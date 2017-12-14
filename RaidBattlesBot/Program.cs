@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 namespace RaidBattlesBot
@@ -13,6 +14,7 @@ namespace RaidBattlesBot
         .CreateDefaultBuilder(args)
         .UseApplicationInsights()
         .UseStartup<Startup>()
+        .ConfigureServices(services => services.AddAutofac())
         .Build();
   }
 }
