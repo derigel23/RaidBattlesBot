@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Autofac.Features.Metadata;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using RaidBattlesBot.Handlers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -13,14 +14,16 @@ namespace RaidBattlesBot.Controllers
   public class TelegramController : Controller
   {
     private readonly TelemetryClient myTelemetryClient;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler>>> myMessageHandlers;
 
-    public TelegramController(TelemetryClient telemetryClient)
+    public TelegramController(TelemetryClient telemetryClient, IEnumerable<Meta<Func<Message, IMessageHandler>>> messageHandlers)
     {
       myTelemetryClient = telemetryClient;
+      myMessageHandlers = messageHandlers;
     }
 
     [HttpPost("/update")]
-    public async Task<IActionResult> Update([FromBody] Update update, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update([FromBody] Update update, CancellationToken cancellationToken = default)
     {
       try
       {
@@ -50,7 +53,9 @@ namespace RaidBattlesBot.Controllers
         HttpContext.Items["messageType"] = message.Type.ToString();
         HttpContext.Items["chat"] = message.Chat.Username;
 
-        return Ok();
+        return await HandlerExtentions<bool>.Handle(myMessageHandlers.Bind(message), (MessageTypeAttribute attr) => attr.MessageType, m => m.Type, message, new object(), cancellationToken)
+          ? Ok() : Ok() /* TODO: not handled */;
+
       }
       catch (Exception ex)
       {

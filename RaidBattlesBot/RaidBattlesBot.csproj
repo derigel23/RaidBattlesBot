@@ -6,12 +6,21 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsAnnotationResourceId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="appsettings.Development.json" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Configuration\" />
+    <Folder Include="Handlers\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
@@ -22,6 +31,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
     <PackageReference Include="Telegram.Bot" Version="13.4.0" />
