@@ -15,11 +15,18 @@ namespace RaidBattlesBot.Controllers
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly IEnumerable<Meta<Func<Message, IMessageHandler>>> myMessageHandlers;
+    private readonly IEnumerable<Func<Update, ICallbackQueryHandler>> myCallbackQueryHandlers;
+    private readonly IEnumerable<Func<Update, IInlineQueryHandler>> myInlineQueryHandlers;
 
-    public TelegramController(TelemetryClient telemetryClient, IEnumerable<Meta<Func<Message, IMessageHandler>>> messageHandlers)
+    public TelegramController(TelemetryClient telemetryClient,
+      IEnumerable<Meta<Func<Message, IMessageHandler>>> messageHandlers,
+      IEnumerable<Func<Update, ICallbackQueryHandler>> callbackQueryHandlers,
+      IEnumerable<Func<Update, IInlineQueryHandler>> inlineQueryHandlers)
     {
       myTelemetryClient = telemetryClient;
       myMessageHandlers = messageHandlers;
+      myCallbackQueryHandlers = callbackQueryHandlers;
+      myInlineQueryHandlers = inlineQueryHandlers;
     }
 
     [HttpPost("/update")]
@@ -39,10 +46,12 @@ namespace RaidBattlesBot.Controllers
             break;
 
           case UpdateType.CallbackQueryUpdate:
-            break;
+            return await HandlerExtentions<bool>.Handle(myCallbackQueryHandlers.Bind(update), update.CallbackQuery, cancellationToken: cancellationToken)
+              ? Ok() : Ok() /* TODO: not handled */;
 
           case UpdateType.InlineQueryUpdate:
-            break;
+            return await HandlerExtentions<bool>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, cancellationToken: cancellationToken)
+              ? Ok() : Ok() /* TODO: not handled */;
         }
 
 

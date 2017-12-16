@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using Autofac;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Module = Autofac.Module;
 
 namespace RaidBattlesBot
@@ -20,6 +23,15 @@ namespace RaidBattlesBot
         return botClient;
       }).As<ITelegramBotClient>().InstancePerLifetimeScope();
       var assembly = Assembly.GetExecutingAssembly();
+
+      builder.Register(c =>
+      {
+        return c.Resolve<IMemoryCache>().GetOrCreate("me", entry =>
+        {
+          entry.SlidingExpiration = TimeSpan.FromMinutes(1);
+          return c.Resolve<ITelegramBotClient>().GetMeAsync().GetAwaiter().GetResult();
+        });
+      });
 
       Register<IMessageHandler, MessageTypeAttribute>(builder, assembly);
       Register<IMessageEntityHandler, MessageEntityTypeAttribute>(builder, assembly);
