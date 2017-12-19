@@ -1,51 +1,38 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Telegram.Bot;
+using Autofac.Features.Metadata;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineKeyboardButtons;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType.TextMessage)]
+  [MessageType(MessageType = MessageType.TextMessage)]
   public class TextMessageHandler : IMessageHandler
   {
-    private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly Message myMessage;
+    private readonly RaidService myRaidService;
+    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
 
-    public TextMessageHandler(ITelegramBotClient telegramBotClient, Message message)
+    public TextMessageHandler(RaidService raidService, IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers)
     {
-      myTelegramBotClient = telegramBotClient;
-      myMessage = message;
+      myRaidService = raidService;
+      myMessageEntityHandlers = messageEntityHandlers;
     }
 
     public async Task<bool> Handle(Message message, object context = default , CancellationToken cancellationToken = default)
     {
-      IReplyMarkup replyMarkup = new InlineKeyboardMarkup(new[]
+      if (string.IsNullOrEmpty(message.Text))
+        return true;
+
+      var handlers = myMessageEntityHandlers.Bind(message).ToList();
+      foreach (var entity in message.Entities)
       {
-        new InlineKeyboardButton[]
-        {
-          new InlineKeyboardCallbackButton("❤", "red"),
-          new InlineKeyboardCallbackButton("💛", "yellow"),
-          new InlineKeyboardCallbackButton("💙", "blue"),
-        },
-        new InlineKeyboardButton[]
-        {
-          new InlineKeyboardCallbackButton("♡", "blue"),
-          new InlineKeyboardCallbackButton("🌐", "globe"),
-          new InlineKeyboardSwitchInlineQueryButton("↺", "/r"),
-        }
-      });
+        return await HandlerExtentions<bool>.Handle(handlers, entity, new object(), cancellationToken);
+      }
 
-      var reply = myTelegramBotClient.SendTextMessageAsync(myMessage.Chat.Id, "Boo", ParseMode.Markdown,
-        replyMarkup: replyMarkup, replyToMessageId: myMessage.MessageId, disableNotification: true, cancellationToken: cancellationToken);
-      
-      return reply != null;
+      return false;
     }
-
-    // TODO: HACK
-    public static readonly string ProcessFurther = Guid.NewGuid().ToString();
   }
 }

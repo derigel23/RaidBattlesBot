@@ -15,12 +15,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20171216174737_TeamIsOptional.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="appsettings.Development.json" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Configuration\" />
-    <Folder Include="Handlers\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
@@ -34,6 +37,8 @@
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" />
     <PackageReference Include="Telegram.Bot" Version="13.4.0" />
   </ItemGroup>
 

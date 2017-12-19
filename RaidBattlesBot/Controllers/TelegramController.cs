@@ -6,6 +6,7 @@ using Autofac.Features.Metadata;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Handlers;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -14,19 +15,25 @@ namespace RaidBattlesBot.Controllers
   public class TelegramController : Controller
   {
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IEnumerable<Meta<Func<Message, IMessageHandler>>> myMessageHandlers;
-    private readonly IEnumerable<Func<Update, ICallbackQueryHandler>> myCallbackQueryHandlers;
-    private readonly IEnumerable<Func<Update, IInlineQueryHandler>> myInlineQueryHandlers;
+    private readonly ITelegramBotClient myTelegramBotClient;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
+    private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
+    private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     public TelegramController(TelemetryClient telemetryClient,
-      IEnumerable<Meta<Func<Message, IMessageHandler>>> messageHandlers,
-      IEnumerable<Func<Update, ICallbackQueryHandler>> callbackQueryHandlers,
-      IEnumerable<Func<Update, IInlineQueryHandler>> inlineQueryHandlers)
+      ITelegramBotClient telegramBotClient,
+      IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
+      IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
+      IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
     {
       myTelemetryClient = telemetryClient;
+      myTelegramBotClient = telegramBotClient;
       myMessageHandlers = messageHandlers;
       myCallbackQueryHandlers = callbackQueryHandlers;
       myInlineQueryHandlers = inlineQueryHandlers;
+      myChosenInlineResultHandlers = chosenInlineResultHandlers;
     }
 
     [HttpPost("/update")]
@@ -46,12 +53,19 @@ namespace RaidBattlesBot.Controllers
             break;
 
           case UpdateType.CallbackQueryUpdate:
-            return await HandlerExtentions<bool>.Handle(myCallbackQueryHandlers.Bind(update), update.CallbackQuery, cancellationToken: cancellationToken)
+            var callbackQuery = update.CallbackQuery;
+            var callBackResponse = await HandlerExtentions<string>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
+            return await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, callBackResponse, cancellationToken: cancellationToken)
               ? Ok() : Ok() /* TODO: not handled */;
 
           case UpdateType.InlineQueryUpdate:
-            return await HandlerExtentions<bool>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, cancellationToken: cancellationToken)
+            return await HandlerExtentions<bool>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken)
               ? Ok() : Ok() /* TODO: not handled */;
+          
+          case UpdateType.ChosenInlineResultUpdate:
+            return await HandlerExtentions<bool>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken)
+              ? Ok() : Ok() /* TODO: not handled */;
+
         }
 
 
@@ -62,7 +76,7 @@ namespace RaidBattlesBot.Controllers
         HttpContext.Items["messageType"] = message.Type.ToString();
         HttpContext.Items["chat"] = message.Chat.Username;
 
-        return await HandlerExtentions<bool>.Handle(myMessageHandlers.Bind(message), (MessageTypeAttribute attr) => attr.MessageType, m => m.Type, message, new object(), cancellationToken)
+        return await HandlerExtentions<bool>.Handle(myMessageHandlers.Bind(message), message, new object(), cancellationToken)
           ? Ok() : Ok() /* TODO: not handled */;
 
       }

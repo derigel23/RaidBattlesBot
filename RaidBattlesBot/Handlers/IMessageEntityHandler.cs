@@ -5,19 +5,19 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  public interface IMessageEntityHandler : IHandler<MessageEntity, object, Message>
+  public interface IMessageEntityHandler : IHandler<MessageEntity, object, bool>
   {
     
   }
 
   [MeansImplicitUse]
-  public class MessageEntityTypeAttribute : Attribute
+  public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntity, object>
   {
-    public MessageEntityType EntityType { get; }
+    public MessageEntityType EntityType { get; set; }
 
-    public MessageEntityTypeAttribute(MessageEntityType entityType)
+    public bool ShouldProcess(MessageEntity messageEntity, object context)
     {
-      EntityType = entityType;
+      return messageEntity.Type == EntityType;
     }
   }
 }

@@ -5,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType.VenueMessage)]
+  [MessageType(MessageType = MessageType.VenueMessage)]
   public class VenueMessageHandler : IMessageHandler
   {
     public async Task<bool> Handle(Message venueMessage, object context = default , CancellationToken cancellationToken = default)

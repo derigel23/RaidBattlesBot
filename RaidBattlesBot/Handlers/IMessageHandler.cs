@@ -11,13 +11,13 @@ namespace RaidBattlesBot.Handlers
   }
 
   [MeansImplicitUse]
-  public class MessageTypeAttribute : Attribute
+  public class MessageTypeAttribute : Attribute, IHandlerAttribute<Message, object>
   {
-    public MessageType MessageType { get; }
+    public MessageType MessageType { get; set; }
 
-    public MessageTypeAttribute(MessageType messageType)
+    public bool ShouldProcess(Message message, object context)
     {
-      MessageType = messageType;
+      return message.Type == MessageType;
     }
   }
 }

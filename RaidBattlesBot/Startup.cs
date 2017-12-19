@@ -6,10 +6,12 @@ using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
+using RaidBattlesBot.Model;
 
 namespace RaidBattlesBot
 {
@@ -33,6 +35,9 @@ namespace RaidBattlesBot
 
       services.AddMemoryCache();
       services.AddMvc().AddControllersAsServices();
+
+      services.AddDbContextPool<RaidBattlesContext>(options =>
+        options.UseSqlServer(myConfiguration.GetConnectionString("RaidBattlesDatabase")));
     }
 
     private void Configure<TOptions>(IServiceCollection services, IConfiguration configuration, string sectionName)

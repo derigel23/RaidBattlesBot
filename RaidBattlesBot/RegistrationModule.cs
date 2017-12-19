@@ -33,13 +33,17 @@ namespace RaidBattlesBot
         });
       });
 
+      builder.RegisterType<RaidService>().InstancePerLifetimeScope();
+
       Register<IMessageHandler, MessageTypeAttribute>(builder, assembly);
       Register<IMessageEntityHandler, MessageEntityTypeAttribute>(builder, assembly);
+      Register<ICallbackQueryHandler, CallbackQueryHandlerAttribute>(builder, assembly);
+      Register<IInlineQueryHandler, InlineQueryHandlerAttribute>(builder, assembly);
 
       builder
         .RegisterAssemblyTypes(assembly)
         //.Where(t => typeof(IHandler<>).IsAssignableFrom(t))
-        .Where(t => !(new[] { typeof(IMessageHandler), typeof(IMessageEntityHandler) }.Any(_ => _.IsAssignableFrom(t))))
+        .Where(t => !(new[] { typeof(IMessageHandler), typeof(IMessageEntityHandler), typeof(ICallbackQueryHandler), typeof(IInlineQueryHandler) }.Any(_ => _.IsAssignableFrom(t))))
         .AsClosedTypesOf(typeof(IHandler<,,>))
         .AsSelf()
         .InstancePerLifetimeScope();

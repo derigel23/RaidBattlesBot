@@ -1,8 +1,9 @@
-﻿using Telegram.Bot.Types.Enums;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType(MessageEntityType.TextLink)]
+  [MessageEntityType(EntityType = MessageEntityType.TextLink)]
   public class TextLinkMessageEntityHandler : UrlLikeMessageEntityHandler
   {
   }

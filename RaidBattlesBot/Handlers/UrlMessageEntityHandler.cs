@@ -2,7 +2,7 @@
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType(MessageEntityType.Url)]
+  [MessageEntityType(EntityType = MessageEntityType.Url)]
   public class UrlMessageEntityHandler : UrlLikeMessageEntityHandler
   {
   }

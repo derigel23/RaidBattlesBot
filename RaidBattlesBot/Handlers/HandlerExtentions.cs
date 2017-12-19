@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
@@ -15,9 +14,9 @@ namespace RaidBattlesBot.Handlers
       return items.Select(func => func(parameter));
     }
 
-    public static IEnumerable<Meta<Func<T>>> Bind<TParameter, T>(this IEnumerable<Meta<Func<TParameter, T>>> items, TParameter parameter)
+    public static IEnumerable<Meta<Func<T>, TMetadata>> Bind<TParameter, T, TMetadata>(this IEnumerable<Meta<Func<TParameter, T>, TMetadata>> items, TParameter parameter)
     {
-      return items.Select(meta => new Meta<Func<T>>(() => meta.Value(parameter), meta.Metadata));
+      return items.Select(meta => new Meta<Func<T>, TMetadata>(() => meta.Value(parameter), meta.Metadata));
     }
   }
 
@@ -35,15 +34,15 @@ namespace RaidBattlesBot.Handlers
       return default;
     }
 
-    public static async Task<TResult> Handle<THandler, TData, TContext, TAttribute, TFilter>(IEnumerable<Meta<Func<THandler>>> handlers, Expression<Func<TAttribute, TFilter>> attributeFilter, Expression<Func<TData, TFilter>> dataFilter, TData data, TContext context = default, CancellationToken cancellationToken = default)
+    public static async Task<TResult> Handle<THandler, TData, TContext, TMetadata>(IEnumerable<Meta<Func<THandler>, TMetadata>> handlers, TData data, TContext context = default, CancellationToken cancellationToken = default)
       where THandler : IHandler<TData, TContext, TResult>
-      where TAttribute : Attribute
+      where TMetadata : Attribute, IHandlerAttribute<TData, TContext>
     {
-      foreach (var handler in handlers)
+      foreach (var h in handlers)
       {
-        if (!Equals(handler.Metadata[PropertySupport.ExtractPropertyName(attributeFilter)], dataFilter.Compile().Invoke(data)))
+        if (!h.Metadata.ShouldProcess(data, context))
           continue;
-        var result = await handler.Value().Handle(data, context, cancellationToken);
+        var result = await h.Value().Handle(data, context, cancellationToken);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
           return result;
       }

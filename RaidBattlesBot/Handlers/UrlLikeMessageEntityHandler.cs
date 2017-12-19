@@ -6,9 +6,9 @@ namespace RaidBattlesBot.Handlers
 {
   public abstract class UrlLikeMessageEntityHandler : IMessageEntityHandler
   {
-    public async Task<Message> Handle(MessageEntity entity, object context = default , CancellationToken cancellationToken = default)
+    public async Task<bool> Handle(MessageEntity entity, object context = default , CancellationToken cancellationToken = default)
     {
-       return null;
+      return false;
     }
   }
 }
