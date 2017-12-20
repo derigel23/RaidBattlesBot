@@ -9,24 +9,26 @@ namespace RaidBattlesBot.Model
 
     public PollMessage(Message message)
     {
-      UserId = message.From.Id;
+      UserId = message.From?.Id;
       Chat = message.Chat;
-      MesssageId = message.MessageId;
+      //MesssageId = message.MessageId;
     }
 
     public PollMessage(ChosenInlineResult inlineResult)
     {
-      UserId = inlineResult.From.Id;
+      UserId = inlineResult.From?.Id;
       InlineMesssageId = inlineResult.InlineMessageId;
     }
 
     public int Id { get; set; }
     public int PollId { get; set; }
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public long? ChatId { get; set; }
     public int? MesssageId { get; set; }
     public string InlineMesssageId { get; set; }
     public DateTimeOffset? Modified { get; set; }
+
+    public Poll Poll { get; set; }
 
     public ChatId Chat
     {

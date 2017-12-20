@@ -30,7 +30,7 @@ namespace RaidBattlesBot.Handlers
         Raid = new Raid
         {
           Title = query
-        }
+        },
       };
 
       var inlineQueryResults = new InlineQueryResult[]

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {

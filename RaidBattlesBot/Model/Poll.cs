@@ -8,8 +8,9 @@ namespace RaidBattlesBot.Model
   {
     public int Id { get; set; }
     public int RaidId { get; set; }
-    public int Owner { get; set; }
+    public int? Owner { get; set; }
     public DateTimeOffset? Modified { get; set; }
+    public bool Cancelled { get; set; }
 
     public Raid Raid { get; set; }
     public List<PollMessage> Messages { get; set; }

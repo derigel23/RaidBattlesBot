@@ -11,9 +11,10 @@ using System;
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20171220200430_PollCancellation")]
+    partial class PollCancellation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,7 +30,7 @@ namespace RaidBattlesBot.Migrations
 
                     b.Property<DateTimeOffset?>("Modified");
 
-                    b.Property<int?>("Owner");
+                    b.Property<int>("Owner");
 
                     b.Property<int>("RaidId");
 
@@ -55,7 +56,7 @@ namespace RaidBattlesBot.Migrations
 
                     b.Property<int>("PollId");
 
-                    b.Property<int?>("UserId");
+                    b.Property<int>("UserId");
 
                     b.HasKey("Id");
 

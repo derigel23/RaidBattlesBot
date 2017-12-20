@@ -29,6 +29,10 @@ namespace RaidBattlesBot.Model
     public static StringBuilder GetMessageText(this Poll poll)
     {
       var text = new StringBuilder($"*{poll.Raid.Title}*").AppendLine();
+      if (poll.Cancelled)
+      {
+        text.AppendLine().AppendLine("*Отмена!*");
+      }
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
         .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value))
       {
@@ -64,19 +68,24 @@ namespace RaidBattlesBot.Model
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
     {
+      if (poll.Cancelled)
+        return null;
+
+      var pollId = poll.Id;
+
       return new InlineKeyboardMarkup(new[]
       {
         new InlineKeyboardButton[]
         {
-          new InlineKeyboardCallbackButton("❤", $"vote:{poll.Id}:red"),
-          new InlineKeyboardCallbackButton("💛", $"vote:{poll.Id}:yellow"),
-          new InlineKeyboardCallbackButton("💙", $"vote:{poll.Id}:blue"),
+          new InlineKeyboardCallbackButton("❤", $"vote:{pollId}:red"),
+          new InlineKeyboardCallbackButton("💛", $"vote:{pollId}:yellow"),
+          new InlineKeyboardCallbackButton("💙", $"vote:{pollId}:blue"),
         },
         new InlineKeyboardButton[]
         {
-          new InlineKeyboardCallbackButton("⁇", $"vote:{poll.Id}:none"),
-          new InlineKeyboardCallbackButton("✖", $"vote:{poll.Id}:cancel"),
-          new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{poll.Id}"),
+          new InlineKeyboardCallbackButton("⁇", $"vote:{pollId}:none"),
+          new InlineKeyboardCallbackButton("✖", $"vote:{pollId}:cancel"),
+          new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
         }
       });
     }

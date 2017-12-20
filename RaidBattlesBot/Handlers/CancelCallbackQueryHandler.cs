@@ -8,13 +8,13 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "vote")]
-  public class VoteCallbackQueryHandler : ICallbackQueryHandler
+  [CallbackQueryHandler(DataPrefix = "cancel")]
+  public class CancelCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
 
-    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
+    public CancelCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
     {
       myContext = context;
       myRaidService = raidService;
@@ -23,7 +23,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<string> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "vote")
+      if (callback[0] != "cancel")
         return null;
       
       if (!int.TryParse(callback.ElementAt(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
@@ -42,37 +42,17 @@ namespace RaidBattlesBot.Handlers
 
       var user = data.From;
 
-      var vote = poll.Votes.SingleOrDefault(v => v.UserId == user.Id);
-      if (vote == null)
-      {
-        poll.Votes.Add(vote = new Vote());
-      }
+      if (poll.Owner != user.Id)
+        return "Вы не можете отменить голосование";
 
-      vote.User = user; // update firstname/lastname if necessary
-
-      int? GetTeam(string team)
-      {
-        switch (team)
-        {
-          case "red": return 0;
-          case "yellow": return 1;
-          case "blue": return 2;
-          case "none": return 3;
-          case "cancel": return 4;
-        }
-
-        return null;
-      }
-
-      var teamStr = callback.ElementAt(2);
-      vote.Team = GetTeam(teamStr);
+      poll.Cancelled = true;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return changed ? $"You've voted for {teamStr}" : "You've already voted.";
+      return changed ? $"Голосование отменено" : "Голование уже отменено";
     }
   }
 }

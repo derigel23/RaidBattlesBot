@@ -4,31 +4,12 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <ApplicationInsightsResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsAnnotationResourceId>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.1</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Migrations\20171216174737_TeamIsOptional.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="appsettings.Development.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Configuration\" />
     <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="appsettings.Development.json" />
   </ItemGroup>
 
   <ItemGroup>

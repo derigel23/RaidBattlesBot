@@ -11,9 +11,10 @@ using System;
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20171220201445_NullableUser")]
+    partial class NullableUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

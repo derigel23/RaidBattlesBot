@@ -23,7 +23,7 @@ namespace RaidBattlesBot.Model
 
       var pollEntity = modelBuilder.Entity<Poll>();
       pollEntity.HasKey(poll => poll.Id);
-      pollEntity.HasMany(poll => poll.Messages).WithOne().HasForeignKey(message => message.PollId);
+      pollEntity.HasMany(poll => poll.Messages).WithOne(message => message.Poll).HasForeignKey(message => message.PollId);
       pollEntity.HasMany(poll => poll.Votes).WithOne().HasForeignKey(vote => vote.PollId);
 
       var messageEntity = modelBuilder.Entity<PollMessage>();
