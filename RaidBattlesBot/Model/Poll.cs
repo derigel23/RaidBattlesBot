@@ -10,6 +10,7 @@ namespace RaidBattlesBot.Model
     public int? RaidId { get; set; }
     public int? Owner { get; set; }
     public string Title { get; set; }
+    public DateTimeOffset? Time { get; set; }
     public DateTimeOffset? Modified { get; set; }
     public bool Cancelled { get; set; }
 
