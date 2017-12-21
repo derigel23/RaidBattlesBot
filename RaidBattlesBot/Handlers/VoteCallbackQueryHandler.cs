@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return null;
+        return "Голосование не найдено";
 
       var user = data.From;
 

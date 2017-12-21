@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -8,9 +9,9 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.VenueMessage)]
   public class VenueMessageHandler : IMessageHandler
   {
-    public async Task<bool> Handle(Message venueMessage, object context = default , CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Message venueMessage, Raid raid = default , CancellationToken cancellationToken = default)
     {
-      return false;
+      return null;
     }
   }
 }

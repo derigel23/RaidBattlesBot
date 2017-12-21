@@ -3,7 +3,11 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using NodaTime;
+using NodaTime.Extensions;
+using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
 using Telegram.Bot;
@@ -22,6 +26,26 @@ namespace RaidBattlesBot
         var botClient = new TelegramBotClient(configuration.BotToken);
         return botClient;
       }).As<ITelegramBotClient>().InstancePerLifetimeScope();
+
+      builder.RegisterInstance(SystemClock.Instance).As<IClock>();
+      //builder.RegisterInstance(new FakeClock(SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(5)))).As<IClock>();
+      builder.Register(c =>
+      {
+        var configuration = c.Resolve<IConfiguration>();
+        DateTimeZone dateTimeZone = null;
+        var timezone = configuration["Timezone"];
+        if (!string.IsNullOrEmpty(timezone))
+        {
+          dateTimeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
+        }
+        return dateTimeZone ?? DateTimeZoneProviders.Tzdb.GetSystemDefault();
+      }).InstancePerLifetimeScope();
+      builder.Register(c => c.Resolve<IClock>().InZone(c.Resolve<DateTimeZone>()))
+        .As<ZonedClock>().InstancePerLifetimeScope();
+
+      builder.RegisterType<GymHelper>().InstancePerLifetimeScope();
+      builder.RegisterType<InfoGymBotHelper>().InstancePerLifetimeScope();
+
       var assembly = Assembly.GetExecutingAssembly();
 
       builder.Register(c =>

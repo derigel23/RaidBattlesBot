@@ -8,13 +8,13 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "cancel")]
-  public class CancelCallbackQueryHandler : ICallbackQueryHandler
+  [CallbackQueryHandler(DataPrefix = "restore")]
+  public class RestoreCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
 
-    public CancelCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
+    public RestoreCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
     {
       myContext = context;
       myRaidService = raidService;
@@ -23,7 +23,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<string> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "cancel")
+      if (callback[0] != "restore")
         return null;
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
@@ -43,16 +43,16 @@ namespace RaidBattlesBot.Handlers
       var user = data.From;
 
       if (poll.Owner != user.Id)
-        return "Вы не можете отменить голосование";
+        return "Вы не можете возобновить голосование";
 
-      poll.Cancelled = true;
+      poll.Cancelled = false;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return changed ? "Голосование отменено" : "Голование уже отменено";
+      return changed ? "Голосование возобновлено" : "Голование уже возобновлено";
     }
   }
 }

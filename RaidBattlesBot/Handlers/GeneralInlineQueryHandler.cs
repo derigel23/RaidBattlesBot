@@ -22,11 +22,11 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
     }
 
-    public async Task<bool> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var query = data.Query;
       if (string.IsNullOrEmpty(query))
-        return false;
+        return null;
 
       var fakePoll = new Poll
       {

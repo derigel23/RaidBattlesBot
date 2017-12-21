@@ -1,11 +1,8 @@
 ﻿using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -17,17 +14,15 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly Message myMessage;
-    private readonly ITelegramBotClient myBot;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, RaidService raidService, Message message, ITelegramBotClient bot)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, RaidService raidService, Message message)
     {
       myContext = context;
       myRaidService = raidService;
       myMessage = message;
-      myBot = bot;
     }
 
-    public async Task<bool> Handle(MessageEntity entity, object context = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(MessageEntity entity, Raid raid = default, CancellationToken cancellationToken = default)
     {
       var command = myMessage.Text.Substring(entity.Offset, entity.Length);
       switch (command)
@@ -50,7 +45,7 @@ namespace RaidBattlesBot.Handlers
           return await myRaidService.AddPollMessage(new PollMessage(myMessage) { Poll = poll }, cancellationToken);
       }
 
-      return false;
+      return null;
     }
   }
 }

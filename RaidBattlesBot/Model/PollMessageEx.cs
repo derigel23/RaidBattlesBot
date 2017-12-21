@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices.ComTypes;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -11,8 +10,19 @@ namespace RaidBattlesBot.Model
     {
       var pollReplyMarkup = message.Poll.GetReplyMarkup();
 
-      if ((pollReplyMarkup == null) || (message.ChatId == null) || (message.Poll.Owner != message.ChatId))
+      if ((message.ChatId == null) || (message.Poll.Owner != message.ChatId))
         return pollReplyMarkup;
+
+      if (pollReplyMarkup == null) // cancelled
+      {
+        if (!message.Poll.Cancelled)
+          return null; // can't be
+
+        return  new InlineKeyboardMarkup(new InlineKeyboardButton[]
+        {
+          new InlineKeyboardCallbackButton("Возобновить", $"restore:{message.GetPollId()}"),
+        });
+      }
 
       var inlineKeyboardButtons = pollReplyMarkup.InlineKeyboard;
       var length = inlineKeyboardButtons.GetLength(0);
@@ -30,4 +40,4 @@ namespace RaidBattlesBot.Model
       return message.Poll?.Id ?? message.PollId;
     }
   }
-}
+} 

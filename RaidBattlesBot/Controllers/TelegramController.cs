@@ -6,6 +6,7 @@ using Autofac.Features.Metadata;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Handlers;
+using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,13 +17,14 @@ namespace RaidBattlesBot.Controllers
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
+    private readonly RaidService myRaidService;
     private readonly IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> myMessageHandlers;
     private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     public TelegramController(TelemetryClient telemetryClient,
-      ITelegramBotClient telegramBotClient,
+      ITelegramBotClient telegramBotClient, RaidService raidService,
       IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
@@ -30,6 +32,7 @@ namespace RaidBattlesBot.Controllers
     {
       myTelemetryClient = telemetryClient;
       myTelegramBotClient = telegramBotClient;
+      myRaidService = raidService;
       myMessageHandlers = messageHandlers;
       myCallbackQueryHandlers = callbackQueryHandlers;
       myInlineQueryHandlers = inlineQueryHandlers;
@@ -59,11 +62,11 @@ namespace RaidBattlesBot.Controllers
               ? Ok() : Ok() /* TODO: not handled */;
 
           case UpdateType.InlineQueryUpdate:
-            return await HandlerExtentions<bool>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken)
+            return (await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken)).GetValueOrDefault()
               ? Ok() : Ok() /* TODO: not handled */;
           
           case UpdateType.ChosenInlineResultUpdate:
-            return await HandlerExtentions<bool>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken)
+            return (await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken)).GetValueOrDefault()
               ? Ok() : Ok() /* TODO: not handled */;
 
         }
@@ -76,8 +79,13 @@ namespace RaidBattlesBot.Controllers
         HttpContext.Items["messageType"] = message.Type.ToString();
         HttpContext.Items["chat"] = message.Chat.Username;
 
-        return await HandlerExtentions<bool>.Handle(myMessageHandlers.Bind(message), message, new object(), cancellationToken)
-          ? Ok() : Ok() /* TODO: not handled */;
+        var raid = new Raid();
+        var result = await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, raid, cancellationToken);
+        if (result.GetValueOrDefault())
+        {
+          await myRaidService.AddRaid(raid, new PollMessage(message), cancellationToken);
+        }
+        return Ok() /* TODO: not handled */;
 
       }
       catch (Exception ex)

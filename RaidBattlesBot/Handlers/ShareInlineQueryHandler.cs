@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
@@ -28,11 +26,11 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
     }
 
-    public async Task<bool> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var queryParts = data.Query.Split(':');
       if (queryParts[0] != "share")
-        return false;
+        return null;
 
       if (!int.TryParse(queryParts.ElementAtOrDefault(1) ?? "", out var pollid))
         return false;

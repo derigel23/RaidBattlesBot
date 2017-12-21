@@ -3,12 +3,14 @@ using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 
@@ -30,8 +32,41 @@ namespace RaidBattlesBot
       services.AddOptions();
 
       // Register configuration handlers
-      Configure<BotConfiguration>(services, myConfiguration, "BotConfiguration");
+      Configure<BotConfiguration>(services, myConfiguration.GetSection("BotConfiguration"));
+      Configure<GeoCoderConfiguration>(services, myConfiguration.GetSection("GeoCoder"));
 
+      services.AddSingleton(provider =>
+      {
+        var hostingEnvironment = provider.GetRequiredService<IHostingEnvironment>();
+        var fileProvider = hostingEnvironment.WebRootFileProvider;
+        var namesBuilder = new ConfigurationBuilder().SetFileProvider(fileProvider);
+        foreach (var fileInfo in fileProvider.GetDirectoryContents("names"))
+        {
+          namesBuilder.AddIniFile(fileInfo.PhysicalPath, false, false);
+        }
+        var raidsBuilder = new ConfigurationBuilder().SetFileProvider(fileProvider);
+        raidsBuilder.AddIniFile("pokemon_raids.properties", false, false);
+
+        return new PokemonInfo(namesBuilder.Build(), raidsBuilder.Build(), provider.GetRequiredService<ILoggerFactory>());
+      });
+
+      services.AddSingleton(provider =>
+      {
+        using (var gymStream = provider.GetRequiredService<IHostingEnvironment>().WebRootFileProvider.GetFileInfo("gyms.kml").CreateReadStream())
+        {
+          return new Gyms(gymStream);
+        }
+      });
+
+      var culture = myConfiguration["Culture"];
+      if (!string.IsNullOrEmpty(culture))
+      {
+        services.Configure<RequestLocalizationOptions>(options =>
+        {
+          options.DefaultRequestCulture = new RequestCulture(culture);
+          options.RequestCultureProviders = null;
+        });
+      }
       services
         .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
         .AddScoped(x => x
@@ -45,10 +80,10 @@ namespace RaidBattlesBot
         options.UseSqlServer(myConfiguration.GetConnectionString("RaidBattlesDatabase")));
     }
 
-    private void Configure<TOptions>(IServiceCollection services, IConfiguration configuration, string sectionName)
+    private static void Configure<TOptions>(IServiceCollection services, IConfiguration configuration)
       where TOptions : class
     {
-      services.Configure<TOptions>(configuration.GetSection(sectionName));
+      services.Configure<TOptions>(configuration);
     }
 
     public void ConfigureContainer(ContainerBuilder builder)

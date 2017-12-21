@@ -27,16 +27,30 @@ namespace RaidBattlesBot
       myHttpContextAccessor = httpContextAccessor;
     }
 
+    public async Task<bool> AddRaid(Raid raid, PollMessage message, CancellationToken cancellationToken = default)
+    {
+      (raid.Polls ?? (raid.Polls = new List<Poll>(1))).Add(new Poll
+      {
+        Owner = message.UserId,
+        Messages = new List<PollMessage>(1) { message }
+      });
+
+      myContext.Attach(raid);
+      await myContext.SaveChangesAsync(cancellationToken);
+
+      return await AddPollMessage(message, cancellationToken);
+    }
+
     public async Task<bool> AddPoll(string text, PollMessage message, CancellationToken cancellationToken = default)
     {
       var poll = new Poll
       {
         Title = text,
         Owner = message.UserId,
-        Messages = new List<PollMessage> { message }
+        Messages = new List<PollMessage>(1) { message }
       };
 
-      myContext.Polls.Attach(poll);
+      myContext.Attach(poll);
       await myContext.SaveChangesAsync(cancellationToken);
 
       return await AddPollMessage(message, cancellationToken);

@@ -1,11 +1,8 @@
-﻿using System;
-using JetBrains.Annotations;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
+﻿using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  public interface IChosenInlineResultHandler : IHandler<ChosenInlineResult, object, bool>
+  public interface IChosenInlineResultHandler : IHandler<ChosenInlineResult, object, bool?>
   {
     
   }

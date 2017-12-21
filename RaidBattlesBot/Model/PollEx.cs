@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -26,14 +27,14 @@ namespace RaidBattlesBot.Model
       return $"{number} {countStr}:";
     }
 
-    public static string GetTitle(this Poll poll)
+    public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
     {
-      return poll.Title ?? poll.Raid?.Title;
+      return poll.Title ?? poll.Raid?.GetDescription(mode);
     }
 
     public static string GetMessageText(this Poll poll)
     {
-      var text = new StringBuilder($"{poll.GetTitle()}").AppendLine();
+      var text = new StringBuilder($"{poll.GetTitle(ParseMode.Markdown)}").AppendLine();
       if (poll.Cancelled)
       {
         text.AppendLine().AppendLine("*Отмена!*");

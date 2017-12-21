@@ -17,7 +17,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
     }
 
-    public async Task<bool> Handle(ChosenInlineResult data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(ChosenInlineResult data, object context = default, CancellationToken cancellationToken = default)
     {
       var resultParts = data.ResultId.Split(':');
       if (resultParts[0] == "poll" && int.TryParse(resultParts.ElementAtOrDefault(1) ?? "", out var pollId))
@@ -29,12 +29,13 @@ namespace RaidBattlesBot.Handlers
         });
         return await myContext.SaveChangesAsync(cancellationToken) > 0;
       }
-      else if (resultParts[0] == "create")
+
+      if (resultParts[0] == "create")
       {
         return await myRaidService.AddPoll(data.Query, new PollMessage(data), cancellationToken);
       }
 
-      return false;
+      return null;
     }
   }
 }
