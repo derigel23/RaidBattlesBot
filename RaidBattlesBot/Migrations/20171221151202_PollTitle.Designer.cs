@@ -11,9 +11,10 @@ using System;
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20171221151202_PollTitle")]
+    partial class PollTitle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

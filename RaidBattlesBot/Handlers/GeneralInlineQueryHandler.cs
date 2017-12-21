@@ -27,10 +27,7 @@ namespace RaidBattlesBot.Handlers
 
       var fakePoll = new Poll
       {
-        Raid = new Raid
-        {
-          Title = query
-        },
+        Title = query
       };
 
       var inlineQueryResults = new InlineQueryResult[]
@@ -38,14 +35,14 @@ namespace RaidBattlesBot.Handlers
         new InlineQueryResultArticle
         {
           Id = $"create:{query.GetHashCode()}",
-          Title = query,
+          Title = fakePoll.GetTitle(),
           Description = "Создать голосование",
           //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
           HideUrl = true,
           //ThumbUrl = "http://json.e2e2.ru/r/absol.png",
           InputMessageContent = new InputTextMessageContent
           {
-            MessageText = fakePoll.GetMessageText().ToString(),
+            MessageText = fakePoll.GetMessageText(),
             ParseMode = ParseMode.Markdown
           },
           ReplyMarkup = fakePoll.GetReplyMarkup()

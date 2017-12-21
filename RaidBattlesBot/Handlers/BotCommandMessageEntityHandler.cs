@@ -35,7 +35,7 @@ namespace RaidBattlesBot.Handlers
         case var _ when command.StartsWith("/new"):
           var title = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
           if (string.IsNullOrEmpty(title)) return false;
-          return await myRaidService.AddRaid(title, new PollMessage(myMessage), cancellationToken);
+          return await myRaidService.AddPoll(title, new PollMessage(myMessage), cancellationToken);
 
         case var _ when command.StartsWith("/poll"):
           if (!int.TryParse(myMessage.Text.Substring(entity.Offset + entity.Length).Trim(), out var pollId))

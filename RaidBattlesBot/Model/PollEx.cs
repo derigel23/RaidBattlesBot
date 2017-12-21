@@ -8,27 +8,32 @@ namespace RaidBattlesBot.Model
 {
   public static class PollEx
   {
-    private static readonly Dictionary<int, (string, string)> ourVoteDescription = new Dictionary<int, (string, string)>
+    private static readonly Dictionary<VoteEnum, (string, string)> ourVoteDescription = new Dictionary<VoteEnum, (string, string)>
     {
-      { 0, ("идёт", "идут") },
-      { 1, ("идёт", "идут") },
-      { 2, ("идёт", "идут") },
+      { VoteEnum.Valor, ("идёт", "идут") },
+      { VoteEnum.Instinct, ("идёт", "идут") },
+      { VoteEnum.Mystic, ("идёт", "идут") },
       
-      { 3, ("думает", "думают") },
+      { VoteEnum.MayBe, ("думает", "думают") },
       
-      { 4, ("передумал", "передумали") },
+      { VoteEnum.Cancel, ("передумал", "передумали") },
     };
 
     private static string GetVoteCounts(IGrouping<(string, string), Vote> grouping)
     {
       var number = grouping.Count();
       var countStr = number == 1 ? grouping.Key.Item1 : grouping.Key.Item2;
-      return $"*{number} {countStr}:*";
+      return $"{number} {countStr}:";
     }
 
-    public static StringBuilder GetMessageText(this Poll poll)
+    public static string GetTitle(this Poll poll)
     {
-      var text = new StringBuilder($"*{poll.Raid.Title}*").AppendLine();
+      return poll.Title ?? poll.Raid?.Title;
+    }
+
+    public static string GetMessageText(this Poll poll)
+    {
+      var text = new StringBuilder($"{poll.GetTitle()}").AppendLine();
       if (poll.Cancelled)
       {
         text.AppendLine().AppendLine("*Отмена!*");
@@ -42,19 +47,19 @@ namespace RaidBattlesBot.Model
           var userLink = vote.User.GetLink();
           switch (vote.Team)
           {
-            case 0:
+            case VoteEnum.Valor:
               text.AppendLine($"❤ {userLink}");
               break;
-            case 1:
+            case VoteEnum.Instinct:
               text.AppendLine($"💛 {userLink}");
               break;
-            case 2:
+            case VoteEnum.Mystic:
               text.AppendLine($"💙 {userLink}");
               break;
-            case 3:
+            case VoteEnum.MayBe:
               text.AppendLine($"⁇ {userLink}");
               break;
-            case 4:
+            case VoteEnum.Cancel:
               text.AppendLine($"✖ {userLink}");
               break;
           }
@@ -63,7 +68,7 @@ namespace RaidBattlesBot.Model
 
       text.AppendLine();
       //text.AppendLine("[link2](http://json.e2e2.ru/?lat=55.762982&lon=37.537352&b=Ninetales&t=19:20)");
-      return text;
+      return text.ToString();
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)

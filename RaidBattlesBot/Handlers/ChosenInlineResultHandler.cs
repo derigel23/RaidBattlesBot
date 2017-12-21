@@ -31,7 +31,7 @@ namespace RaidBattlesBot.Handlers
       }
       else if (resultParts[0] == "create")
       {
-        return await myRaidService.AddRaid(data.Query, new PollMessage(data), cancellationToken);
+        return await myRaidService.AddPoll(data.Query, new PollMessage(data), cancellationToken);
       }
 
       return false;

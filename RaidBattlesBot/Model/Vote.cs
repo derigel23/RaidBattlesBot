@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Model
     public int UserId { get; set; }
     public string FirstName { get; set; }
     public string LasttName { get; set; }
-    public int? Team { get; set; }
+    public VoteEnum? Team { get; set; }
     public DateTimeOffset? Modified { get; set; }
 
     public User User

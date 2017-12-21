@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,15 @@ namespace RaidBattlesBot.Handlers
       myContext = context;
       myRaidService = raidService;
     }
+
+    private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
+    {
+      { VoteEnum.Valor, "Вы проголосовали за Valor" },
+      { VoteEnum.Instinct, "Вы проголосовали за Instinct" },
+      { VoteEnum.Mystic, "Вы проголосовали за Mystic" },
+      { VoteEnum.MayBe, "Вы дуамете" },
+      { VoteEnum.Cancel, "Вы передумали" },
+    };
 
     public async Task<string> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
@@ -50,29 +60,29 @@ namespace RaidBattlesBot.Handlers
 
       vote.User = user; // update firstname/lastname if necessary
 
-      int? GetTeam(string team)
+      VoteEnum? GetTeam(string team)
       {
         switch (team)
         {
-          case "red": return 0;
-          case "yellow": return 1;
-          case "blue": return 2;
-          case "none": return 3;
-          case "cancel": return 4;
+          case "red": return VoteEnum.Valor;
+          case "yellow": return VoteEnum.Instinct;
+          case "blue": return VoteEnum.Mystic;
+          case "none": return VoteEnum.MayBe;
+          case "cancel": return VoteEnum.Cancel;
         }
 
         return null;
       }
 
-      var teamStr = callback.ElementAt(2);
-      vote.Team = GetTeam(teamStr);
+      var teamAbbr = callback.ElementAt(2);
+      vote.Team = GetTeam(teamAbbr);
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return changed ? $"You've voted for {teamStr}" : "You've already voted.";
+      return changed ? ourResponse.TryGetValue(vote.Team, out var response ) ?  response : "Вы проголосовали" : "Вы уже проголосовали";
     }
   }
 }

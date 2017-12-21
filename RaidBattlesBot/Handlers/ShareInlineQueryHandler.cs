@@ -45,18 +45,17 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var title = poll.Raid.Title;
         inlineQueryResults = new InlineQueryResult[]
         {
           new InlineQueryResultArticle
           {
             Id = $"poll:{poll.Id}",
-            Title = title,
-            Description = "Склонировать голосование",
+            Title = poll.GetTitle(),
+            Description = "Клонировать голосование",
             //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
             HideUrl = true,
             //ThumbUrl = "http://json.e2e2.ru/r/absol.png",
-            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText().ToString(), ParseMode = ParseMode.Markdown },
+            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(), ParseMode = ParseMode.Markdown },
             ReplyMarkup = poll.GetReplyMarkup()
           },
         };

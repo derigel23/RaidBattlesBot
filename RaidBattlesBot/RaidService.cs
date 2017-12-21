@@ -27,23 +27,16 @@ namespace RaidBattlesBot
       myHttpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<bool> AddRaid(string text, PollMessage message, CancellationToken cancellationToken = default)
+    public async Task<bool> AddPoll(string text, PollMessage message, CancellationToken cancellationToken = default)
     {
-      Poll poll;
-      var raid = new Raid
+      var poll = new Poll
       {
         Title = text,
-        Polls = new List<Poll>
-        {
-          (poll = new Poll
-          {
-            Owner = message.UserId,
-            Messages = new List<PollMessage> { message }
-          })
-        }
+        Owner = message.UserId,
+        Messages = new List<PollMessage> { message }
       };
 
-      myContext.Raids.Attach(raid);
+      myContext.Polls.Attach(poll);
       await myContext.SaveChangesAsync(cancellationToken);
 
       return await AddPollMessage(message, cancellationToken);
@@ -53,7 +46,7 @@ namespace RaidBattlesBot
     {
       myContext.Attach(message);
 
-      var messageText = message.Poll.GetMessageText().ToString();
+      var messageText = message.Poll.GetMessageText();
       if (message.InlineMesssageId == null)
       {
         var postedMessage = await myBot.SendTextMessageAsync(message.Chat, messageText, ParseMode.Markdown,
@@ -72,7 +65,7 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, CancellationToken cancellationToken = default)
     {
-      var messageText = poll.GetMessageText().ToString();
+      var messageText = poll.GetMessageText();
       foreach (var message in poll.Messages)
       {
         try
