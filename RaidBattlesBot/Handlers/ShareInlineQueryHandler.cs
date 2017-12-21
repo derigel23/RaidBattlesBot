@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
@@ -16,11 +19,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
+    private readonly IUrlHelper myUrlHelper;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper)
     {
       myContext = context;
       myBot = bot;
+      myUrlHelper = urlHelper;
     }
 
     public async Task<bool> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -54,7 +59,7 @@ namespace RaidBattlesBot.Handlers
             Description = "Клонировать голосование",
             //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
             HideUrl = true,
-            //ThumbUrl = "http://json.e2e2.ru/r/absol.png",
+            ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/raid_tut_raid.png").ToString(),
             InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(), ParseMode = ParseMode.Markdown },
             ReplyMarkup = poll.GetReplyMarkup()
           },

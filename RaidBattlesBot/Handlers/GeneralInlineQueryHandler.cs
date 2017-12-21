@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -13,10 +14,12 @@ namespace RaidBattlesBot.Handlers
   public class GeneralInlineQueryHandler : IInlineQueryHandler
   {
     private readonly ITelegramBotClient myBot;
+    private readonly IUrlHelper myUrlHelper;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot)
+    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper)
     {
       myBot = bot;
+      myUrlHelper = urlHelper;
     }
 
     public async Task<bool> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -39,7 +42,7 @@ namespace RaidBattlesBot.Handlers
           Description = "Создать голосование",
           //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
           HideUrl = true,
-          //ThumbUrl = "http://json.e2e2.ru/r/absol.png",
+          ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/raid_tut_raid.png").ToString(),
           InputMessageContent = new InputTextMessageContent
           {
             MessageText = fakePoll.GetMessageText(),

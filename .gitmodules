@@ -1,0 +1,3 @@
+[submodule "RaidBattlesBot/PogoAssets"]
+	path = RaidBattlesBot/PogoAssets
+	url = git@github.com:ZeChrales/PogoAssets.git

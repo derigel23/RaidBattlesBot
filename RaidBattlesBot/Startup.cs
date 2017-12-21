@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.FileProviders;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 
@@ -32,6 +31,12 @@ namespace RaidBattlesBot
 
       // Register configuration handlers
       Configure<BotConfiguration>(services, myConfiguration, "BotConfiguration");
+
+      services
+        .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
+        .AddScoped(x => x
+          .GetRequiredService<IUrlHelperFactory>()
+          .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
 
       services.AddMemoryCache();
       services.AddMvc().AddControllersAsServices();
@@ -57,11 +62,16 @@ namespace RaidBattlesBot
       if (env.IsDevelopment())
       {
         app.UseDeveloperExceptionPage();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+          FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "PogoAssets")),
+          RequestPath = "/assets",
+          OnPrepareResponse = context => context.Context.Response.Headers.Append("Cache-Control", "public,max-age=600")
+        });
       }
 
       app
         .UseRequestLocalization()
-        .UseStaticFiles()
         .UseMvc();
     }
 

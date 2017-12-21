@@ -1,8 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using RaidBattlesBot.Configuration;
 using Telegram.Bot;
 
 namespace RaidBattlesBot.Controllers
@@ -10,12 +8,12 @@ namespace RaidBattlesBot.Controllers
   public class StatusController : Controller
   {
     private readonly ITelegramBotClient myBot;
-    private readonly BotConfiguration myConfiguration;
+    private readonly IUrlHelper myUrlHelper;
 
-    public StatusController(ITelegramBotClient bot, IOptions<BotConfiguration> configuration)
+    public StatusController(ITelegramBotClient bot, IUrlHelper urlHelper)
     {
       myBot = bot;
-      myConfiguration = configuration.Value;
+      myUrlHelper = urlHelper;
     }
 
     [HttpGet("/status")]
@@ -23,7 +21,7 @@ namespace RaidBattlesBot.Controllers
     {
       var webhookInfo = await myBot.GetWebhookInfoAsync(cancellationToken);
       var botInfo = await myBot.GetMeAsync(cancellationToken);
-      return Json(new { botInfo, webhookInfo });
+      return Json(new { botInfo, webhookInfo, assetsRoot = myUrlHelper.AssetsContent("~") });
     }
 
     [HttpGet("/refresh")]

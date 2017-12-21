@@ -36,8 +36,8 @@ namespace RaidBattlesBot.Handlers
       if (callback[0] != "vote")
         return null;
       
-      if (!int.TryParse(callback.ElementAt(1), NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return null;
+      if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
+        return "Голование подготавливается. Повторите позже";
 
       var poll = await myContext
         .Polls
