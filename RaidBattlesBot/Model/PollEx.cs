@@ -29,12 +29,25 @@ namespace RaidBattlesBot.Model
 
     public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
     {
-      return poll.Title ?? poll.Raid?.GetDescription(mode);
+      return poll.Raid?.GetDescription(mode)?.ToString() ?? poll.Title;
+    }
+
+    public static StringBuilder GetDescription(this Poll poll, ParseMode mode = ParseMode.Default)
+    {
+      var description = poll.Raid?.GetDescription(mode) ?? new StringBuilder();
+      if (!string.IsNullOrEmpty(poll.Title))
+      {
+        if (description.Length > 0)
+          description.AppendLine();
+        description.Append(poll.Title);
+      }
+
+      return description;
     }
 
     public static string GetMessageText(this Poll poll)
     {
-      var text = new StringBuilder($"{poll.GetTitle(ParseMode.Markdown)}").AppendLine();
+      var text = poll.GetDescription(ParseMode.Markdown).AppendLine();
       if (poll.Cancelled)
       {
         text.AppendLine().AppendLine("*Отмена!*");

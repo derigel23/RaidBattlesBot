@@ -13,6 +13,6 @@ namespace RaidBattlesBot.Handlers
   public class UrlMessageEntityHandler : UrlLikeMessageEntityHandler
   {
     public UrlMessageEntityHandler(TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, Message message, ZonedClock clock, DateTimeZone timeZoneInfo, ITelegramBotClient bot, PokemonInfo pokemons, GymHelper gymHelper)
-      : base(telemetryClient, httpContextAccessor, message, (e, m) => m.Text.Substring(e.Offset, e.Length), clock, timeZoneInfo, bot, pokemons, gymHelper) { }
+      : base(telemetryClient, httpContextAccessor, message, (e, m) => m.Text.Substring(e.Offset, e.Length), clock, timeZoneInfo, pokemons, gymHelper) { }
   }
 }

@@ -12,17 +12,15 @@ namespace RaidBattlesBot.Handlers
   public class BotCommandMessageEntityHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
-    private readonly RaidService myRaidService;
     private readonly Message myMessage;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, RaidService raidService, Message message)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message)
     {
       myContext = context;
-      myRaidService = raidService;
       myMessage = message;
     }
 
-    public async Task<bool?> Handle(MessageEntity entity, Raid raid = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       var command = myMessage.Text.Substring(entity.Offset, entity.Length);
       switch (command)
@@ -30,19 +28,24 @@ namespace RaidBattlesBot.Handlers
         case var _ when command.StartsWith("/new"):
           var title = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
           if (string.IsNullOrEmpty(title)) return false;
-          return await myRaidService.AddPoll(title, new PollMessage(myMessage), cancellationToken);
+          pollMessage.Poll = new Poll(myMessage)
+          {
+            Title = title
+          };
+          return true;
 
         case var _ when command.StartsWith("/poll"):
           if (!int.TryParse(myMessage.Text.Substring(entity.Offset + entity.Length).Trim(), out var pollId))
             return false;
-          var poll = await myContext.Polls
+          var existingPoll = await myContext.Polls
             .Where(_ => _.Id == pollId)
             .Include(_ => _.Raid)
             .Include(_ => _.Votes)
             .FirstOrDefaultAsync(cancellationToken);
-          if (poll == null)
+          if (existingPoll == null)
             return false;
-          return await myRaidService.AddPollMessage(new PollMessage(myMessage) { Poll = poll }, cancellationToken);
+          pollMessage.Poll = existingPoll;
+          return true;
       }
 
       return null;

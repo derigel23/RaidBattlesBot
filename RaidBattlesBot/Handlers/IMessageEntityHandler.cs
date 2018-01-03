@@ -6,17 +6,17 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  public interface IMessageEntityHandler : IHandler<MessageEntity, Raid, bool?>
+  public interface IMessageEntityHandler : IHandler<MessageEntity, PollMessage, bool?>
   {
     
   }
 
   [MeansImplicitUse]
-  public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntity, Raid>
+  public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntity, PollMessage>
   {
     public MessageEntityType EntityType { get; set; }
 
-    public bool ShouldProcess(MessageEntity messageEntity, Raid raid)
+    public bool ShouldProcess(MessageEntity messageEntity, PollMessage pollMessage)
     {
       return messageEntity.Type == EntityType;
     }

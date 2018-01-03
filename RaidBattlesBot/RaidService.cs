@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot
@@ -43,22 +41,21 @@ namespace RaidBattlesBot
 
     public async Task<bool> AddPoll(string text, PollMessage message, CancellationToken cancellationToken = default)
     {
-      var poll = new Poll
+      message.Poll = new Poll
       {
         Title = text,
-        Owner = message.UserId,
-        Messages = new List<PollMessage>(1) { message }
+        Owner = message.UserId
       };
-
-      myContext.Attach(poll);
-      await myContext.SaveChangesAsync(cancellationToken);
 
       return await AddPollMessage(message, cancellationToken);
     }
 
+
     public async Task<bool> AddPollMessage(PollMessage message, CancellationToken cancellationToken = default )
     {
       myContext.Attach(message);
+      if (await myContext.SaveChangesAsync(cancellationToken) == 0)
+        return false; //nothing changed
 
       var messageText = message.Poll.GetMessageText();
       if (message.InlineMesssageId == null)

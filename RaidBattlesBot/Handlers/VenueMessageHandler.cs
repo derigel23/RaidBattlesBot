@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.VenueMessage)]
   public class VenueMessageHandler : IMessageHandler
   {
-    public async Task<bool?> Handle(Message venueMessage, Raid raid = default , CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Message venueMessage, PollMessage pollMessage = default , CancellationToken cancellationToken = default)
     {
       return null;
     }

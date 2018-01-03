@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.LocationMessage)]
   public class LocationMessageHandler : IMessageHandler
   {
-    public async Task<bool?> Handle(Message message, Raid raid = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Message message, PollMessage pollMessage = default, CancellationToken cancellationToken = default)
     {
       return null;
     }

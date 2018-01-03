@@ -13,7 +13,6 @@ using NodaTime;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -25,26 +24,24 @@ namespace RaidBattlesBot.Handlers
     private readonly Func<MessageEntity, Message, string> myGetUrl;
     private readonly ZonedClock myClock;
     private readonly DateTimeZone myTimeZoneInfo;
-    private readonly ITelegramBotClient myBot;
     private readonly PokemonInfo myPokemons;
     private readonly GymHelper myGymHelper;
     private readonly TelemetryClient myTelemetryClient;
     private readonly IHttpContextAccessor myHttpContextAccessor;
 
-    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, Message message, Func<MessageEntity, Message, string> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, ITelegramBotClient bot, PokemonInfo pokemons, GymHelper gymHelper)
+    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, Message message, Func<MessageEntity, Message, string> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
     {
       myMessage = message;
       myGetUrl = getUrl;
       myClock = clock;
       myTimeZoneInfo = timeZoneInfo;
-      myBot = bot;
       myPokemons = pokemons;
       myGymHelper = gymHelper;
       myTelemetryClient = telemetryClient;
       myHttpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<bool?> Handle(MessageEntity entity, Raid raid, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default(CancellationToken))
     {
       var url = myGetUrl(entity, myMessage);
       using (var httpClient = new HttpClient())
@@ -77,6 +74,8 @@ namespace RaidBattlesBot.Handlers
             (GetGoogleLocation(requestUri, "/maps/search", 3, out lat, out lon) ||
              GetGoogleLocation(requestUri, "/maps/place", 4, out lat, out lon)))
         {
+          var poll = pollMessage.Poll = new Poll(myMessage);
+          var raid = poll.Raid = new Raid();
           raid.Lon = lon;
           raid.Lat = lat;
           var title = new StringBuilder();

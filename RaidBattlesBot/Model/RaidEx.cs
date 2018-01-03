@@ -5,7 +5,7 @@ namespace RaidBattlesBot.Model
 {
   public static class RaidEx
   {
-    public static string GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
+    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
     {
       switch (mode)
       {
@@ -18,10 +18,10 @@ namespace RaidBattlesBot.Model
 
           descritpion.Append($"{raid.Name}");
 
-          return descritpion.ToString();
+          return descritpion;
 
         default:
-          return raid.Title ?? $"Raid {raid.Id}";
+          return new StringBuilder(raid.Title ?? $"Raid {raid.Id}");
       }
     }
   }

@@ -79,12 +79,12 @@ namespace RaidBattlesBot.Controllers
         HttpContext.Items["messageType"] = message.Type.ToString();
         HttpContext.Items["chat"] = message.Chat.Username;
 
-        var raid = new Raid();
-        var result = await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, raid, cancellationToken);
-        if (result.GetValueOrDefault())
+        var pollMessage = new PollMessage(message);
+        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)).GetValueOrDefault())
         {
-          await myRaidService.AddRaid(raid, new PollMessage(message), cancellationToken);
-        }
+          await myRaidService.AddPollMessage(pollMessage, cancellationToken);
+        };
+
         return Ok() /* TODO: not handled */;
 
       }

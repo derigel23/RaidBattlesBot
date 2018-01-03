@@ -6,6 +6,13 @@ namespace RaidBattlesBot.Model
 {
   public class Poll : ITrackable
   {
+    public Poll() {  }
+
+    public Poll(Message message)
+    {
+      Owner = message.From.Id;
+    }
+
     public int Id { get; set; }
     public int? RaidId { get; set; }
     public int? Owner { get; set; }

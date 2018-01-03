@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.StickerMessage)]
   public class StickerMessageHandler : IMessageHandler
   {
-    public async Task<bool?> Handle(Message data, Raid raid = default, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Message data, PollMessage pollMessage = default, CancellationToken cancellationToken = default)
     {
       return null;
     }
