@@ -181,7 +181,6 @@ namespace RaidBattlesBot.Handlers
                 title.Append("\u2009").Append(ivMatch.Value).Append('%');
               }
             }
-            raid.Pokemon = myPokemons.GetPokemonNumber(raid.Name);
 
             if (ParseTimePattern(messageText, ourPoketrackEndTimeDetector, out var dateTime))
             {
@@ -234,6 +233,8 @@ namespace RaidBattlesBot.Handlers
               raid.Move2 = move2Match.Value;
             }
           }
+
+          raid.Pokemon = myPokemons.GetPokemonNumber(raid.Name);
 
           if (raid.EndTime.HasValue)
           {

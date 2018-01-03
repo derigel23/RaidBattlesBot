@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -25,6 +27,28 @@ namespace RaidBattlesBot.Model
       var number = grouping.Count();
       var countStr = number == 1 ? grouping.Key.Item1 : grouping.Key.Item2;
       return $"{number} {countStr}:";
+    }
+
+    public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
+    {
+      var pokemonId = poll.Raid?.Pokemon;
+      if (pokemonId != null)
+        return urlHelper.AssetsContent($"decrypted_assets/pokemon_icon_{pokemonId:D3}_00.png");
+
+      var raidRaidBossLevel = poll.Raid?.RaidBossLevel;
+      switch (raidRaidBossLevel)
+      {
+        case 1:
+        case 2:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_normal.png");
+        case 3:
+        case 4:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_rare.png");
+        case 5:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_legendary.png");
+      }
+
+      return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
     }
 
     public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)

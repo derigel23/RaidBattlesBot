@@ -42,7 +42,7 @@ namespace RaidBattlesBot.Handlers
           Description = "Создать голосование",
           //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
           HideUrl = true,
-          ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/raid_tut_raid.png").ToString(),
+          ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent
           {
             MessageText = fakePoll.GetMessageText(),

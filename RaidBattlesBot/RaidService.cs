@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -23,20 +22,6 @@ namespace RaidBattlesBot
       myBot = bot;
       myTelemetryClient = telemetryClient;
       myHttpContextAccessor = httpContextAccessor;
-    }
-
-    public async Task<bool> AddRaid(Raid raid, PollMessage message, CancellationToken cancellationToken = default)
-    {
-      (raid.Polls ?? (raid.Polls = new List<Poll>(1))).Add(new Poll
-      {
-        Owner = message.UserId,
-        Messages = new List<PollMessage>(1) { message }
-      });
-
-      myContext.Attach(raid);
-      await myContext.SaveChangesAsync(cancellationToken);
-
-      return await AddPollMessage(message, cancellationToken);
     }
 
     public async Task<bool> AddPoll(string text, PollMessage message, CancellationToken cancellationToken = default)
