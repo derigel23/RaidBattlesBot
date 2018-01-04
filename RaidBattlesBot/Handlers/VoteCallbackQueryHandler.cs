@@ -30,14 +30,14 @@ namespace RaidBattlesBot.Handlers
       { VoteEnum.Cancel, "Вы передумали" },
     };
 
-    public async Task<string> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
       if (callback[0] != "vote")
-        return null;
+        return (null, false);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return "Голование подготавливается. Повторите позже";
+        return ("Голование подготавливается. Повторите позже", true);
 
       var poll = await myContext
         .Polls
@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return "Голосование не найдено";
+        return ("Голосование не найдено", true);
 
       var user = data.From;
 
@@ -82,7 +82,7 @@ namespace RaidBattlesBot.Handlers
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return changed ? ourResponse.TryGetValue(vote.Team, out var response ) ?  response : "Вы проголосовали" : "Вы уже проголосовали";
+      return (changed ? ourResponse.TryGetValue(vote.Team, out var response ) ?  response : "Вы проголосовали" : "Вы уже проголосовали", false);
     }
   }
 }

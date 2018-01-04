@@ -59,6 +59,12 @@ namespace RaidBattlesBot.Model
     public static StringBuilder GetDescription(this Poll poll, ParseMode mode = ParseMode.Default)
     {
       var description = poll.Raid?.GetDescription(mode) ?? new StringBuilder();
+      if (poll.Time != null)
+      {
+        if (description.Length > 0)
+          description.Append(" ∙ ");
+        description.Append($"{poll.Time:t}");
+      }
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)

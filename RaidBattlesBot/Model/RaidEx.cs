@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
@@ -23,6 +24,16 @@ namespace RaidBattlesBot.Model
         default:
           return new StringBuilder(raid.Title ?? $"Raid {raid.Id}");
       }
+    }
+
+    public static DateTimeOffset? RaidBossEndTime(this Raid raid)
+    {
+      if ((raid.RaidBossLevel != null) && (raid.Pokemon == null)) // egg
+      {
+        return raid.EndTime?.Add(TimeSpan.FromMinutes(45)); // boss lifetime
+      }
+
+      return raid.EndTime;
     }
   }
 }

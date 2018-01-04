@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  public interface ICallbackQueryHandler : IHandler<CallbackQuery, object, string>
+  public interface ICallbackQueryHandler : IHandler<CallbackQuery, object, (string text, bool showAlert)>
   {
     
   }

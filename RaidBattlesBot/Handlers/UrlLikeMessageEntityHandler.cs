@@ -236,8 +236,11 @@ namespace RaidBattlesBot.Handlers
 
           raid.Pokemon = myPokemons.GetPokemonNumber(raid.Name);
 
-          if (raid.EndTime.HasValue)
+          if (raid.EndTime != null)
           {
+            poll.Time = raid.RaidBossEndTime()? // adjustemnts
+              .Subtract(TimeSpan.FromMinutes(15)) // default offset to the end
+              .Floor(TimeSpan.FromMinutes(5)); // rounding
             title
               .Append($" ∙ {raid.EndTime:t}");
           }

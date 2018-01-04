@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -28,10 +29,14 @@ namespace RaidBattlesBot.Model
       var length = inlineKeyboardButtons.GetLength(0);
       var pollMessageReplyMarkup = new InlineKeyboardButton[length + 1][];
       Array.Copy(inlineKeyboardButtons, pollMessageReplyMarkup, length);
-      pollMessageReplyMarkup[length] = new InlineKeyboardButton[]
+      var additionalKeyboardButtons = new List<InlineKeyboardButton>();
+      if (message.Poll.Time != null)
       {
-        new InlineKeyboardCallbackButton("Отменить", $"cancel:{message.GetPollId()}"),
-      };
+        additionalKeyboardButtons.Add(new InlineKeyboardCallbackButton("5' раньше", $"adjust:{message.GetPollId()}:-5"));
+        additionalKeyboardButtons.Add(new InlineKeyboardCallbackButton("5' позже", $"adjust:{message.GetPollId()}:5"));
+      }
+      additionalKeyboardButtons.Add(new InlineKeyboardCallbackButton("Отменить", $"cancel:{message.GetPollId()}"));
+      pollMessageReplyMarkup[length] = additionalKeyboardButtons.ToArray();
       return new InlineKeyboardMarkup(pollMessageReplyMarkup);
     }
 

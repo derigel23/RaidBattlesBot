@@ -20,14 +20,14 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
     }
 
-    public async Task<string> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
       if (callback[0] != "cancel")
-        return null;
+        return (null, false);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return "Голование подготавливается. Повторите позже";
+        return ("Голование подготавливается. Повторите позже", true);
 
       var poll = await myContext
         .Polls
@@ -38,12 +38,12 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return "Голосование не найдено";
+        return ("Голосование не найдено", true);
 
       var user = data.From;
 
       if (poll.Owner != user.Id)
-        return "Вы не можете отменить голосование";
+        return ("Вы не можете отменить голосование", true);
 
       poll.Cancelled = true;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Handlers
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return changed ? "Голосование отменено" : "Голование уже отменено";
+      return (changed ? "Голосование отменено" : "Голование уже отменено", false);
     }
   }
 }

@@ -8,13 +8,13 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "restore")]
-  public class RestoreCallbackQueryHandler : ICallbackQueryHandler
+  [CallbackQueryHandler(DataPrefix = "adjust")]
+  public class AdjustCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
 
-    public RestoreCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
+    public AdjustCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
     {
       myContext = context;
       myRaidService = raidService;
@@ -23,11 +23,14 @@ namespace RaidBattlesBot.Handlers
     public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "restore")
+      if (callback[0] != "adjust")
         return (null, false);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
         return ("Голование подготавливается. Повторите позже", true);
+
+      if (!int.TryParse(callback.ElementAtOrDefault(2) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var offset))
+        return ("", false);
 
       var poll = await myContext
         .Polls
@@ -43,16 +46,19 @@ namespace RaidBattlesBot.Handlers
       var user = data.From;
 
       if (poll.Owner != user.Id)
-        return ("Вы не можете возобновить голосование", true);
+        return ("Вы не можете редактировать голосование", true);
 
-      poll.Cancelled = false;
+      poll.Time = poll.Time?.AddMinutes(offset);
+      if (poll.Time > poll.Raid?.RaidBossEndTime())
+        return ($"В {poll.Time:t} рейд уже закончится", true);
+
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, cancellationToken);
       }
 
-      return (changed ? "Голосование возобновлено" : "Голование уже возобновлено", false);
+      return ($"Голосование установлено на {poll.Time:t}", false);
     }
   }
 }
