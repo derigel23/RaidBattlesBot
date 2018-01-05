@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -39,6 +41,20 @@ namespace RaidBattlesBot
 
     public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
+      if (message.Poll.Raid is Raid raid)
+      {
+        if (raid.Id == 0)
+        {
+          var existingRaid = await myContext.Raids
+            .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat && _.EndTime == raid.EndTime)
+            .FirstOrDefaultAsync(cancellationToken);
+          if (existingRaid != null)
+          {
+            message.Poll.Raid = existingRaid;
+          }
+        }
+      }
+
       myContext.Attach(message);
       if (await myContext.SaveChangesAsync(cancellationToken) == 0)
         return false; //nothing changed
