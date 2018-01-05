@@ -1,28 +1,52 @@
 ﻿using System;
+using System.IO;
 using System.Text;
+using Markdig;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class RaidEx
   {
+    public const string Delimeter = " ∙ ";
+
     public static StringBuilder GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
     {
+      var description = new StringBuilder();
+      if (raid.RaidBossLevel.HasValue)
+      {
+        description.Append($@"\[R{raid.RaidBossLevel}] ");
+      }
+
+      description.Append($"{raid.Name}");
+
+      if ((raid.Gym ?? raid.PossibleGym) != null)
+      {
+        description.Append(Delimeter).Append(raid.Gym ?? raid.PossibleGym);
+      }
+      else if (raid.NearByAddress != null)
+      {
+        description.Append(Delimeter).Append(raid.NearByAddress);
+      }
+
       switch (mode)
       {
         case ParseMode.Markdown:
-          var descritpion = new StringBuilder();
-          if (raid.RaidBossLevel.HasValue)
+          return description;
+
+        case ParseMode.Html:
+          using (var output = new StringWriter())
           {
-            descritpion.Append($"[[R{raid.RaidBossLevel}]] ");
+            Markdown.ToHtml(description.ToString(), output);
+            return output.GetStringBuilder();
           }
 
-          descritpion.Append($"{raid.Name}");
-
-          return descritpion;
-
         default:
-          return new StringBuilder(raid.Title ?? $"Raid {raid.Id}");
+          using (var output = new StringWriter())
+          {
+            Markdown.ToPlainText(description.ToString(), output);
+            return output.GetStringBuilder();
+          }
       }
     }
 

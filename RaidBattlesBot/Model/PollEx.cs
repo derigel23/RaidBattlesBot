@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Markdig.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
@@ -51,20 +52,32 @@ namespace RaidBattlesBot.Model
       return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
     }
 
+    private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode = ParseMode.Default)
+    {
+      var result = poll.Raid?.GetDescription(mode) ?? new StringBuilder();
+      if (poll.Time != null)
+      {
+        var insertPos = result.ToString().IndexOf(RaidEx.Delimeter, StringComparison.Ordinal) is var pos && pos >= 0 ? pos : result.Length;
+        result.Insert(insertPos, $"{RaidEx.Delimeter}{poll.Time:t}");
+      }
+
+      return result;
+    }
+
     public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
     {
-      return poll.Raid?.GetDescription(mode)?.ToString() ?? poll.Title;
+      var title = poll.GetTitleBase(mode);
+      if (title.Length == 0)
+      {
+        return poll.Title;
+      }
+
+      return title.ToString();
     }
 
     public static StringBuilder GetDescription(this Poll poll, ParseMode mode = ParseMode.Default)
     {
-      var description = poll.Raid?.GetDescription(mode) ?? new StringBuilder();
-      if (poll.Time != null)
-      {
-        if (description.Length > 0)
-          description.Append(" ∙ ");
-        description.Append($"{poll.Time:t}");
-      }
+      var description = poll.GetTitleBase(mode);
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
