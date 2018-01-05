@@ -23,11 +23,11 @@ namespace RaidBattlesBot.Handlers
 
     private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
     {
-      { VoteEnum.Valor, "Вы проголосовали за Valor" },
-      { VoteEnum.Instinct, "Вы проголосовали за Instinct" },
-      { VoteEnum.Mystic, "Вы проголосовали за Mystic" },
-      { VoteEnum.MayBe, "Вы дуамете" },
-      { VoteEnum.Cancel, "Вы передумали" },
+      { VoteEnum.Valor, "Вы проголосовали как Valor" },
+      { VoteEnum.Instinct, "Вы проголосовали как Instinct" },
+      { VoteEnum.Mystic, "Вы проголосовали как Mystic" },
+      { VoteEnum.MayBe, "Вы ещё не решили..." },
+      { VoteEnum.Cancel, "Вы передумали!" },
     };
 
     public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
