@@ -276,6 +276,7 @@ namespace RaidBattlesBot.Handlers
           await myGymHelper.ProcessGym(raid, description, cancellationToken: cancellationToken);
 
           raid.Title = title.ToString();
+          raid.Description = description.ToString();
 
           return true;
         }
