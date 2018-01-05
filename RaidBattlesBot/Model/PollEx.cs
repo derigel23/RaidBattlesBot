@@ -121,7 +121,7 @@ namespace RaidBattlesBot.Model
         }
       }
 
-      return text.Append("\x200B").ToString();
+      return text.Append($"[\x200B]({urlHelper.Page("/Raid", null, new { raidId = poll.Raid()?.Id }, protocol: "https")})").ToString();
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
