@@ -57,7 +57,7 @@ namespace RaidBattlesBot
             raid = message.Poll.Raid = existingRaid;
           }
 
-          if (raid.EggRaid == null) // check for egg raid
+          if ((raid.Pokemon != null) && (raid.EggRaid == null)) // check for egg raid
           {
             var eggRaid = await sameRaids
             .Where(_ =>  _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
@@ -68,7 +68,7 @@ namespace RaidBattlesBot
             .ThenInclude(_ => _.Votes)
             .DecompileAsync()
             .FirstOrDefaultAsync(cancellationToken);
-            if (eggRaid != null)
+            if ((eggRaid != null) && (raid.Id != eggRaid.Id))
             {
               raid.EggRaid = eggRaid;
             }
