@@ -19,7 +19,7 @@
   <meta property="og:description" content="@StringEx.JoinNonEmpty(Environment.NewLine,
                                              StringEx.JoinNonEmpty(" / ", raid.Move1, raid.Move2),
                                              StringEx.JoinNonEmpty(Environment.NewLine, raid.Gym ?? raid.PossibleGym, raid.Description))" />
-  <meta property="og:site_name" content="@($"Рейд до {raid.RaidBossEndTime():t}")" />
+  <meta property="og:site_name" content="@($"Рейд до {raid.RaidBossEndTime:t}")" />
   <meta property="og:image" content="@raid.GetThumbUrl(Url)" />
   <script src="https://api-maps.yandex.ru/2.1/?lang=@System.Globalization.CultureInfo.CurrentCulture.Name" type="text/javascript"></script>
   <script type="text/javascript">
@@ -42,7 +42,7 @@
       {
         hintContent: '@raid.Title',
         balloonContentHeader: "@raid.Title",
-        balloonContentBody: '@(raid.Gym ?? raid.PossibleGym ?? raid.NearByAddress)'
+        balloonContentBody: '@StringEx.JoinNonEmpty(RaidEx.Delimeter, raid.Gym ?? raid.PossibleGym, raid.Description)'
       });
 
       myMap.geoObjects.add(myPlacemark);

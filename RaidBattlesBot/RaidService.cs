@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DelegateDecompiler.EntityFramework;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,19 +46,46 @@ namespace RaidBattlesBot
       {
         if (raid.Id == 0)
         {
-          var existingRaid = await myContext.Raids
-            .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat && _.EndTime == raid.EndTime)
+          var sameRaids = myContext.Raids
+            .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
+          var existingRaid = await sameRaids
+            .Where(_ => _.EndTime == raid.EndTime)
+            .Include(_ => _.EggRaid)
             .FirstOrDefaultAsync(cancellationToken);
           if (existingRaid != null)
           {
-            message.Poll.Raid = existingRaid;
+            raid = message.Poll.Raid = existingRaid;
+          }
+
+          if (raid.EggRaid == null) // check for egg raid
+          {
+            var eggRaid = await sameRaids
+            .Where(_ =>  _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
+            .Include(_ => _.PostEggRaid)
+            .Include(_ => _.Polls)
+            .ThenInclude(_ => _.Messages)
+            .Include(_ => _.Polls)
+            .ThenInclude(_ => _.Votes)
+            .DecompileAsync()
+            .FirstOrDefaultAsync(cancellationToken);
+            if (eggRaid != null)
+            {
+              raid.EggRaid = eggRaid;
+            }
           }
         }
       }
 
-      myContext.Attach(message);
-      if (await myContext.SaveChangesAsync(cancellationToken) == 0)
-        return false; //nothing changed
+      var messageEntity = myContext.Attach(message);
+      await myContext.SaveChangesAsync(cancellationToken);
+
+      if (message.Poll?.Raid?.EggRaid is Raid eggRaidToUpdate)
+      {
+        foreach (var poll in eggRaidToUpdate.Polls ?? Enumerable.Empty<Poll>())
+        {
+          await UpdatePoll(poll, urlHelper, cancellationToken);
+        }
+      }
 
       var messageText = message.Poll.GetMessageText(urlHelper);
       if (message.InlineMesssageId == null)

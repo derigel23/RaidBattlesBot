@@ -20,6 +20,7 @@ namespace RaidBattlesBot.Model
       var raidEntity = modelBuilder.Entity<Raid>();
       raidEntity.HasKey(raid => raid.Id);
       raidEntity.HasMany(raid => raid.Polls).WithOne(poll => poll.Raid).HasForeignKey(poll => poll.RaidId);
+      raidEntity.HasOne(raid => raid.EggRaid).WithOne(raid => raid.PostEggRaid).HasForeignKey<Raid>(raid => raid.EggRaidId);
       raidEntity.Property(p => p.Lat).HasColumnType("decimal(18,15)");
       raidEntity.Property(p => p.Lon).HasColumnType("decimal(18,15)");
 

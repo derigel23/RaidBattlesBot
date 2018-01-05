@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Markdig.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -32,12 +32,12 @@ namespace RaidBattlesBot.Model
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
     {
-      return  poll.Raid.GetThumbUrl(urlHelper);
+      return  poll.Raid().GetThumbUrl(urlHelper);
     }
 
     private static StringBuilder GetTitleBase(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var result = poll.Raid?.GetDescription(urlHelper, mode) ?? new StringBuilder();
+      var result = poll.Raid()?.GetDescription(urlHelper, mode) ?? new StringBuilder();
       if (poll.Time != null)
       {
         var insertPos = result.ToString().IndexOf(RaidEx.Delimeter, StringComparison.Ordinal) is var pos && pos >= 0 ? pos : result.Length;
@@ -71,11 +71,12 @@ namespace RaidBattlesBot.Model
       {
         case ParseMode.Html:
         case ParseMode.Markdown:
-          if (poll.Raid?.Lat != null && poll.Raid?.Lon != null)
+          var raid = poll.Raid();
+          if (raid?.Lat != null && raid?.Lon != null)
           {
             description
               .Append(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter)
-              .Append($"[Карта]({urlHelper.Page("/Raid", null, new { raidId = poll.Raid.Id }, protocol: "https")})");
+              .Append($"[Карта]({urlHelper.Page("/Raid", null, new { raidId = raid.Id }, protocol: "https")})");
           }
           break;
       }
@@ -120,12 +121,7 @@ namespace RaidBattlesBot.Model
         }
       }
 
-      if (poll.Raid?.Lat != null && poll.Raid?.Lon != null)
-      {
-        text.Append($"[\x200B]({urlHelper.Page("/raid", null, new { raidId = poll.Raid.Id }, protocol: "https")})");
-      }
-
-      return text.ToString();
+      return text.Append("\x200B").ToString();
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
@@ -150,6 +146,20 @@ namespace RaidBattlesBot.Model
           new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
         }
       });
+    }
+
+    public static IQueryable<Poll> IncludeRelatedData(this IQueryable<Poll> polls)
+    {
+      return polls
+        .Include(_ => _.Votes)
+        .Include(_ => _.Messages)
+        .Include(_ => _.Raid)
+        .ThenInclude(raid => raid.PostEggRaid);
+    }
+
+    public static Raid Raid(this Poll poll)
+    {
+      return poll.Raid?.PostEggRaid ?? poll.Raid;
     }
   }
 }

@@ -38,9 +38,7 @@ namespace RaidBattlesBot.Handlers
       var poll = await myContext
         .Polls
         .Where(_ => _.Id == pollId)
-        .Include(_ => _.Votes)
-        .Include(_ => _.Messages)
-        .Include(_ => _.Raid)
+        .IncludeRelatedData()
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
@@ -52,7 +50,7 @@ namespace RaidBattlesBot.Handlers
         return ("Вы не можете редактировать голосование", true);
 
       poll.Time = poll.Time?.AddMinutes(offset);
-      if (poll.Time > poll.Raid?.RaidBossEndTime())
+      if (poll.Time > poll.Raid?.RaidBossEndTime)
         return ($"В {poll.Time:t} рейд уже закончится", true);
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;

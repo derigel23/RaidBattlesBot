@@ -39,8 +39,7 @@ namespace RaidBattlesBot.Handlers
             return false;
           var existingPoll = await myContext.Polls
             .Where(_ => _.Id == pollId)
-            .Include(_ => _.Raid)
-            .Include(_ => _.Votes)
+            .IncludeRelatedData()
             .FirstOrDefaultAsync(cancellationToken);
           if (existingPoll == null)
             return false;

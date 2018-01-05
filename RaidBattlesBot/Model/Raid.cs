@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using DelegateDecompiler;
 
 namespace RaidBattlesBot.Model
 {
@@ -26,5 +28,23 @@ namespace RaidBattlesBot.Model
       public DateTimeOffset? Modified { get; set; }
 
       public List<Poll> Polls { get; set; }
+
+      [Computed, NotMapped]
+      public DateTimeOffset? RaidBossEndTime
+      {
+        get
+        {
+          if ((RaidBossLevel != null) && (Pokemon == null)) // egg
+          {
+            return EndTime?.Add(TimeSpan.FromMinutes(45)); // boss lifetime
+          }
+
+          return EndTime;
+        }
+      }
+
+      public int? EggRaidId { get; set; }
+      public Raid EggRaid { get; set; }
+      public Raid PostEggRaid { get; set; }
     }
 }

@@ -56,16 +56,6 @@ namespace RaidBattlesBot.Model
       }
     }
 
-    public static DateTimeOffset? RaidBossEndTime(this Raid raid)
-    {
-      if ((raid.RaidBossLevel != null) && (raid.Pokemon == null)) // egg
-      {
-        return raid.EndTime?.Add(TimeSpan.FromMinutes(45)); // boss lifetime
-      }
-
-      return raid.EndTime;
-    }
-
     public static Uri GetThumbUrl([CanBeNull] this Raid raid, IUrlHelper urlHelper)
     {
       var pokemonId = raid?.Pokemon;
