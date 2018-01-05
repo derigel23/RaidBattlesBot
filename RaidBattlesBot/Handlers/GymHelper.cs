@@ -52,10 +52,10 @@ namespace RaidBattlesBot.Handlers
         myHttpContextAccessor.HttpContext.Items["park"] = park = foundGymInfo.park;
       }
 
-      if (!string.IsNullOrEmpty(gym))
-      {
-        description.Append(gym);
-      }
+      //if (!string.IsNullOrEmpty(gym))
+      //{
+      //  description.Append(gym);
+      //}
 
       //var geoCode = await myGeoCoder.Decode(lon, lat, cancellationToken: cancellationToken,
       //    parameters: new Dictionary<string, string>

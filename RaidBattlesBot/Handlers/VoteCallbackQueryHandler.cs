@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -14,11 +15,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
+    private readonly IUrlHelper myUrlHelper;
 
-    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService)
+    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper)
     {
       myContext = context;
       myRaidService = raidService;
+      myUrlHelper = urlHelper;
     }
 
     private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
@@ -79,7 +82,7 @@ namespace RaidBattlesBot.Handlers
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
-        await myRaidService.UpdatePoll(poll, cancellationToken);
+        await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
       }
 
       return (changed ? ourResponse.TryGetValue(vote.Team, out var response ) ?  response : "Вы проголосовали" : "Вы уже проголосовали", false);

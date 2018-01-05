@@ -82,7 +82,7 @@ namespace RaidBattlesBot.Controllers
         var pollMessage = new PollMessage(message);
         if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)).GetValueOrDefault())
         {
-          await myRaidService.AddPollMessage(pollMessage, cancellationToken);
+          await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
         };
 
         return Ok() /* TODO: not handled */;

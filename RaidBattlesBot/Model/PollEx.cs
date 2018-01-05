@@ -32,29 +32,12 @@ namespace RaidBattlesBot.Model
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
     {
-      var pokemonId = poll.Raid?.Pokemon;
-      if (pokemonId != null)
-        return urlHelper.AssetsContent($"decrypted_assets/pokemon_icon_{pokemonId:D3}_00.png");
-
-      var raidRaidBossLevel = poll.Raid?.RaidBossLevel;
-      switch (raidRaidBossLevel)
-      {
-        case 1:
-        case 2:
-          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_normal.png");
-        case 3:
-        case 4:
-          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_rare.png");
-        case 5:
-          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_legendary.png");
-      }
-
-      return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
+      return  poll.Raid.GetThumbUrl(urlHelper);
     }
 
-    private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode = ParseMode.Default)
+    private static StringBuilder GetTitleBase(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var result = poll.Raid?.GetDescription(mode) ?? new StringBuilder();
+      var result = poll.Raid?.GetDescription(urlHelper, mode) ?? new StringBuilder();
       if (poll.Time != null)
       {
         var insertPos = result.ToString().IndexOf(RaidEx.Delimeter, StringComparison.Ordinal) is var pos && pos >= 0 ? pos : result.Length;
@@ -64,9 +47,9 @@ namespace RaidBattlesBot.Model
       return result;
     }
 
-    public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
+    public static string GetTitle(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var title = poll.GetTitleBase(mode);
+      var title = poll.GetTitleBase(urlHelper, mode);
       if (title.Length == 0)
       {
         return poll.Title;
@@ -75,26 +58,40 @@ namespace RaidBattlesBot.Model
       return title.ToString();
     }
 
-    public static StringBuilder GetDescription(this Poll poll, ParseMode mode = ParseMode.Default)
+    public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var description = poll.GetTitleBase(mode);
+      var description = poll.GetTitleBase(urlHelper, mode);
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
           description.AppendLine();
         description.Append(poll.Title);
       }
+      switch (mode)
+      {
+        case ParseMode.Html:
+        case ParseMode.Markdown:
+          if (poll.Raid?.Lat != null && poll.Raid?.Lon != null)
+          {
+            description
+              .Append(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter)
+              .Append($"[Карта]({urlHelper.Page("/Raid", null, new { raidId = poll.Raid.Id }, protocol: "https")})");
+          }
+          break;
+      }
 
       return description;
     }
 
-    public static string GetMessageText(this Poll poll)
+    public static string GetMessageText(this Poll poll, IUrlHelper urlHelper)
     {
-      var text = poll.GetDescription(ParseMode.Markdown).AppendLine();
+      var text = poll.GetDescription(urlHelper, ParseMode.Markdown).AppendLine();
+      
       if (poll.Cancelled)
       {
         text.AppendLine().AppendLine("*Отмена!*");
       }
+
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
         .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value))
       {
@@ -123,8 +120,11 @@ namespace RaidBattlesBot.Model
         }
       }
 
-      text.AppendLine();
-      //text.AppendLine("[link2](http://json.e2e2.ru/?lat=55.762982&lon=37.537352&b=Ninetales&t=19:20)");
+      if (poll.Raid?.Lat != null && poll.Raid?.Lon != null)
+      {
+        text.Append($"[\x200B]({urlHelper.Page("/raid", null, new { raidId = poll.Raid.Id }, protocol: "https")})");
+      }
+
       return text.ToString();
     }
 

@@ -1,0 +1,59 @@
+﻿@page "{raidId:int}"
+@using System.Globalization
+@using RaidBattlesBot
+@using RaidBattlesBot.Model
+@model RaidBattlesBot.Pages.RaidModel
+@{
+    Layout = null;
+    var raid = Model.Raid;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>@StringEx.JoinNonEmpty(RaidEx.Delimeter, raid.Title, raid.Gym ?? raid.PossibleGym ?? raid.NearByAddress)</title>
+  <meta property="og:title" content="@raid.Title" />
+  <meta property="og:description" content="@StringEx.JoinNonEmpty(Environment.NewLine,
+                                             StringEx.JoinNonEmpty(" / ", raid.Move1, raid.Move2),
+                                             StringEx.JoinNonEmpty(Environment.NewLine, raid.Gym ?? raid.PossibleGym, raid.Description))" />
+  <meta property="og:site_name" content="@($"Рейд до {raid.RaidBossEndTime():t}")" />
+  <meta property="og:image" content="@raid.GetThumbUrl(Url)" />
+  <script src="https://api-maps.yandex.ru/2.1/?lang=@System.Globalization.CultureInfo.CurrentCulture.Name" type="text/javascript"></script>
+  <script type="text/javascript">
+    ymaps.ready(init);
+    var myMap,
+      myPlacemark;
+
+    function init() {
+      myMap = new ymaps.Map("map",
+        {
+          center: [@raid.Lat?.ToString(CultureInfo.InvariantCulture), @raid.Lon?.ToString(CultureInfo.InvariantCulture)],
+          zoom: 17,
+          controls: ['zoomControl', 'geolocationControl']
+        },
+        {
+          balloonPanelMaxMapArea: Infinity
+        });
+
+      myPlacemark = new ymaps.Placemark([@raid.Lat?.ToString(CultureInfo.InvariantCulture), @raid.Lon?.ToString(CultureInfo.InvariantCulture)],
+      {
+        hintContent: '@raid.Title',
+        balloonContentHeader: "@raid.Title",
+        balloonContentBody: '@(raid.Gym ?? raid.PossibleGym ?? raid.NearByAddress)'
+      });
+
+      myMap.geoObjects.add(myPlacemark);
+
+      myMap.container.enterFullscreen();
+
+      myPlacemark.balloon.open();
+    }
+  </script>
+</head>
+<body>
+<div id="map" style="width: 600px; height: 400px"></div>
+</body>
+</html>

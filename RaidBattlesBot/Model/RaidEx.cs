@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 using Markdig;
+using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
@@ -10,12 +12,12 @@ namespace RaidBattlesBot.Model
   {
     public const string Delimeter = " ∙ ";
 
-    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
+    public static StringBuilder GetDescription(this Raid raid, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var description = new StringBuilder();
+      var description = new StringBuilder("*");
       if (raid.RaidBossLevel.HasValue)
       {
-        description.Append($@"\[R{raid.RaidBossLevel}] ");
+        description.Append($@"[R{raid.RaidBossLevel}] ");
       }
 
       description.Append($"{raid.Name}");
@@ -29,6 +31,10 @@ namespace RaidBattlesBot.Model
         description.Append(Delimeter).Append(raid.NearByAddress);
       }
 
+      if (description.Length == 0)
+        description.Append(raid.Title);
+
+      description.Append("*");
       switch (mode)
       {
         case ParseMode.Markdown:
@@ -58,6 +64,28 @@ namespace RaidBattlesBot.Model
       }
 
       return raid.EndTime;
+    }
+
+    public static Uri GetThumbUrl([CanBeNull] this Raid raid, IUrlHelper urlHelper)
+    {
+      var pokemonId = raid?.Pokemon;
+      if (pokemonId != null)
+        return urlHelper.AssetsContent($"decrypted_assets/pokemon_icon_{pokemonId:D3}_00.png");
+
+      var raidRaidBossLevel = raid?.RaidBossLevel;
+      switch (raidRaidBossLevel)
+      {
+        case 1:
+        case 2:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_normal.png");
+        case 3:
+        case 4:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_rare.png");
+        case 5:
+          return urlHelper.AssetsContent("static_assets/png/ic_raid_egg_legendary.png");
+      }
+
+      return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
     }
   }
 }

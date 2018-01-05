@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types;
+﻿using System.Linq;
+using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Model
 {
@@ -6,7 +7,7 @@ namespace RaidBattlesBot.Model
   {
     public static string GetLink(this User user)
     {
-      return $"[{string.Join(" ", user.FirstName, user.LastName)}](tg://user?id={user.Id})";
+      return $"[{string.Join(" ", new [] { user.FirstName, user.LastName }.Where(_ => !string.IsNullOrEmpty(_)))}](tg://user?id={user.Id})";
     }
   }
 }

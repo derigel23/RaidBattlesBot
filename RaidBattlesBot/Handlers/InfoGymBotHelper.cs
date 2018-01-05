@@ -54,7 +54,11 @@ namespace PokeTrackDecoder.Handlers
 
     public static void ProcessMoves(string movesString, Raid raid)
     {
-      var moves = movesString.TrimEnd('.').Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
+      if (movesString.IndexOf("{подробнее}", StringComparison.Ordinal) is var tail && tail >= 0)
+      {
+        movesString = movesString.Remove(tail);
+      }
+      var moves = movesString.TrimEnd('.').TrimEnd().Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
       string GetMove(int i) => (moves.Length > i ? moves[i] : null) is string move ? string.IsNullOrEmpty(move) ? null : move : null;
       raid.Move1 = GetMove(0);
       raid.Move2 = GetMove(1);

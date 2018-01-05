@@ -53,12 +53,12 @@ namespace RaidBattlesBot.Handlers
           new InlineQueryResultArticle
           {
             Id = $"poll:{poll.Id}",
-            Title = poll.GetTitle(),
+            Title = poll.GetTitle(myUrlHelper),
             Description = "Клонировать голосование",
             //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
             HideUrl = true,
             ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(), ParseMode = ParseMode.Markdown },
+            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(myUrlHelper), ParseMode = ParseMode.Markdown },
             ReplyMarkup = poll.GetReplyMarkup()
           },
         };

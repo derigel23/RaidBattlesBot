@@ -38,14 +38,14 @@ namespace RaidBattlesBot.Handlers
         new InlineQueryResultArticle
         {
           Id = $"create:{query.GetHashCode()}",
-          Title = fakePoll.GetTitle(),
+          Title = fakePoll.GetTitle(myUrlHelper),
           Description = "Создать голосование",
           //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
           HideUrl = true,
           ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent
           {
-            MessageText = fakePoll.GetMessageText(),
+            MessageText = fakePoll.GetMessageText(myUrlHelper),
             ParseMode = ParseMode.Markdown
           },
           ReplyMarkup = fakePoll.GetReplyMarkup()

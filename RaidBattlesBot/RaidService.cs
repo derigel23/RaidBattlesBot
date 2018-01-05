@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -24,7 +25,7 @@ namespace RaidBattlesBot
       myHttpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<bool> AddPoll(string text, PollMessage message, CancellationToken cancellationToken = default)
+    public async Task<bool> AddPoll(string text, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
       message.Poll = new Poll
       {
@@ -32,17 +33,17 @@ namespace RaidBattlesBot
         Owner = message.UserId
       };
 
-      return await AddPollMessage(message, cancellationToken);
+      return await AddPollMessage(message, urlHelper, cancellationToken);
     }
 
 
-    public async Task<bool> AddPollMessage(PollMessage message, CancellationToken cancellationToken = default )
+    public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
       myContext.Attach(message);
       if (await myContext.SaveChangesAsync(cancellationToken) == 0)
         return false; //nothing changed
 
-      var messageText = message.Poll.GetMessageText();
+      var messageText = message.Poll.GetMessageText(urlHelper);
       if (message.InlineMesssageId == null)
       {
         var postedMessage = await myBot.SendTextMessageAsync(message.Chat, messageText, ParseMode.Markdown,
@@ -59,9 +60,9 @@ namespace RaidBattlesBot
       return await myContext.SaveChangesAsync(cancellationToken) > 0;
     }
 
-    public async Task UpdatePoll(Poll poll, CancellationToken cancellationToken = default)
+    public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var messageText = poll.GetMessageText();
+      var messageText = poll.GetMessageText(urlHelper);
       foreach (var message in poll.Messages)
       {
         try

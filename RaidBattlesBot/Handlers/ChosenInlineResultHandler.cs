@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 
@@ -10,11 +11,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
+    private readonly IUrlHelper myUrlHelper;
 
-    public ChosenInlineResultHandler(RaidBattlesContext context, RaidService raidService)
+    public ChosenInlineResultHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper)
     {
       myContext = context;
       myRaidService = raidService;
+      myUrlHelper = urlHelper;
     }
 
     public async Task<bool?> Handle(ChosenInlineResult data, object context = default, CancellationToken cancellationToken = default)
@@ -32,7 +35,7 @@ namespace RaidBattlesBot.Handlers
 
       if (resultParts[0] == "create")
       {
-        return await myRaidService.AddPoll(data.Query, new PollMessage(data), cancellationToken);
+        return await myRaidService.AddPoll(data.Query, new PollMessage(data), myUrlHelper, cancellationToken);
       }
 
       return null;
