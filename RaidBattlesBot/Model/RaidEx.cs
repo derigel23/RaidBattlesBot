@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Markdig;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
@@ -76,6 +78,16 @@ namespace RaidBattlesBot.Model
       }
 
       return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
+    }
+
+    public static IQueryable<Raid> IncludeRelatedData(this IQueryable<Raid> raids)
+    {
+      return raids
+        .Include(_ => _.PostEggRaid)
+        .Include(_ => _.Polls)
+        .ThenInclude(_ => _.Messages)
+        .Include(_ => _.Polls)
+        .ThenInclude(_ => _.Votes);
     }
   }
 }

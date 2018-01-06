@@ -42,6 +42,8 @@ namespace RaidBattlesBot
 
     public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
+      var raidUpdated = false;
+      var eggRaidUpdated = false;
       if (message.Poll.Raid is Raid raid)
       {
         if (raid.Id == 0)
@@ -51,26 +53,30 @@ namespace RaidBattlesBot
           var existingRaid = await sameRaids
             .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
             .Include(_ => _.EggRaid)
+            .IncludeRelatedData()
             .FirstOrDefaultAsync(cancellationToken);
           if (existingRaid != null)
           {
+            if (((existingRaid.Gym ?? existingRaid.PossibleGym) == null) && ((raid.Gym ?? raid.PossibleGym) != null))
+            {
+              existingRaid.PossibleGym = raid.Gym ?? raid.PossibleGym;
+              raidUpdated = true;
+            }
+
             raid = message.Poll.Raid = existingRaid;
           }
 
           if ((raid.Pokemon != null) && (raid.EggRaid == null)) // check for egg raid
           {
             var eggRaid = await sameRaids
-            .Where(_ =>  _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
-            .Include(_ => _.PostEggRaid)
-            .Include(_ => _.Polls)
-            .ThenInclude(_ => _.Messages)
-            .Include(_ => _.Polls)
-            .ThenInclude(_ => _.Votes)
-            .DecompileAsync()
-            .FirstOrDefaultAsync(cancellationToken);
+              .Where(_ => _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
+              .IncludeRelatedData()
+              .DecompileAsync()
+              .FirstOrDefaultAsync(cancellationToken);
             if ((eggRaid != null) && (raid.Id != eggRaid.Id))
             {
               raid.EggRaid = eggRaid;
+              eggRaidUpdated = true;
             }
           }
         }
@@ -78,11 +84,22 @@ namespace RaidBattlesBot
 
       var messageEntity = myContext.Attach(message);
       await myContext.SaveChangesAsync(cancellationToken);
-
-      if (message.Poll?.Raid?.EggRaid is Raid eggRaidToUpdate)
+      
+      // update egg raid poll messages if any
+      if (eggRaidUpdated && message.Poll?.Raid?.EggRaid is Raid eggRaidToUpdate)
       {
         foreach (var poll in eggRaidToUpdate.Polls ?? Enumerable.Empty<Poll>())
         {
+          await UpdatePoll(poll, urlHelper, cancellationToken);
+        }
+      }
+
+      // update current raid poll messages if changed
+      if (raidUpdated && message.Poll?.Raid is Raid raidToUpdate)
+      {
+        foreach (var poll in raidToUpdate.Polls ?? Enumerable.Empty<Poll>())
+        {
+          if (poll == message.Poll) continue; // will be updated separately later
           await UpdatePoll(poll, urlHelper, cancellationToken);
         }
       }
