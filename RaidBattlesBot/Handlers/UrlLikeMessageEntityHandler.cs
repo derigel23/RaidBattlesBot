@@ -41,7 +41,7 @@ namespace RaidBattlesBot.Handlers
       myHttpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       var url = myGetUrl(entity, myMessage);
       using (var httpClient = new HttpClient())
@@ -118,6 +118,7 @@ namespace RaidBattlesBot.Handlers
                 raid.Name = name;
                 //raid.IV = 100; // raid bosses are always 100%
                 raid.RaidBossLevel = myPokemons.GetRaidBossLevel(name);
+                raid.Pokemon = myPokemons.GetPokemonNumber(name);
 
                 if (lines.Length > 1)
                 {
@@ -128,6 +129,10 @@ namespace RaidBattlesBot.Handlers
               if (query.TryGetValue("t", out var time) && ParseTime(time, out var dateTime))
               {
                 raid.RaidBossEndTime = dateTime;
+              }
+              else if (query.TryGetValue("tb", out time) && ParseTime(time, out dateTime))
+              {
+                raid.EndTime = dateTime;
               }
               title
                 .AppendFormat("[R{0}] ", raid.RaidBossLevel)
@@ -232,7 +237,7 @@ namespace RaidBattlesBot.Handlers
             }
           }
 
-          raid.Pokemon = myPokemons.GetPokemonNumber(raid.Name);
+          raid.Pokemon = raid.Pokemon ?? myPokemons.GetPokemonNumber(raid.Name);
 
           if (raid.EndTime != null)
           {
