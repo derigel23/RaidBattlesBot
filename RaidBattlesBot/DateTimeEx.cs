@@ -16,7 +16,7 @@ namespace RaidBattlesBot
       return overflow == 0 ? dateTime : dateTime.AddTicks(interval.Ticks - overflow);
     }
 
-    public static DateTimeOffset Round(this DateTime dateTime, TimeSpan interval)
+    public static DateTimeOffset Round(this DateTimeOffset dateTime, TimeSpan interval)
     {
       var halfIntervalTicks = (interval.Ticks + 1) >> 1;
 

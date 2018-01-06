@@ -238,7 +238,7 @@ namespace RaidBattlesBot.Handlers
           {
             poll.Time = raid.RaidBossEndTime? // adjustemnts
               .Subtract(TimeSpan.FromMinutes(15)) // default offset to the end
-              .Floor(TimeSpan.FromMinutes(5)); // rounding
+              .Round(TimeSpan.FromMinutes(5)); // rounding
             title
               .Append($" ∙ {raid.EndTime:t}");
           }
