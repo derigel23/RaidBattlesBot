@@ -35,10 +35,10 @@ namespace RaidBattlesBot.Handlers
       myGeoCoderOptions = geoCoderOptions;
     }
 
-    public async Task<(string gym, string park, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<(string gym, string park, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
     {
-      var park = default(string);
-      var distance = default(string);
+      string park = default;
+      string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym ??
             (raid.PossibleGym = await myDbContext.Raids
               .FindKnownGym((decimal)raid.Lat, (decimal)raid.Lon, precision)
