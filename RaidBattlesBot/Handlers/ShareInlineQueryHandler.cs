@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -40,30 +43,52 @@ namespace RaidBattlesBot.Handlers
         .IncludeRelatedData()
         .FirstOrDefaultAsync(cancellationToken);
 
-      InlineQueryResult[] inlineQueryResults;
-      if (poll == null)
+      var inlineQueryResults = new List<InlineQueryResult>();
+      if (poll != null)
       {
-        inlineQueryResults = new InlineQueryResult[0];
-      }
-      else
-      {
-        inlineQueryResults = new InlineQueryResult[]
-        {
+        inlineQueryResults.Add(
           new InlineQueryResultArticle
           {
             Id = $"poll:{poll.Id}",
             Title = poll.GetTitle(myUrlHelper),
             Description = "Клонировать голосование",
-            //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
             HideUrl = true,
             ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
             InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(myUrlHelper), ParseMode = ParseMode.Markdown },
             ReplyMarkup = poll.GetReplyMarkup()
-          },
-        };
+          });
+
+        if (poll.Raid() is Raid raid)
+        {
+          inlineQueryResults.Add(
+            new InlineQueryResultVenue
+            {
+              Id = $"location:{raid.Id}",
+              Title = raid.Title,
+              Address = "Запостить локу",
+              Latitude = (float)raid.Lat,
+              Longitude = (float)raid.Lon,
+              ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/ic_map.png").ToString(),
+              InputMessageContent = new InputVenueMessageContentNew
+              {
+                Name = raid.Title,
+                Address = RaidEx.Delimeter.JoinNonEmpty(raid.Gym ?? raid.PossibleGym, raid.Description),
+                Latitude = (float)raid.Lat,
+                Longitude = (float)raid.Lon,
+              },
+            });
+        }
       }
 
-      return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
+      return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults.ToArray(), cacheTime: 0, cancellationToken: cancellationToken);
+    }
+
+    [JsonObject(Title = "InputVenueMessageContent", MemberSerialization = MemberSerialization.OptIn, NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
+    private class InputVenueMessageContentNew : InputVenueMessageContent
+    {
+      /// <summary>Name of the venue</summary>
+      [JsonProperty("title", Required = Required.Always)]
+      public string Title { get => Name; set => Name = value; }
     }
   }
 }

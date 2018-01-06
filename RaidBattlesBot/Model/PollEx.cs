@@ -69,7 +69,7 @@ namespace RaidBattlesBot.Model
           {
             description
               .Append(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter)
-              .Append($"[Карта]({urlHelper.Page("/Raid", null, new { raidId = raid.Id }, protocol: "https")})");
+              .Append($"[Карта]({raid.GetLink(urlHelper)})");
           }
           break;
       }
@@ -113,7 +113,7 @@ namespace RaidBattlesBot.Model
         }
       }
 
-      return text.Append($"[\x200B]({urlHelper.Page("/Raid", null, new { raidId = poll.Raid()?.Id }, protocol: "https")})").ToString();
+      return text.Append($"[\x200B]({poll.Raid()?.GetLink(urlHelper)})").ToString();
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)

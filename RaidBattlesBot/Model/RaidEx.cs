@@ -80,6 +80,11 @@ namespace RaidBattlesBot.Model
       return urlHelper.AssetsContent("static_assets/png/raid_tut_raid.png");
     }
 
+    public static string GetLink(this Raid raid, IUrlHelper urlHelper)
+    {
+      return urlHelper.Page("/Raid", null, new { raidId = raid.Id }, protocol: "https");
+    }
+
     public static IQueryable<Raid> IncludeRelatedData(this IQueryable<Raid> raids)
     {
       return raids
