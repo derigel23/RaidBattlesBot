@@ -14,11 +14,11 @@
 <head>
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>@StringEx.JoinNonEmpty(RaidEx.Delimeter, raid.Title, raid.Gym ?? raid.PossibleGym ?? raid.NearByAddress)</title>
+  <title>@RaidEx.Delimeter.JoinNonEmpty(raid.Title, raid.Gym ?? raid.PossibleGym ?? raid.NearByAddress)</title>
   <meta property="og:title" content="@raid.Title" />
-  <meta property="og:description" content="@StringEx.JoinNonEmpty(Environment.NewLine,
-                                             StringEx.JoinNonEmpty(" / ", raid.Move1, raid.Move2),
-                                             StringEx.JoinNonEmpty(Environment.NewLine, raid.Gym ?? raid.PossibleGym, raid.Description))" />
+  <meta property="og:description" content="@Environment.NewLine.JoinNonEmpty(
+                                             " / ".JoinNonEmpty(raid.Move1, raid.Move2),
+                                             Environment.NewLine.JoinNonEmpty(raid.Gym ?? raid.PossibleGym, raid.Description))" />
   <meta property="og:site_name" content="@($"Рейд до {raid.RaidBossEndTime:t}")" />
   <meta property="og:image" content="@raid.GetThumbUrl(Url)" />
   <style>
@@ -49,7 +49,7 @@
       {
         hintContent: '@raid.Title',
         balloonContentHeader: '<img src="@raid.GetThumbUrl(Url)" class="icon" />@raid.Title',
-        balloonContentBody: '@StringEx.JoinNonEmpty(RaidEx.Delimeter, raid.Gym ?? raid.PossibleGym, raid.Description)',
+        balloonContentBody: '@RaidEx.Delimeter.JoinNonEmpty(raid.Gym ?? raid.PossibleGym, raid.Description)',
       });
 
       myMap.geoObjects.add(myPlacemark);
