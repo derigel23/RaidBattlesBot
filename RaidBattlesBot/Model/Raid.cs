@@ -31,28 +31,13 @@ namespace RaidBattlesBot.Model
 
       public List<Poll> Polls { get; set; }
 
+      public bool IsEgg => (RaidBossLevel != null) && (Pokemon == null);
+
       [Computed, NotMapped]
       public DateTimeOffset? RaidBossEndTime
       {
-        get
-        {
-          if ((RaidBossLevel != null) && (Pokemon == null)) // egg
-          {
-            return EndTime?.Add(BossLifetime); // plus boss lifetime
-          }
-
-          return EndTime;
-        }
-        set
-        {
-          if ((RaidBossLevel != null) && (Pokemon == null)) // egg
-          {
-            EndTime = value?.Add(-BossLifetime); // minus boss lifetime
-            return;
-          }
-
-          EndTime = value;
-      }
+        get => !IsEgg ? EndTime : EndTime?.Add(BossLifetime); // plus boss lifetime
+        set => EndTime = !IsEgg ? value : value?.Add(-BossLifetime); // minus boss lifetime
       }
 
       public int? EggRaidId { get; set; }
