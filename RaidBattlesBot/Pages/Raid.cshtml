@@ -48,7 +48,7 @@
       myPlacemark = new ymaps.Placemark([@raid.Lat?.ToString(CultureInfo.InvariantCulture), @raid.Lon?.ToString(CultureInfo.InvariantCulture)],
       {
         hintContent: '@raid.Title',
-        balloonContentHeader: '<img src="@raid.GetThumbUrl(Url)" class="icon" /> @raid.Title',
+        balloonContentHeader: '<img src="@raid.GetThumbUrl(Url)" class="icon" />@raid.Title',
         balloonContentBody: '@StringEx.JoinNonEmpty(RaidEx.Delimeter, raid.Gym ?? raid.PossibleGym, raid.Description)',
       });
 
