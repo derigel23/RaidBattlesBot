@@ -127,7 +127,7 @@ namespace RaidBattlesBot.Handlers
 
               if (query.TryGetValue("t", out var time) && ParseTime(time, out var dateTime))
               {
-                raid.EndTime = dateTime;
+                raid.RaidBossEndTime = dateTime;
               }
               title
                 .AppendFormat("[R{0}] ", raid.RaidBossLevel)

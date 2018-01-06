@@ -49,7 +49,7 @@ namespace RaidBattlesBot
           var sameRaids = myContext.Raids
             .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
           var existingRaid = await sameRaids
-            .Where(_ => _.EndTime == raid.EndTime)
+            .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
             .Include(_ => _.EggRaid)
             .FirstOrDefaultAsync(cancellationToken);
           if (existingRaid != null)
