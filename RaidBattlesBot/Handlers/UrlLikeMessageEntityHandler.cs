@@ -105,19 +105,16 @@ namespace RaidBattlesBot.Handlers
             if (query.TryGetValue("b", out var boss))
             {
               var name = boss.ToString();
-              string timeStr = null;
-              if (query.TryGetValue("tb", out var timeBoss)) // EGG
+              if (name.StartsWith("EGG", StringComparison.OrdinalIgnoreCase)) // EGG
               {
-                timeStr = timeBoss.ToString();
                 raid.Name = name.Substring(0, name.Length - 1);
                 if (int.TryParse(name.Substring(name.Length - 1, 1), out var raidBossLevel))
                 {
                   raid.RaidBossLevel = raidBossLevel;
                 }
               }
-              else if (query.TryGetValue("t", out var time)) // Boss
+              else // BOSS
               {
-                timeStr = time.ToString();
                 raid.Name = name;
                 //raid.IV = 100; // raid bosses are always 100%
                 raid.RaidBossLevel = myPokemons.GetRaidBossLevel(name);
@@ -127,7 +124,8 @@ namespace RaidBattlesBot.Handlers
                   InfoGymBotHelper.ProcessMoves(lines[1], raid);
                 }
               }
-              if (timeStr != null && ParseTime(timeStr, out var dateTime))
+
+              if (query.TryGetValue("t", out var time) && ParseTime(time, out var dateTime))
               {
                 raid.EndTime = dateTime;
               }
