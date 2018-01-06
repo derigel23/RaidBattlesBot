@@ -1,11 +1,25 @@
-﻿namespace RaidBattlesBot.Model
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace RaidBattlesBot.Model
 {
   public enum VoteEnum : int
   {
-    Valor = 0,
-    Instinct = 1,
-    Mystic= 2 ,
-    MayBe = 3,
-    Cancel = 4
+    None = 0,
+
+    [Description("❤")]
+    Valor = 1,
+
+    [Description("💛")]
+    Instinct = 2,
+
+    [Description("💙")]
+    Mystic = 3,
+
+    [Description("⁇")]
+    MayBe = 4,
+
+    [Description("✖")]
+    Cancel = 5
   }
 }

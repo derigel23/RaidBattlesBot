@@ -12,23 +12,16 @@ namespace RaidBattlesBot.Model
 {
   public static class PollEx
   {
-    private static readonly Dictionary<VoteEnum, (string, string)> ourVoteDescription = new Dictionary<VoteEnum, (string, string)>
+    private static readonly Dictionary<VoteEnum, (int Order, string Singular, string Plural)> ourVoteDescription = new Dictionary<VoteEnum, (int, string, string)>
     {
-      { VoteEnum.Valor, ("идёт", "идут") },
-      { VoteEnum.Instinct, ("идёт", "идут") },
-      { VoteEnum.Mystic, ("идёт", "идут") },
+      { VoteEnum.Valor, (1, "идёт", "идут") },
+      { VoteEnum.Instinct, (1, "идёт", "идут") },
+      { VoteEnum.Mystic, (1, "идёт", "идут") },
       
-      { VoteEnum.MayBe, ("думает", "думают") },
+      { VoteEnum.MayBe, (2, "думает", "думают") },
       
-      { VoteEnum.Cancel, ("передумал", "передумали") },
+      { VoteEnum.Cancel, (3, "передумал", "передумали") },
     };
-
-    private static string GetVoteCounts(IGrouping<(string, string), Vote> grouping)
-    {
-      var number = grouping.Count();
-      var countStr = number == 1 ? grouping.Key.Item1 : grouping.Key.Item2;
-      return $"{number} {countStr}:";
-    }
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
     {
@@ -94,29 +87,28 @@ namespace RaidBattlesBot.Model
       }
 
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
-        .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value))
+        .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value)
+        .OrderBy(voteGroup => voteGroup.Key.Order))
       {
-        text.AppendLine().AppendLine(GetVoteCounts(voteGroup));
-        foreach (var vote in voteGroup.OrderBy(_ => _.Team))
+        var votesNumber = voteGroup.Count();
+        var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
+        text.AppendLine().AppendLine($"{votesNumber} {countStr}");
+
+        foreach (var vote in voteGroup.GroupBy(_ => _.Team).OrderBy(_ => _.Key))
         {
-          var userLink = vote.User.GetLink();
-          switch (vote.Team)
+          var votes = vote.OrderBy(v => v.Modified);
+          if (votesNumber > 10) // compact mode
           {
-            case VoteEnum.Valor:
-              text.AppendLine($"❤ {userLink}");
-              break;
-            case VoteEnum.Instinct:
-              text.AppendLine($"💛 {userLink}");
-              break;
-            case VoteEnum.Mystic:
-              text.AppendLine($"💙 {userLink}");
-              break;
-            case VoteEnum.MayBe:
-              text.AppendLine($"⁇ {userLink}");
-              break;
-            case VoteEnum.Cancel:
-              text.AppendLine($"✖ {userLink}");
-              break;
+            text
+              .Append(vote.Key?.GetDescription()).Append(" ")
+              .AppendJoin(", ", votes.Select(v => v.User.GetLink()))
+              .AppendLine();
+          }
+          else
+          {
+            text
+              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.GetDescription()} {v.User.GetLink()}"))
+              .AppendLine();
           }
         }
       }
@@ -131,18 +123,21 @@ namespace RaidBattlesBot.Model
 
       var pollId = poll.Id;
 
+      InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
+        new InlineKeyboardCallbackButton(vote.GetDescription(), $"vote:{pollId}:{vote}");
+
       return new InlineKeyboardMarkup(new[]
       {
         new InlineKeyboardButton[]
         {
-          new InlineKeyboardCallbackButton("❤", $"vote:{pollId}:red"),
-          new InlineKeyboardCallbackButton("💛", $"vote:{pollId}:yellow"),
-          new InlineKeyboardCallbackButton("💙", $"vote:{pollId}:blue"),
+          GetVoteButton(VoteEnum.Valor),
+          GetVoteButton(VoteEnum.Instinct),
+          GetVoteButton(VoteEnum.Mystic),
         },
         new InlineKeyboardButton[]
         {
-          new InlineKeyboardCallbackButton("⁇", $"vote:{pollId}:none"),
-          new InlineKeyboardCallbackButton("✖", $"vote:{pollId}:cancel"),
+          GetVoteButton(VoteEnum.MayBe),
+          GetVoteButton(VoteEnum.Cancel),
           new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
         }
       });

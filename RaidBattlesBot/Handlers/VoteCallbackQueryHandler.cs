@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -61,29 +62,19 @@ namespace RaidBattlesBot.Handlers
 
       vote.User = user; // update firstname/lastname if necessary
 
-      VoteEnum? GetTeam(string team)
-      {
-        switch (team)
-        {
-          case "red": return VoteEnum.Valor;
-          case "yellow": return VoteEnum.Instinct;
-          case "blue": return VoteEnum.Mystic;
-          case "none": return VoteEnum.MayBe;
-          case "cancel": return VoteEnum.Cancel;
-        }
-
-        return null;
-      }
-
       var teamAbbr = callback.ElementAt(2);
-      vote.Team = GetTeam(teamAbbr);
+      if (!Enum.TryParse(teamAbbr, true, out VoteEnum team))
+        return ("Неправильный голос", true);
+
+      vote.Team = team;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
+        return (ourResponse.TryGetValue(vote.Team, out var response) ? response : "Вы проголосовали", false);
       }
 
-      return (changed ? ourResponse.TryGetValue(vote.Team, out var response ) ?  response : "Вы проголосовали" : "Вы уже проголосовали", false);
+      return ("Вы уже проголосовали", false);
     }
   }
 }
