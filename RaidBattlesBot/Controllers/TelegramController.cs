@@ -42,6 +42,9 @@ namespace RaidBattlesBot.Controllers
     [HttpPost("/update")]
     public async Task<IActionResult> Update([FromBody] Update update, CancellationToken cancellationToken = default)
     {
+      IActionResult Return(bool? result) =>
+        result is bool success && success ? Ok() : Ok(); // TODO: not handled
+
       try
       {
         Message message = null;
@@ -57,20 +60,15 @@ namespace RaidBattlesBot.Controllers
 
           case UpdateType.CallbackQueryUpdate:
             var callbackQuery = update.CallbackQuery;
-            var callBackResponse = await HandlerExtentions<(string text, bool showAlert)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
-            return await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, callBackResponse.text, callBackResponse.showAlert, cancellationToken: cancellationToken)
-              ? Ok() : Ok() /* TODO: not handled */;
+            (var text, var showAlert) = await HandlerExtentions<(string text, bool showAlert)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
+            return Return(await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, cancellationToken: cancellationToken));
 
           case UpdateType.InlineQueryUpdate:
-            return (await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken)).GetValueOrDefault()
-              ? Ok() : Ok() /* TODO: not handled */;
+            return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken));
           
           case UpdateType.ChosenInlineResultUpdate:
-            return (await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken)).GetValueOrDefault()
-              ? Ok() : Ok() /* TODO: not handled */;
-
+            return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken));
         }
-
 
         if (message == null)
           return Ok();
@@ -80,7 +78,7 @@ namespace RaidBattlesBot.Controllers
         HttpContext.Items["chat"] = message.Chat.Username;
 
         var pollMessage = new PollMessage(message);
-        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)).GetValueOrDefault())
+        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
         {
           await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
         };

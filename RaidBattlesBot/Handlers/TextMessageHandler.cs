@@ -38,7 +38,7 @@ namespace RaidBattlesBot.Handlers
           break;
       }
 
-      if (result.GetValueOrDefault())
+      if (result is bool success && success)
       {
         if (string.IsNullOrEmpty(pollMessage.Poll.Title) &&
             myCache.TryGetValue<Message>(message.Chat.Id, out var prevMessage) &&
