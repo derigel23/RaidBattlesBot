@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,6 +76,17 @@ namespace RaidBattlesBot
               .FirstOrDefaultAsync(cancellationToken);
             if ((eggRaid != null) && (raid.Id != eggRaid.Id))
             {
+              raid.Polls = raid.Polls ?? new List<Poll>(eggRaid.Polls?.Count ?? 0);
+              // on post egg raid creation update all existing polls to new raid
+              foreach (var eggRaidPoll in eggRaid.Polls?.ToList() ?? Enumerable.Empty<Poll>())
+              {
+                eggRaid.Polls.Remove(eggRaidPoll);
+                raid.Polls.Add(eggRaidPoll);
+                eggRaidPoll.Raid = raid;
+                // use exisiting poll (any) for new poll message
+                message.Poll = eggRaidPoll;
+                raidUpdated = true;
+              }
               raid.EggRaid = eggRaid;
               eggRaidUpdated = true;
             }
@@ -84,7 +96,16 @@ namespace RaidBattlesBot
 
       var messageEntity = myContext.Attach(message);
       await myContext.SaveChangesAsync(cancellationToken);
-      
+
+      // update current raid poll messages if changed
+      if (raidUpdated && message.Poll?.Raid is Raid raidToUpdate)
+      {
+        foreach (var poll in raidToUpdate.Polls ?? Enumerable.Empty<Poll>())
+        {
+          await UpdatePoll(poll, urlHelper, cancellationToken);
+        }
+      }
+
       // update egg raid poll messages if any
       if (eggRaidUpdated && message.Poll?.Raid?.EggRaid is Raid eggRaidToUpdate)
       {
@@ -94,27 +115,17 @@ namespace RaidBattlesBot
         }
       }
 
-      // update current raid poll messages if changed
-      if (raidUpdated && message.Poll?.Raid is Raid raidToUpdate)
-      {
-        foreach (var poll in raidToUpdate.Polls ?? Enumerable.Empty<Poll>())
-        {
-          if (poll == message.Poll) continue; // will be updated separately later
-          await UpdatePoll(poll, urlHelper, cancellationToken);
-        }
-      }
-
       var messageText = message.Poll.GetMessageText(urlHelper);
-      if (message.InlineMesssageId == null)
+      if (message.ChatId is long chatId)
       {
-        var postedMessage = await myBot.SendTextMessageAsync(message.Chat, messageText, ParseMode.Markdown,
+        var postedMessage = await myBot.SendTextMessageAsync(chatId, messageText, ParseMode.Markdown,
           replyMarkup: message.GetReplyMarkup(), disableNotification: true, cancellationToken: cancellationToken);
         message.Chat = postedMessage.Chat;
         message.MesssageId = postedMessage.MessageId;
       }
-      else
+      else if (message.InlineMesssageId is string inlineMessageId)
       {
-        await myBot.EditInlineMessageTextAsync(message.InlineMesssageId, messageText, ParseMode.Markdown,
+        await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, ParseMode.Markdown,
           replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
       }
 
@@ -128,14 +139,14 @@ namespace RaidBattlesBot
       {
         try
         {
-          if (message.InlineMesssageId != null)
+          if (message.InlineMesssageId is string inlineMessageId)
           {
-            await myBot.EditInlineMessageTextAsync(message.InlineMesssageId, messageText, ParseMode.Markdown,
+            await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, ParseMode.Markdown,
               replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
           }
-          else
+          else if (message.ChatId is long chatId && message.MesssageId is int messageId)
           {
-            await myBot.EditMessageTextAsync(message.Chat, message.MesssageId.GetValueOrDefault(), messageText, ParseMode.Markdown,
+            await myBot.EditMessageTextAsync(chatId, messageId, messageText, ParseMode.Markdown,
               replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
           }
         }
