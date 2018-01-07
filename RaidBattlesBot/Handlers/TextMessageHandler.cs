@@ -51,7 +51,7 @@ namespace RaidBattlesBot.Handlers
 
       if ((message.ForwardFrom == null) && (message.ForwardFromChat == null))
       {
-        myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(3));
+        myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
       }
 
       return result;
