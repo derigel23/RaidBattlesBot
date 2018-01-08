@@ -60,14 +60,23 @@ namespace RaidBattlesBot.Controllers
 
           case UpdateType.CallbackQueryUpdate:
             var callbackQuery = update.CallbackQuery;
+            HttpContext.Items["uid"] = callbackQuery.From?.Username;
+            HttpContext.Items["data"] = callbackQuery.Data;
             (var text, var showAlert) = await HandlerExtentions<(string text, bool showAlert)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
             return Return(await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, cancellationToken: cancellationToken));
 
           case UpdateType.InlineQueryUpdate:
-            return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), update.InlineQuery, new object(), cancellationToken));
+            var inlineQuery = update.InlineQuery;
+            HttpContext.Items["uid"] = inlineQuery.From?.Username;
+            HttpContext.Items["query"] = inlineQuery.Query;
+            return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken));
           
           case UpdateType.ChosenInlineResultUpdate:
-            return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), update.ChosenInlineResult, new object(), cancellationToken));
+            var chosenInlineResult = update.ChosenInlineResult;
+            HttpContext.Items["uid"] = chosenInlineResult.From?.Username;
+            HttpContext.Items["query"] = chosenInlineResult.Query;
+            HttpContext.Items["result"] = chosenInlineResult.ResultId;
+            return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), chosenInlineResult, new object(), cancellationToken));
         }
 
         if (message == null)
