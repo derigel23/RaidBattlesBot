@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
+using CsvHelper;
 using RaidBattlesBot.Model;
 
 // ReSharper disable PossibleNullReferenceException
@@ -14,35 +16,44 @@ namespace RaidBattlesBot.Configuration
   {
     public const int LowerDecimalPrecision = 4;
       
-    private readonly IDictionary<(decimal lat, decimal lon), (string gym, string park)> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), (string gym, string park)>();
-    private readonly IDictionary<(decimal lat, decimal lon), (string gym, string park)> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), (string gym, string park)>();
+    private readonly IDictionary<(decimal lat, decimal lon), string> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), string>();
+    private readonly IDictionary<(decimal lat, decimal lon), string> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), string>();
     
     public Gyms(Stream stream)
     {
-      var ns = XNamespace.Get("http://www.opengis.net/kml/2.2");
-      foreach (var placemark in XDocument.Load(stream)
-        .Element(ns + "kml")
-        .Element(ns + "Document")?
-        .Elements(ns + "Placemark"))
+      using (var streamReader = new StreamReader(stream, Encoding.UTF8))
       {
-        var extendedData = placemark
-          .Element(ns + "ExtendedData")
-          .Elements(ns + "Data")
-          .ToDictionary(_ => _.Attribute("name").Value, _=> _.Element(ns + "value").Value);
-        var name = placemark.Element(ns + "name").Value;
-        if (decimal.TryParse(extendedData["lat"], NumberStyles.Currency, CultureInfo.InvariantCulture, out var lat) &&
-            decimal.TryParse(extendedData["lng"], NumberStyles.Currency, CultureInfo.InvariantCulture, out var lon))
+        var configuration = new CsvHelper.Configuration.Configuration
         {
-          var data = (name, extendedData.GetValueOrDefault("park_name"));
-          myGymInfo.Add((lat, lon), data);
-          myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision)] = data;
+          IgnoreQuotes = true,
+          PrepareHeaderForMatch = header => header.Replace("\"", "")
+        };
+        using (var csvReader = new CsvReader(streamReader, configuration))
+        {
+          foreach (var record in csvReader.GetRecords(new { latlon = default(string), name = default(string) }))
+          {
+            var lonPos = record.latlon.LastIndexOf('.') - 2;
+            if (lonPos < 0) continue;
+            if (decimal.TryParse(record.latlon.Substring(0, lonPos), NumberStyles.Currency, CultureInfo.InvariantCulture, out var lat) &&
+                decimal.TryParse(record.latlon.Substring(lonPos), NumberStyles.Currency, CultureInfo.InvariantCulture, out var lon))
+            {
+              var name = record.name;
+              if (string.IsNullOrEmpty(name)) continue;
+              if (name[0] == '"')
+              {
+                name = name.Substring(1, name.Length - 1 - (name[name.Length - 1] == '"' ? 1 : 0)); // unquote
+              }
+              myGymInfo.Add((lat, lon), name);
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision)] = name;
+            }
+          }
         }
       }
     }
 
-    public bool TryGet(decimal lat, decimal lon, out (string gym, string park) data, int? precision = null) =>
-      precision.HasValue ?
-        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision), out data) :
-        myGymInfo.TryGetValue((lat, lon), out data);
+    public bool TryGet(decimal lat, decimal lon, out string gym, int? precision = null) =>
+      precision is int specifiedPrecision ?
+        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, specifiedPrecision), out gym) :
+        myGymInfo.TryGetValue((lat, lon), out gym);
   }
 }

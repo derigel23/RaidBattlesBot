@@ -35,21 +35,20 @@ namespace RaidBattlesBot.Handlers
       myGeoCoderOptions = geoCoderOptions;
     }
 
-    public async Task<(string gym, string park, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
+    public async Task<(string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
     {
-      string park = default;
       string distance = default;
-      var gym = raid.Gym ?? raid.PossibleGym ??
-            (raid.PossibleGym = await myDbContext.Raids
-              .FindKnownGym((decimal)raid.Lat, (decimal)raid.Lon, precision)
-              .Select(_ => _.Gym ?? _.PossibleGym)
-              .FirstOrDefaultAsync(cancellationToken));
-      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGymInfo, precision))
+      var gym = raid.Gym ?? raid.PossibleGym;
+      if ((gym == null) && myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision))
       {
-        gym = gym ?? (raid.PossibleGym = foundGymInfo.gym);
-        gym = "★ " + gym;
-        myHttpContextAccessor.HttpContext.Items["possibleMewto"] = true;
-        myHttpContextAccessor.HttpContext.Items["park"] = park = foundGymInfo.park;
+        gym = raid.PossibleGym = foundGym;
+      }
+      if (gym == null)
+      {
+        raid.PossibleGym = await myDbContext.Raids
+          .FindKnownGym((decimal) raid.Lat, (decimal) raid.Lon, precision)
+          .Select(_ => _.Gym ?? _.PossibleGym)
+          .FirstOrDefaultAsync(cancellationToken);
       }
 
       //if (!string.IsNullOrEmpty(gym))
@@ -115,7 +114,7 @@ namespace RaidBattlesBot.Handlers
         myTelemetryClient.TrackException(ex, myHttpContextAccessor.HttpContext.Properties());
       }
 
-      return (gym, park, distance);
+      return (gym, distance);
     }
 
     private TRequest InitGeoRequest<TRequest>(TRequest request)

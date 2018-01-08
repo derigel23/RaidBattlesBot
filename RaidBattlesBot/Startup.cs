@@ -52,7 +52,7 @@ namespace RaidBattlesBot
 
       services.AddSingleton(provider =>
       {
-        using (var gymStream = provider.GetRequiredService<IHostingEnvironment>().WebRootFileProvider.GetFileInfo("gyms.kml").CreateReadStream())
+        using (var gymStream = provider.GetRequiredService<IHostingEnvironment>().WebRootFileProvider.GetFileInfo("gyms.csv").CreateReadStream())
         {
           return new Gyms(gymStream);
         }
