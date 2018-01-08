@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="PogoAssets\**\*" CopyToPublishDirectory="Never" />
+    <None Include="PogoAssets\**\*" />
   </ItemGroup>
 
   <ItemGroup>
