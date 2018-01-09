@@ -32,7 +32,7 @@ namespace RaidBattlesBot.Model
 
     public ChatId Chat
     {
-      get => ChatId.HasValue ?  new ChatId(ChatId.Value) : null;
+      get => ChatId is long chatId ?  new ChatId(chatId) : null;
       set => ChatId = value?.Identifier;
     }
   }

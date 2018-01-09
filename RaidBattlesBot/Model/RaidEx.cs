@@ -17,9 +17,9 @@ namespace RaidBattlesBot.Model
     public static StringBuilder GetDescription(this Raid raid, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
       var description = new StringBuilder("*");
-      if (raid.RaidBossLevel.HasValue)
+      if (raid.RaidBossLevel is int raidBossLevel)
       {
-        description.Append($@"[R{raid.RaidBossLevel}] ");
+        description.Append($@"[R{raidBossLevel}] ");
       }
 
       description.Append($"{raid.Name}");

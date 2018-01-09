@@ -15,17 +15,17 @@ namespace RaidBattlesBot.Model
         .Where(_ => _.Gym != null || _.PossibleGym != null)
         .Where(_ => _.Lon != null && _.Lat != null);
 
-      if (precision.HasValue)
+      if (precision is int precisionValue)
       {
-        (lat, lon) = LowerPrecision(lat, lon, precision.Value);
+        (lat, lon) = LowerPrecision(lat, lon, precisionValue);
         possibleEncounters = possibleEncounters
-          .Where(_ => decimal.Round(_.Lon.Value, precision.Value, MidpointRounding.AwayFromZero) == lon)
-          .Where(_ => decimal.Round(_.Lat.Value, precision.Value, MidpointRounding.AwayFromZero) == lat);
+          .Where(_ => decimal.Round(_.Lon.Value, precisionValue, MidpointRounding.AwayFromZero) == lon)
+          .Where(_ => decimal.Round(_.Lat.Value, precisionValue, MidpointRounding.AwayFromZero) == lat);
       }
       else
       {
         possibleEncounters = possibleEncounters
-          .Where(_ => _.Lon.Value == lon && _.Lat.Value == lat);
+          .Where(_ => _.Lon == lon && _.Lat == lat);
       }
 
       return possibleEncounters
