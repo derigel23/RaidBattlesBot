@@ -10,7 +10,7 @@ namespace RaidBattlesBot.Model
 
     public Poll(Message message)
     {
-      Owner = message.From.Id;
+      Owner = message.From?.Id;
     }
 
     public int Id { get; set; }
