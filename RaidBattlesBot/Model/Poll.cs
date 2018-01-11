@@ -10,12 +10,13 @@ namespace RaidBattlesBot.Model
 
     public Poll(Message message)
     {
-      Owner = message.From?.Id;
+      Owner = message.From?.Id ?? message.Chat.Id;
     }
 
     public int Id { get; set; }
     public int? RaidId { get; set; }
-    public int? Owner { get; set; }
+    /// <remarks>Chat Id (equals user Id for private chat with bot)</remarks>
+    public long? Owner { get; set; }
     public string Title { get; set; }
     public DateTimeOffset? Time { get; set; }
     public DateTimeOffset? Modified { get; set; }

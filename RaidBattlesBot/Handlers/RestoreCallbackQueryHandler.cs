@@ -15,22 +15,24 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
+    private readonly ChatInfo myChatInfo;
 
-    public RestoreCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper)
+    public RestoreCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ChatInfo chatInfo)
     {
       myContext = context;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
+      myChatInfo = chatInfo;
     }
 
-    public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
       if (callback[0] != "restore")
-        return (null, false);
+        return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return ("Голование подготавливается. Повторите позже", true);
+        return ("Голование подготавливается. Повторите позже", true, null);
 
       var poll = await myContext
         .Polls
@@ -39,12 +41,12 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return ("Голосование не найдено", true);
+        return ("Голосование не найдено", true, null);
 
       var user = data.From;
 
-      if (poll.Owner != user.Id)
-        return ("Вы не можете возобновить голосование", true);
+      if (!await myChatInfo.IsAdmin(poll.Owner, user.Id, cancellationToken))
+        return ("Вы не можете возобновить голосование", true, null);
 
       poll.Cancelled = false;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
@@ -53,7 +55,7 @@ namespace RaidBattlesBot.Handlers
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
       }
 
-      return (changed ? "Голосование возобновлено" : "Голование уже возобновлено", false);
+      return (changed ? "Голосование возобновлено" : "Голование уже возобновлено", false, null);
     }
   }
 }

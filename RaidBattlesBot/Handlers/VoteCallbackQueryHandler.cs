@@ -34,14 +34,14 @@ namespace RaidBattlesBot.Handlers
       { VoteEnum.Cancel, "Вы передумали!" },
     };
 
-    public async Task<(string, bool)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
+    public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
       if (callback[0] != "vote")
-        return (null, false);
+        return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return ("Голование подготавливается. Повторите позже", true);
+        return ("Голование подготавливается. Повторите позже", true, null);
 
       var poll = await myContext
         .Polls
@@ -50,7 +50,7 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return ("Голосование не найдено", true);
+        return ("Голосование не найдено", true, null);
 
       var user = data.From;
 
@@ -64,17 +64,17 @@ namespace RaidBattlesBot.Handlers
 
       var teamAbbr = callback.ElementAt(2);
       if (!Enum.TryParse(teamAbbr, true, out VoteEnum team))
-        return ("Неправильный голос", true);
+        return ("Неправильный голос", true, null);
 
       vote.Team = team;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
-        return (ourResponse.TryGetValue(vote.Team, out var response) ? response : "Вы проголосовали", false);
+        return (ourResponse.TryGetValue(vote.Team, out var response) ? response : "Вы проголосовали", false, null);
       }
 
-      return ("Вы уже проголосовали", false);
+      return ("Вы уже проголосовали", false, null);
     }
   }
 }

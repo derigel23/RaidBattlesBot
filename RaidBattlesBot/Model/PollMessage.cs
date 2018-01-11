@@ -1,5 +1,6 @@
 ﻿using System;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
@@ -11,7 +12,6 @@ namespace RaidBattlesBot.Model
     {
       UserId = message.From?.Id;
       Chat = message.Chat;
-      //MesssageId = message.MessageId;
     }
 
     public PollMessage(ChosenInlineResult inlineResult)
@@ -24,16 +24,17 @@ namespace RaidBattlesBot.Model
     public int PollId { get; set; }
     public int? UserId { get; set; }
     public long? ChatId { get; set; }
+    public ChatType? ChatType { get; set; }
     public int? MesssageId { get; set; }
     public string InlineMesssageId { get; set; }
     public DateTimeOffset? Modified { get; set; }
 
     public Poll Poll { get; set; }
 
-    public ChatId Chat
+    public Chat Chat
     {
-      get => ChatId is long chatId ?  new ChatId(chatId) : null;
-      set => ChatId = value?.Identifier;
+      get => ChatId is long chatId ?  new Chat { Id = chatId, Type = ChatType.GetValueOrDefault() } : null;
+      set { ChatId = value?.Id; ChatType = value?.Type; }
     }
   }
 }

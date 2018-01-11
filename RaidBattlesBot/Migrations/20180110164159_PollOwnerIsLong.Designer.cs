@@ -7,14 +7,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using RaidBattlesBot.Model;
 using System;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20180110164159_PollOwnerIsLong")]
+    partial class PollOwnerIsLong
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,8 +51,6 @@ namespace RaidBattlesBot.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<long?>("ChatId");
-
-                    b.Property<int?>("ChatType");
 
                     b.Property<string>("InlineMesssageId");
 

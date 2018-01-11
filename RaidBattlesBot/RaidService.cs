@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot
@@ -20,13 +21,15 @@ namespace RaidBattlesBot
     private readonly ITelegramBotClient myBot;
     private readonly TelemetryClient myTelemetryClient;
     private readonly IHttpContextAccessor myHttpContextAccessor;
+    private readonly ChatInfo myChatInfo;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, ChatInfo chatInfo)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
       myHttpContextAccessor = httpContextAccessor;
+      myChatInfo = chatInfo;
     }
 
     public async Task<bool> AddPoll(string text, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
@@ -34,12 +37,11 @@ namespace RaidBattlesBot
       message.Poll = new Poll
       {
         Title = text,
-        Owner = message.UserId
+        Owner = message.UserId,
       };
 
       return await AddPollMessage(message, urlHelper, cancellationToken);
     }
-
 
     public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
@@ -116,17 +118,17 @@ namespace RaidBattlesBot
       }
 
       var messageText = message.Poll.GetMessageText(urlHelper);
-      if (message.ChatId is long chatId)
+      if (message.Chat is Chat chat)
       {
-        var postedMessage = await myBot.SendTextMessageAsync(chatId, messageText, ParseMode.Markdown,
-          replyMarkup: message.GetReplyMarkup(), disableNotification: true, cancellationToken: cancellationToken);
+        var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, ParseMode.Markdown,
+          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
         message.Chat = postedMessage.Chat;
         message.MesssageId = postedMessage.MessageId;
       }
       else if (message.InlineMesssageId is string inlineMessageId)
       {
         await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, ParseMode.Markdown,
-          replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
+          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
       }
 
       return await myContext.SaveChangesAsync(cancellationToken) > 0;
@@ -142,12 +144,12 @@ namespace RaidBattlesBot
           if (message.InlineMesssageId is string inlineMessageId)
           {
             await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, ParseMode.Markdown,
-              replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
+              replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
           }
           else if (message.ChatId is long chatId && message.MesssageId is int messageId)
           {
             await myBot.EditMessageTextAsync(chatId, messageId, messageText, ParseMode.Markdown,
-              replyMarkup: message.GetReplyMarkup(), cancellationToken: cancellationToken);
+              replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
           }
         }
         catch (Exception ex)

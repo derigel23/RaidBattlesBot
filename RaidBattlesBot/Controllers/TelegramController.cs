@@ -62,8 +62,8 @@ namespace RaidBattlesBot.Controllers
             var callbackQuery = update.CallbackQuery;
             HttpContext.Items["uid"] = callbackQuery.From?.Username;
             HttpContext.Items["data"] = callbackQuery.Data;
-            (var text, var showAlert) = await HandlerExtentions<(string text, bool showAlert)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
-            return Return(await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, cancellationToken: cancellationToken));
+            (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
+            return Return(await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken));
 
           case UpdateType.InlineQueryUpdate:
             var inlineQuery = update.InlineQuery;

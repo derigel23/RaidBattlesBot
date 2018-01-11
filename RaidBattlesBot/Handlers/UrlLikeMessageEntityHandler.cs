@@ -14,7 +14,6 @@ using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -44,10 +43,12 @@ namespace RaidBattlesBot.Handlers
     public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       var url = myGetUrl(entity, myMessage);
+      if (string.IsNullOrEmpty(url) || !url.StartsWith("http"))
+        return false;
       using (var httpClient = new HttpClient())
       {
         var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url);
-        if (InfoGymBotHelper.IsAppropriateUrl(poketrackRequest.RequestUri) && (myMessage.Chat.Type == ChatType.Private))
+        if (InfoGymBotHelper.IsAppropriateUrl(poketrackRequest.RequestUri))
         {
           poketrackRequest.Method = HttpMethod.Get;
         }
@@ -88,8 +89,6 @@ namespace RaidBattlesBot.Handlers
           var firstLine = lines[0].Trim();
           if (InfoGymBotHelper.IsAppropriateUrl(requestUri))
           {
-            if (myMessage.Chat.Type != ChatType.Private) // handle thouse messages only in private chat
-              return null;
             try
             {
               var poketrackResponseContent = await poketrackResponse.Content.ReadAsStringAsync();

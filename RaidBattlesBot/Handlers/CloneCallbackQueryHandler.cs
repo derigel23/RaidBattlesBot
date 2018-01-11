@@ -6,36 +6,34 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "adjust")]
-  public class AdjustCallbackQueryHandler : ICallbackQueryHandler
+  [CallbackQueryHandler(DataPrefix = "clone")]
+  public class CloneCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
-    private readonly ChatInfo myChatInfo;
+    private readonly User myBot;
 
-    public AdjustCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ChatInfo chatInfo)
+    public CloneCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, User bot)
     {
       myContext = context;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
-      myChatInfo = chatInfo;
+      myBot = bot;
     }
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "adjust")
+      if (callback[0] != "clone")
         return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
         return ("Голование подготавливается. Повторите позже", true, null);
-
-      if (!int.TryParse(callback.ElementAtOrDefault(2) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var offset))
-        return ("", false, null);
 
       var poll = await myContext
         .Polls
@@ -46,22 +44,17 @@ namespace RaidBattlesBot.Handlers
       if (poll == null)
         return ("Голосование не найдено", true, null);
 
-      var user = data.From;
-
-      if (!await myChatInfo.IsAdmin(poll.Owner, user.Id, cancellationToken))
-        return ("Вы не можете редактировать голосование", true, null);
-
-      poll.Time = poll.Time?.AddMinutes(offset);
-      if (poll.Time > poll.Raid?.RaidBossEndTime)
-        return ($"В {poll.Time:t} рейд уже закончится", true, null);
-
-      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
-      if (changed)
+      var pollMessage = new PollMessage
       {
-        await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
-      }
-
-      return ($"Голосование установлено на {poll.Time:t}", false, null);
+        ChatId =  data.From.Id,
+        ChatType = ChatType.Private,
+        UserId = data.From.Id,
+        InlineMesssageId = data.InlineMessageId,
+        Poll = poll
+      };
+      await myRaidService.AddPollMessage(pollMessage, myUrlHelper, cancellationToken);
+      
+      return (null, false, $"https://t.me/{myBot.Username}?start={pollMessage.GetPollId()}");
     }
   }
 }

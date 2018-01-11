@@ -14,7 +14,7 @@ namespace DelegateDecompiler.EntityFramework
       this.inner = inner;
     }
 
-    public IAsyncEnumerator<T> GetEnumerator()
+    IAsyncEnumerator<T> IAsyncEnumerable<T>.GetEnumerator()
     {
       if (!(inner is IAsyncEnumerable<T> asyncEnumerable))
       {

@@ -1,16 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <ApplicationInsightsResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsAnnotationResourceId>
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <None Include="PogoAssets\**\*" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
@@ -18,7 +15,7 @@
     <PackageReference Include="DelegateDecompiler" Version="0.23.0" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Markdig" Version="0.14.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.1" PrivateAssets="All" />
     <PackageReference Include="GoogleMapsApi" Version="1.0.0-beta" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.2.0-beta3" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
@@ -35,5 +32,4 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
-
 </Project>

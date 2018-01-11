@@ -10,8 +10,8 @@ using NodaTime.Extensions;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
+using RaidBattlesBot.Model;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Module = Autofac.Module;
 
 namespace RaidBattlesBot
@@ -45,6 +45,7 @@ namespace RaidBattlesBot
 
       builder.RegisterType<GymHelper>().InstancePerLifetimeScope();
       builder.RegisterType<InfoGymBotHelper>().InstancePerLifetimeScope();
+      builder.RegisterType<ChatInfo>().InstancePerLifetimeScope();
 
       var assembly = Assembly.GetExecutingAssembly();
 
@@ -52,7 +53,7 @@ namespace RaidBattlesBot
       {
         return c.Resolve<IMemoryCache>().GetOrCreate("me", entry =>
         {
-          entry.SlidingExpiration = TimeSpan.FromMinutes(1);
+          entry.SlidingExpiration = TimeSpan.FromMinutes(5);
           return c.Resolve<ITelegramBotClient>().GetMeAsync().GetAwaiter().GetResult();
         });
       });

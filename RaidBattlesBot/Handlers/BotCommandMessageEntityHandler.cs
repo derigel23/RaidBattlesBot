@@ -27,7 +27,9 @@ namespace RaidBattlesBot.Handlers
       {
         case var _ when command.StartsWith("/new"):
           var title = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
-          if (string.IsNullOrEmpty(title)) return false;
+          if (string.IsNullOrEmpty(title))
+            return false;
+          
           pollMessage.Poll = new Poll(myMessage)
           {
             Title = title
@@ -37,12 +39,15 @@ namespace RaidBattlesBot.Handlers
         case var _ when command.StartsWith("/poll"):
           if (!int.TryParse(myMessage.Text.Substring(entity.Offset + entity.Length).Trim(), out var pollId))
             return false;
+          
           var existingPoll = await myContext.Polls
             .Where(_ => _.Id == pollId)
             .IncludeRelatedData()
             .FirstOrDefaultAsync(cancellationToken);
+          
           if (existingPoll == null)
             return false;
+
           pollMessage.Poll = existingPoll;
           return true;
       }

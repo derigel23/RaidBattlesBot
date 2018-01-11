@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -7,11 +12,35 @@ namespace RaidBattlesBot.Model
 {
   public static class PollMessageEx
   {
-    public static InlineKeyboardMarkup GetReplyMarkup(this PollMessage message)
+    public static async Task<InlineKeyboardMarkup> GetReplyMarkup(this PollMessage message, ChatInfo chatInfo, CancellationToken cancellationToken = default)
     {
       var pollReplyMarkup = message.Poll.GetReplyMarkup();
+      var inlineKeyboardButtons = pollReplyMarkup?.InlineKeyboard;
 
-      if ((message.ChatId == null) || (message.Poll.Owner != message.ChatId))
+      var messageChat = message.Chat;
+      if (messageChat == null) // inline message
+        return pollReplyMarkup;
+
+      switch (messageChat.Type)
+      {
+        case ChatType.Channel:
+          // channel, cancelled
+          if (pollReplyMarkup == null)
+            return null;
+            
+          // channel, not cancelled
+          // replace share button with clone button
+          inlineKeyboardButtons[1][2] =
+            new InlineKeyboardCallbackButton("🌐", $"clone:{message.GetPollId()}");
+
+          return pollReplyMarkup;
+        
+        case ChatType.Group:
+        case ChatType.Supergroup:
+          return pollReplyMarkup;
+      }
+
+      if (!await chatInfo.IsAdmin(message.Poll.Owner, message.UserId, cancellationToken))
         return pollReplyMarkup;
 
       if (pollReplyMarkup == null) // cancelled
@@ -25,7 +54,6 @@ namespace RaidBattlesBot.Model
         });
       }
 
-      var inlineKeyboardButtons = pollReplyMarkup.InlineKeyboard;
       var length = inlineKeyboardButtons.GetLength(0);
       var pollMessageReplyMarkup = new InlineKeyboardButton[length + 1][];
       Array.Copy(inlineKeyboardButtons, pollMessageReplyMarkup, length);
@@ -43,6 +71,18 @@ namespace RaidBattlesBot.Model
     public static int? GetPollId(this PollMessage message)
     {
       return message.Poll?.Id ?? message.PollId;
+    }
+    
+    public static IQueryable<PollMessage> IncludeRelatedData(this IQueryable<PollMessage> pollMessages)
+    {
+      return pollMessages
+        .Include(_ => _.Poll)
+        .ThenInclude(_ => _.Votes)
+        .Include(_ => _.Poll)
+        .ThenInclude(_ => _.Messages)
+        .Include(_ => _.Poll)
+        .ThenInclude(_ => _.Raid)
+        .ThenInclude(raid => raid.PostEggRaid);
     }
   }
 } 
