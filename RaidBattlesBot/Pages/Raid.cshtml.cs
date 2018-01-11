@@ -31,5 +31,10 @@ namespace RaidBattlesBot.Pages
 
         return Page();
       }
+
+      public IActionResult OnHead(int raidId)
+      {
+        return new OkResult();
+      }
     }
 }
