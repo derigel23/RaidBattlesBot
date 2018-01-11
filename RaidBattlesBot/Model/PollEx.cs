@@ -152,6 +152,11 @@ namespace RaidBattlesBot.Model
         .ThenInclude(raid => raid.PostEggRaid);
     }
 
+    public static int? GetRaidId(this Poll poll)
+    {
+      return poll.Raid?.Id ?? poll.RaidId;
+    }
+
     public static Raid Raid(this Poll poll)
     {
       return poll.Raid?.PostEggRaid ?? poll.Raid;

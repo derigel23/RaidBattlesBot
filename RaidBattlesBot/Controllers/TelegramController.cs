@@ -70,7 +70,7 @@ namespace RaidBattlesBot.Controllers
             HttpContext.Items["uid"] = inlineQuery.From?.Username;
             HttpContext.Items["query"] = inlineQuery.Query;
             return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken));
-          
+
           case UpdateType.ChosenInlineResultUpdate:
             var chosenInlineResult = update.ChosenInlineResult;
             HttpContext.Items["uid"] = chosenInlineResult.From?.Username;
@@ -82,28 +82,33 @@ namespace RaidBattlesBot.Controllers
         if (message == null)
           return Ok();
 
-        HttpContext.Items["uid"] = (message.ForwardFrom ?? message.From)?.Username;
-        HttpContext.Items["messageType"] = message.Type.ToString();
-        HttpContext.Items["chat"] = message.Chat.Username;
+        myTelemetryClient.Context.User.AccountId = (message.From?.Id ?? message.ForwardFrom?.Id)?.ToString();
+        myTelemetryClient.Context.Properties["uid"] = myTelemetryClient.Context.User.AuthenticatedUserId =
+          message.From?.Username ?? message.ForwardFrom?.Username;
+        myTelemetryClient.Context.Properties["messageType"] = message.Type.ToString();
+        myTelemetryClient.Context.Properties["chat"] = message.Chat.Username;
 
         var pollMessage = new PollMessage(message);
-        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
+        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage,
+              cancellationToken)) is bool success && success)
         {
           await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
-        };
+        }
+        myTelemetryClient.Context.Properties["pollId"] = pollMessage.GetPollId()?.ToString();
+        myTelemetryClient.Context.Properties["raidId"] = pollMessage.Poll?.GetRaidId()?.ToString();
 
         return Ok() /* TODO: not handled */;
 
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackException(ex, HttpContext.Properties());
+        myTelemetryClient.TrackException(ex);
         return Ok();
       }
       finally
       {
         var eventName = update.Type.ToString();
-        myTelemetryClient.TrackEvent(eventName, HttpContext.Properties());
+        myTelemetryClient.TrackEvent(eventName);
       }
     }
   }

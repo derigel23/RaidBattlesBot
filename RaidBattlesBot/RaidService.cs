@@ -20,15 +20,13 @@ namespace RaidBattlesBot
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IHttpContextAccessor myHttpContextAccessor;
     private readonly ChatInfo myChatInfo;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, ChatInfo chatInfo)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
-      myHttpContextAccessor = httpContextAccessor;
       myChatInfo = chatInfo;
     }
 
@@ -154,7 +152,7 @@ namespace RaidBattlesBot
         }
         catch (Exception ex)
         {
-          myTelemetryClient.TrackException(ex, myHttpContextAccessor.HttpContext.Properties());
+          myTelemetryClient.TrackException(ex);
         }
       }
     }

@@ -26,9 +26,8 @@ namespace RaidBattlesBot.Handlers
     private readonly PokemonInfo myPokemons;
     private readonly GymHelper myGymHelper;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IHttpContextAccessor myHttpContextAccessor;
 
-    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, Message message, Func<MessageEntity, Message, string> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
+    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, Message message, Func<MessageEntity, Message, string> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
     {
       myMessage = message;
       myGetUrl = getUrl;
@@ -37,7 +36,6 @@ namespace RaidBattlesBot.Handlers
       myPokemons = pokemons;
       myGymHelper = gymHelper;
       myTelemetryClient = telemetryClient;
-      myHttpContextAccessor = httpContextAccessor;
     }
 
     public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -99,7 +97,7 @@ namespace RaidBattlesBot.Handlers
             }
             catch (Exception e)
             {
-              myTelemetryClient.TrackException(e, myHttpContextAccessor.HttpContext.Properties());
+              myTelemetryClient.TrackException(e);
             }
             if (query.TryGetValue("b", out var boss))
             {

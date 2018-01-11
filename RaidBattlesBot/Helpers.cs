@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,12 +21,6 @@ namespace RaidBattlesBot
         urlHelper.ActionContext.HttpContext.RequestServices.GetService<IConfiguration>()["AssetsRoot"]);
       var assetpath = Path.Combine(assetsRoot.AbsolutePath, urlHelper.Content(contentPath));
       return new Uri(assetsRoot, assetpath);
-    }
-
-    public static IDictionary<string, string> Properties(this HttpContext httpContext)
-    {
-      return httpContext?.Items?.ToDictionary(_ => Convert.ToString(_.Key), _ => Convert.ToString(_.Value))
-             ?? new Dictionary<string, string>(0);
     }
 
     #endregion

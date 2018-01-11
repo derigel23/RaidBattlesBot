@@ -23,15 +23,13 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myDbContext;
     private readonly Gyms myGyms;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IHttpContextAccessor myHttpContextAccessor;
     private readonly IOptions<GeoCoderConfiguration> myGeoCoderOptions;
 
-    public GymHelper(RaidBattlesContext dbContext, Gyms gyms, TelemetryClient telemetryClient, IHttpContextAccessor httpContextAccessor, IOptions<GeoCoderConfiguration> geoCoderOptions)
+    public GymHelper(RaidBattlesContext dbContext, Gyms gyms, TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions)
     {
       myDbContext = dbContext;
       myGyms = gyms;
       myTelemetryClient = telemetryClient;
-      myHttpContextAccessor = httpContextAccessor;
       myGeoCoderOptions = geoCoderOptions;
     }
 
@@ -111,7 +109,7 @@ namespace RaidBattlesBot.Handlers
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackException(ex, myHttpContextAccessor.HttpContext.Properties());
+        myTelemetryClient.TrackException(ex);
       }
 
       return (gym, distance);
