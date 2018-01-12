@@ -16,7 +16,7 @@ namespace RaidBattlesBot.Model
     [Description("💙")]
     Mystic = 3,
 
-    [Description("⁇")]
+    [Description("🤔")]
     MayBe = 4,
 
     [Description("✖")]
