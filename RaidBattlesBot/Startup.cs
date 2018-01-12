@@ -97,6 +97,7 @@ namespace RaidBattlesBot
       if (env.IsDevelopment())
       {
         app.UseDeveloperExceptionPage();
+        app.UseStaticFiles();
         app.UseStaticFiles(new StaticFileOptions
         {
           FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "PogoAssets")),
@@ -107,6 +108,7 @@ namespace RaidBattlesBot
 
       app
         .UseRequestLocalization()
+        .UseStaticFiles() // for regular wwwroot
         .UseMvc();
     }
 
