@@ -37,9 +37,10 @@ namespace RaidBattlesBot.Handlers
     {
       string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym;
-      if ((gym == null) && myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision))
+      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision) && (foundGym != gym))
       {
-        gym = raid.PossibleGym = foundGym;
+        if ((gym == null) || foundGym.StartsWith(gym))
+          gym = raid.PossibleGym = foundGym;
       }
       if (gym == null)
       {

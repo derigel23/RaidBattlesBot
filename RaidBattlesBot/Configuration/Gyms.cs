@@ -25,9 +25,16 @@ namespace RaidBattlesBot.Configuration
       {
         var configuration = new CsvHelper.Configuration.Configuration
         {
-          IgnoreQuotes = true,
-          PrepareHeaderForMatch = header => header.Replace("\"", "")
+          BadDataFound = context =>
+            context.FieldBuilder.Clear().Append(
+              context.RawRecord.Split(',', 2).ElementAtOrDefault(1)?.TrimEnd() is string quotedName ?
+                quotedName.StartsWith("\"") ?
+                  quotedName.Substring(1) is string unquotedNameStart ?
+                    unquotedNameStart.EndsWith("\"") ? unquotedNameStart.Substring(0, unquotedNameStart.Length - 1) : unquotedNameStart : quotedName :
+                  quotedName :
+                null)
         };
+        
         using (var csvReader = new CsvReader(streamReader, configuration))
         {
           foreach (var record in csvReader.GetRecords(new { latlon = default(string), name = default(string) }))
