@@ -19,7 +19,7 @@
     "RaidBattlesBot": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://e5d26836.ngrok.io/refresh",
+      "launchUrl": "https://8e4a737e.ngrok.io",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

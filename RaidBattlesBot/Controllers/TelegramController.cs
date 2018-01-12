@@ -89,11 +89,25 @@ namespace RaidBattlesBot.Controllers
         myTelemetryClient.Context.Properties["chat"] = message.Chat.Username;
 
         var pollMessage = new PollMessage(message);
-        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage,
-              cancellationToken)) is bool success && success)
+        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
         {
-          await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
+          switch (pollMessage.Poll.Raid)
+          {
+            // regular pokemons in private chat
+            case Raid raid when raid.RaidBossLevel == null && message.Chat?.Type == ChatType.Private:
+              goto case null;
+
+            // raid pokemons everywhere
+            case Raid raid when raid.RaidBossLevel != null:
+              goto case null;
+
+            // polls without raids
+            case null:
+              await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
+              break;
+          }
         }
+
         myTelemetryClient.Context.Properties["pollId"] = pollMessage.GetPollId()?.ToString();
         myTelemetryClient.Context.Properties["raidId"] = pollMessage.Poll?.GetRaidId()?.ToString();
 
