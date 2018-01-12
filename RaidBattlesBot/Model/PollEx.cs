@@ -28,13 +28,14 @@ namespace RaidBattlesBot.Model
       return  poll.Raid().GetThumbUrl(urlHelper);
     }
 
-    private static StringBuilder GetTitleBase(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
+    private static StringBuilder GetTitleBase(this Poll poll)
     {
-      var result = poll.Raid()?.GetDescription(urlHelper, mode) ?? new StringBuilder();
+      var result = poll.Raid()?.GetDescription() ?? new StringBuilder();
       if (poll.Time != null)
       {
-        var insertPos = result.ToString().IndexOf(RaidEx.Delimeter, StringComparison.Ordinal) is var pos && pos >= 0 ? pos : result.Length;
-        result.Insert(insertPos, $"{RaidEx.Delimeter}{poll.Time:t}");
+        if (result.Length > 0)
+          result.Insert(0, RaidEx.Delimeter);
+        result.Insert(0, $"*Бой {poll.Time:t}*");
       }
 
       return result;
@@ -42,18 +43,18 @@ namespace RaidBattlesBot.Model
 
     public static string GetTitle(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var title = poll.GetTitleBase(urlHelper, mode);
+      var title = poll.GetTitleBase() ?? new StringBuilder();
       if (title.Length == 0)
       {
-        return poll.Title;
+        title.Append(poll.Title);
       }
 
-      return title.ToString();
+      return mode.Format(title).ToString();
     }
 
     public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var description = poll.GetTitleBase(urlHelper, mode);
+      var description = poll.GetTitleBase();
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)

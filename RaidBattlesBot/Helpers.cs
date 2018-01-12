@@ -3,11 +3,14 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using JetBrains.Annotations;
+using Markdig;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot
 {
@@ -68,6 +71,33 @@ namespace RaidBattlesBot
           .FirstOrDefault()
           ?.GetCustomAttribute<DescriptionAttribute>()
           ?.Description;
+    }
+
+    #endregion
+
+    #region Markdown
+
+    public static StringBuilder Format(this ParseMode mode, StringBuilder text)
+    {
+      switch (mode)
+      {
+        case ParseMode.Markdown:
+          return text;
+
+        case ParseMode.Html:
+          using (var output = new StringWriter())
+          {
+            Markdown.ToHtml(text.ToString(), output);
+            return output.GetStringBuilder();
+          }
+
+        default:
+          using (var output = new StringWriter())
+          {
+            Markdown.ToPlainText(text.ToString(), output);
+            return output.GetStringBuilder();
+          }
+      }
     }
 
     #endregion

@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using Markdig;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
@@ -14,48 +13,31 @@ namespace RaidBattlesBot.Model
   {
     public const string Delimeter = " ∙ ";
 
-    public static StringBuilder GetDescription(this Raid raid, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
+    public static StringBuilder GetDescription(this Raid raid)
     {
-      var description = new StringBuilder("*");
+      var description = new StringBuilder();
+      description.Append('*');
       if (raid.RaidBossLevel is int raidBossLevel)
       {
         description.Append($@"[R{raidBossLevel}] ");
       }
 
       description.Append($"{raid.Name}");
+      description.Append('*');
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
       {
-        description.Append(Delimeter).Append(raid.Gym ?? raid.PossibleGym);
+        description.Append(Delimeter).Append('*').Append(raid.Gym ?? raid.PossibleGym).Append('*');
       }
       else if (raid.NearByAddress != null)
       {
-        description.Append(Delimeter).Append(raid.NearByAddress);
+        description.Append(Delimeter).Append('*').Append(raid.NearByAddress).Append('*');
       }
 
       if (description.Length == 0)
-        description.Append(raid.Title);
-
-      description.Append("*");
-      switch (mode)
-      {
-        case ParseMode.Markdown:
-          return description;
-
-        case ParseMode.Html:
-          using (var output = new StringWriter())
-          {
-            Markdown.ToHtml(description.ToString(), output);
-            return output.GetStringBuilder();
-          }
-
-        default:
-          using (var output = new StringWriter())
-          {
-            Markdown.ToPlainText(description.ToString(), output);
-            return output.GetStringBuilder();
-          }
-      }
+        description.Append('*').Append(raid.Title).Append('*');
+      
+      return description;
     }
 
     public static Uri GetThumbUrl([CanBeNull] this Raid raid, IUrlHelper urlHelper)
