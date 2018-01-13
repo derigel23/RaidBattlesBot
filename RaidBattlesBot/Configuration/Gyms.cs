@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using CsvHelper;
 using RaidBattlesBot.Model;
 
@@ -16,8 +15,8 @@ namespace RaidBattlesBot.Configuration
   {
     public const int LowerDecimalPrecision = 4;
       
-    private readonly IDictionary<(decimal lat, decimal lon), string> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), string>();
-    private readonly IDictionary<(decimal lat, decimal lon), string> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), string>();
+    private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
+    private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
     
     public Gyms(Stream stream)
     {
@@ -50,17 +49,19 @@ namespace RaidBattlesBot.Configuration
               {
                 name = name.Substring(1, name.Length - 1 - (name[name.Length - 1] == '"' ? 1 : 0)); // unquote
               }
-              myGymInfo.Add((lat, lon), name);
-              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision)] = name;
+
+              var gymInfo = ((lat, lon), name);
+              myGymInfo.Add((lat, lon), gymInfo);
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision)] = gymInfo;
             }
           }
         }
       }
     }
 
-    public bool TryGet(decimal lat, decimal lon, out string gym, int? precision = null) =>
+    public bool TryGet(decimal lat, decimal lon, out ((decimal lat, decimal lon) location, string name) gymInfo, int? precision = null) =>
       precision is int specifiedPrecision ?
-        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, specifiedPrecision), out gym) :
-        myGymInfo.TryGetValue((lat, lon), out gym);
+        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, specifiedPrecision), out gymInfo) :
+        myGymInfo.TryGetValue((lat, lon) , out gymInfo);
   }
 }

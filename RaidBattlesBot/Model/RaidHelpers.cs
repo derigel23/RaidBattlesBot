@@ -7,7 +7,7 @@ namespace RaidBattlesBot.Model
   public static class RaidHelpers
   {
     public static (decimal lat, decimal lon) LowerPrecision(decimal lat, decimal lon, int precision) =>
-      (decimal.Round(lat, precision, MidpointRounding.AwayFromZero), decimal.Round(lon, precision, MidpointRounding.AwayFromZero));
+      (decimal.Round(lat, precision, MidpointRounding.ToEven), decimal.Round(lon, precision, MidpointRounding.ToEven));
 
     public static IOrderedQueryable<Raid> FindKnownGym(this DbSet<Raid> encounters, decimal lat, decimal lon, int? precision = null)
     {
@@ -19,8 +19,8 @@ namespace RaidBattlesBot.Model
       {
         (lat, lon) = LowerPrecision(lat, lon, precisionValue);
         possibleEncounters = possibleEncounters
-          .Where(_ => decimal.Round(_.Lon.Value, precisionValue, MidpointRounding.AwayFromZero) == lon)
-          .Where(_ => decimal.Round(_.Lat.Value, precisionValue, MidpointRounding.AwayFromZero) == lat);
+          .Where(_ => decimal.Round(_.Lon.Value, precisionValue, MidpointRounding.ToEven) == lon)
+          .Where(_ => decimal.Round(_.Lat.Value, precisionValue, MidpointRounding.ToEven) == lat);
       }
       else
       {

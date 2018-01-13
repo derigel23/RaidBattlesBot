@@ -1,11 +1,13 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Markdig;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RaidBattlesBot.Configuration;
+using RaidBattlesBot.Handlers;
 
 namespace RaidBattlesBot.Model
 {
@@ -67,14 +69,81 @@ namespace RaidBattlesBot.Model
       return urlHelper.Page("/Raid", null, new { raidId = raid.Id }, protocol: "https");
     }
 
-    public static IQueryable<Raid> IncludeRelatedData(this IQueryable<Raid> raids)
-    {
-      return raids
+    public static IQueryable<Raid> IncludeRelatedData(this IQueryable<Raid> raids) =>
+      raids
         .Include(_ => _.PostEggRaid)
         .Include(_ => _.Polls)
         .ThenInclude(_ => _.Messages)
         .Include(_ => _.Polls)
         .ThenInclude(_ => _.Votes);
+
+    public static DateTimeOffset? GetDefaultPollTime(this Raid raid) =>
+      raid.RaidBossEndTime?
+        .Subtract(TimeSpan.FromMinutes(15)) // default offset to the end
+        .Round(TimeSpan.FromMinutes(5)); // rounding
+
+    public static Raid ParseRaidInfo(this Raid raid, PokemonInfo pokemonInfo, string name, string moves = null)
+    {
+      if (name.StartsWith("EGG", StringComparison.OrdinalIgnoreCase)) // EGG
+      {
+        raid.Name = name.Substring(0, name.Length - 1);
+        if (int.TryParse(name.Substring(name.Length - 1, 1), out var raidBossLevel))
+        {
+          raid.RaidBossLevel = raidBossLevel;
+        }
+      }
+      else // BOSS
+      {
+        raid.Name = name;
+        //raid.IV = 100; // raid bosses are always 100%
+        raid.RaidBossLevel = pokemonInfo.GetRaidBossLevel(name);
+        raid.Pokemon = pokemonInfo.GetPokemonNumber(name);
+
+        if (!string.IsNullOrEmpty(moves))
+        {
+          InfoGymBotHelper.ProcessMoves(moves, raid);
+        }
+      }
+
+      return raid;
+    }
+
+    public static Raid SetTitle(this Raid raid, StringBuilder title)
+    {
+      if (title.Length == 0)
+      {
+        title
+          .AppendFormat("[R{0}] ", raid.RaidBossLevel)
+          .Append(raid.Name);
+      }
+
+      if (raid.EndTime != null)
+      {
+        title.Append($" ∙ {raid.EndTime:t}");
+      }
+
+
+      string GetMoveAbbreviation(string move) =>
+        move.Split(' ', StringSplitOptions.RemoveEmptyEntries).Aggregate("", (agg, s) => agg + s.FirstOrDefault()).ToUpper();
+      //if (raid.Move1 != null)
+      //{
+      //  title.Append(" ∙ ").Append(GetMoveAbbreviation(raid.Move1));
+      //  if (raid.Move2 != null)
+      //    title.Append('|').Append(GetMoveAbbreviation(raid.Move2));
+      //}
+      raid.Title = title.ToString();
+
+      return raid;
+    }
+
+    public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, StringBuilder description, GymHelper gymHelper, int? precision = null, CancellationToken cancellationToken = default)
+    {
+      var gymInfo = await gymHelper.ProcessGym(raid.SetTitle(title), description, precision, cancellationToken);
+      if (description.Length > 0)
+      {
+        raid.Description = description.ToString();
+      }
+      return gymInfo;
     }
   }
 }

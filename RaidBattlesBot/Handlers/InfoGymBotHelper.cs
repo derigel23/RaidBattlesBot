@@ -4,7 +4,7 @@ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 
-namespace PokeTrackDecoder.Handlers
+namespace RaidBattlesBot.Handlers
 {
   /// <summary>
   /// Handle messages and venues from @InfoGymBot and @RaidInfoBot
@@ -54,11 +54,7 @@ namespace PokeTrackDecoder.Handlers
 
     public static void ProcessMoves(string movesString, Raid raid)
     {
-      if (movesString.IndexOf("{подробнее}", StringComparison.Ordinal) is var tail && tail >= 0)
-      {
-        movesString = movesString.Remove(tail);
-      }
-      var moves = movesString.TrimEnd('.').TrimEnd().Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
+      var moves = movesString.TrimEnd().Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
       string GetMove(int i) => (moves.Length > i ? moves[i] : null) is string move ? string.IsNullOrEmpty(move) ? null : move : null;
       raid.Move1 = GetMove(0);
       raid.Move2 = GetMove(1);

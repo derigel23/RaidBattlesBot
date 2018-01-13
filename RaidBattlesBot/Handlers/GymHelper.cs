@@ -10,7 +10,6 @@ using GoogleMapsApi.Entities.DistanceMatrix.Request;
 using GoogleMapsApi.Entities.PlacesNearBy.Request;
 using GoogleMapsApi.Entities.PlacesNearBy.Response;
 using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
@@ -33,14 +32,18 @@ namespace RaidBattlesBot.Handlers
       myGeoCoderOptions = geoCoderOptions;
     }
 
-    public async Task<(string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
+    public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
     {
+      var  location = (lat: raid.Lat, lon: raid.Lon);
       string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym;
-      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision) && (foundGym != gym))
+      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision) && (foundGym.name is var foundGymName) && (foundGymName != gym))
       {
-        if ((gym == null) || foundGym.StartsWith(gym))
-          gym = raid.PossibleGym = foundGym;
+        if ((gym == null) || foundGymName.StartsWith(gym))
+        {
+          gym = raid.PossibleGym = foundGymName;
+        }
+        location = foundGym.location;
       }
       if (gym == null)
       {
@@ -65,10 +68,9 @@ namespace RaidBattlesBot.Handlers
 
       try
       {
-        var destination = new Location((double)raid.Lat, (double)raid.Lon);
         var geoRequest = InitGeoRequest(new PlacesNearByRequest
         {
-          Location = destination,
+          Location = new Location((double) location.lat, (double) location.lon),
           Type = "subway_station",
           RankBy = RankBy.Distance,
         });
@@ -94,7 +96,7 @@ namespace RaidBattlesBot.Handlers
             var distanceMatrixRequest = InitGeoRequest(new DistanceMatrixRequest
             {
               Origins = new[] {$"place_id:{address.PlaceId}"},
-              Destinations = new[] {destination.LocationString},
+              Destinations = new[] { geoRequest.Location.LocationString },
               Mode = DistanceMatrixTravelModes.walking,
             });
             var distanceMatrixResponse = await GoogleMaps.DistanceMatrix.QueryAsync(distanceMatrixRequest, cancellationToken);
@@ -113,7 +115,7 @@ namespace RaidBattlesBot.Handlers
         myTelemetryClient.TrackException(ex);
       }
 
-      return (gym, distance);
+      return (location, gym, distance);
     }
 
     private TRequest InitGeoRequest<TRequest>(TRequest request)

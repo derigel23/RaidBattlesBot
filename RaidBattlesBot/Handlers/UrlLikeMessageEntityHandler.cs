@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using NodaTime;
 using PokeTrackDecoder.Handlers;
@@ -73,17 +72,16 @@ namespace RaidBattlesBot.Handlers
             (GetGoogleLocation(requestUri, "/maps/search", 3, out lat, out lon) ||
              GetGoogleLocation(requestUri, "/maps/place", 4, out lat, out lon)))
         {
-          var poll = pollMessage.Poll = new Poll(myMessage);
-          var raid = poll.Raid = new Raid();
-          raid.Lon = lon;
-          raid.Lat = lat;
           var title = new StringBuilder();
+          var description = new StringBuilder();
+
+          var raid = new Raid { Lon = lon, Lat = lat };
 
           var messageDate = myMessage.GetMessageDate(myTimeZoneInfo);
           raid.StartTime = messageDate.ToDateTimeOffset();
 
           var messageText = myMessage.Text;
-          var lines = messageText.Split(new[] {'\n'}, 2);
+          var lines = messageText.Split(Environment.NewLine.ToCharArray(), 2);
           var firstLine = lines[0].Trim();
           if (InfoGymBotHelper.IsAppropriateUrl(requestUri))
           {
@@ -101,39 +99,21 @@ namespace RaidBattlesBot.Handlers
             }
             if (query.TryGetValue("b", out var boss))
             {
-              var name = boss.ToString();
-              if (name.StartsWith("EGG", StringComparison.OrdinalIgnoreCase)) // EGG
+              var movesString = lines.ElementAtOrDefault(1);
+              if (movesString?.IndexOf("{подробнее}", StringComparison.Ordinal) is int tail && tail >= 0)
               {
-                raid.Name = name.Substring(0, name.Length - 1);
-                if (int.TryParse(name.Substring(name.Length - 1, 1), out var raidBossLevel))
-                {
-                  raid.RaidBossLevel = raidBossLevel;
-                }
+                movesString = movesString.Remove(tail);
               }
-              else // BOSS
-              {
-                raid.Name = name;
-                //raid.IV = 100; // raid bosses are always 100%
-                raid.RaidBossLevel = myPokemons.GetRaidBossLevel(name);
-                raid.Pokemon = myPokemons.GetPokemonNumber(name);
+              raid.ParseRaidInfo(myPokemons, boss.ToString(), movesString);
 
-                if (lines.Length > 1)
-                {
-                  InfoGymBotHelper.ProcessMoves(lines[1], raid);
-                }
-              }
-
-              if (query.TryGetValue("t", out var time) && ParseTime(time, out var dateTime))
+              if (query.TryGetValue("t", out var time) && messageDate.ParseTime(time, out var dateTime))
               {
                 raid.RaidBossEndTime = dateTime;
               }
-              else if (query.TryGetValue("tb", out time) && ParseTime(time, out dateTime))
+              else if (query.TryGetValue("tb", out time) && messageDate.ParseTime(time, out dateTime))
               {
                 raid.EndTime = dateTime;
               }
-              title
-                .AppendFormat("[R{0}] ", raid.RaidBossLevel)
-                .Append(raid.Name);
             }
             else
             {
@@ -182,17 +162,17 @@ namespace RaidBattlesBot.Handlers
               }
             }
 
-            if (ParseTimePattern(messageText, ourPoketrackEndTimeDetector, out var dateTime))
+            if (messageDate.ParseTimePattern(messageText, ourPoketrackEndTimeDetector, out var dateTime))
             {
               raid.EndTime = dateTime;
             }
-            else if (ParseTimePattern(messageText, ourPoketrackStartTimeDetector, out dateTime))
+            else if (messageDate.ParseTimePattern(messageText, ourPoketrackStartTimeDetector, out dateTime))
             {
               raid.EndTime = dateTime;
             }
             else if (raid.RaidBossLevel == null)
             {
-              if (!ParseTimePattern(messageText, ourPoketrackSpottedDetector, out dateTime))
+              if (!messageDate.ParseTimePattern(messageText, ourPoketrackSpottedDetector, out dateTime))
               {
                 dateTime = raid.StartTime ?? (myClock.GetCurrentZonedDateTime().ToDateTimeOffset());
               }
@@ -236,47 +216,13 @@ namespace RaidBattlesBot.Handlers
 
           raid.Pokemon = raid.Pokemon ?? myPokemons.GetPokemonNumber(raid.Name);
 
-          if (raid.EndTime != null)
+          await raid.SetTitleAndDescription(title, description, myGymHelper, cancellationToken: cancellationToken);
+
+          pollMessage.Poll = new Poll(myMessage)
           {
-            poll.Time = raid.RaidBossEndTime? // adjustemnts
-              .Subtract(TimeSpan.FromMinutes(15)) // default offset to the end
-              .Round(TimeSpan.FromMinutes(5)); // rounding
-            title
-              .Append($" ∙ {raid.EndTime:t}");
-          }
-
-          bool ParseTimePattern(string text, Regex pattern, out DateTimeOffset parsedDateTime)
-          {
-            return pattern.Match(text) is var match && match.Success && ParseTime(match.Value, out parsedDateTime);
-          }
-
-          bool ParseTime(string value, out DateTimeOffset parsedDateTime)
-          {
-            if (DateTime.TryParseExact(value, new[] { "HH:mm:ss", "hh:mm tt", "HH:mm" }, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.NoCurrentDateDefault, out var parsedTime) ||
-                DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.NoCurrentDateDefault, out parsedTime))
-            {
-              var parsedZonedDateTime = messageDate - Duration.FromTicks(messageDate.TickOfDay) + Duration.FromTicks(parsedTime.TimeOfDay.Ticks);
-              parsedDateTime = parsedZonedDateTime.ToDateTimeOffset();
-              return true;
-            }
-
-            return false;
-          }
-
-          string GetMoveAbbreviation(string move) =>
-            move.Split(' ', StringSplitOptions.RemoveEmptyEntries).Aggregate("", (agg, s) => agg + s.FirstOrDefault()).ToUpper();
-          //if (raid.Move1 != null)
-          //{
-          //  title.Append(" ∙ ").Append(GetMoveAbbreviation(raid.Move1));
-          //  if (raid.Move2 != null)
-          //    title.Append('|').Append(GetMoveAbbreviation(raid.Move2));
-          //}
-
-          var description = new StringBuilder();
-          await myGymHelper.ProcessGym(raid, description, cancellationToken: cancellationToken);
-
-          raid.Title = title.ToString();
-          raid.Description = description.ToString();
+            Raid = raid,
+            Time = raid.GetDefaultPollTime()
+          };
 
           return true;
         }
