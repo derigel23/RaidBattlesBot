@@ -5,9 +5,7 @@ namespace RaidBattlesBot.Model
 {
   public static class UserEx
   {
-    public static string GetLink(this User user)
-    {
-      return $"[{string.Join(" ", new [] { user.FirstName, user.LastName }.Where(_ => !string.IsNullOrEmpty(_)))}](tg://user?id={user.Id})";
-    }
+    public static string GetLink(this User user) =>
+      $"[{"\x00A0".JoinNonEmpty(user.FirstName, user.LastName)}](tg://user?id={user.Id})";
   }
 }

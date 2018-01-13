@@ -101,7 +101,7 @@ namespace RaidBattlesBot.Model
           if (votesNumber > 10) // compact mode
           {
             text
-              .Append(vote.Key?.GetDescription()).Append(" ")
+              .Append(vote.Key?.GetDescription()).Append('\x00A0')
               .AppendJoin(", ", votes.Select(v => v.User.GetLink()))
               .AppendLine();
           }
