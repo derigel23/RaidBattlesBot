@@ -136,9 +136,9 @@ namespace RaidBattlesBot.Model
       return raid;
     }
 
-    public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, StringBuilder description, GymHelper gymHelper, int? precision = null, CancellationToken cancellationToken = default)
+    public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, StringBuilder description, GymHelper gymHelper, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
-      var gymInfo = await gymHelper.ProcessGym(raid.SetTitle(title), description, precision, cancellationToken);
+      var gymInfo = await gymHelper.ProcessGym(raid.SetTitle(title), description, precision, rounding, cancellationToken);
       if (description.Length > 0)
       {
         raid.Description = description.ToString();

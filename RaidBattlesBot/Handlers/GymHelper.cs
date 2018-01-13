@@ -32,12 +32,12 @@ namespace RaidBattlesBot.Handlers
       myGeoCoderOptions = geoCoderOptions;
     }
 
-    public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, CancellationToken cancellationToken = default)
+    public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
       var  location = (lat: raid.Lat, lon: raid.Lon);
       string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym;
-      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision) && (foundGym.name is var foundGymName) && (foundGymName != gym))
+      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision, rounding) && (foundGym.name is var foundGymName) && (foundGymName != gym))
       {
         if ((gym == null) || foundGymName.StartsWith(gym))
         {

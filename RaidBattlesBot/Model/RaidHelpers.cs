@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using RaidBattlesBot.Configuration;
 
 namespace RaidBattlesBot.Model
 {
   public static class RaidHelpers
   {
-    public static (decimal lat, decimal lon) LowerPrecision(decimal lat, decimal lon, int precision) =>
-      (decimal.Round(lat, precision, MidpointRounding.ToEven), decimal.Round(lon, precision, MidpointRounding.ToEven));
+    public static (decimal lat, decimal lon) LowerPrecision(decimal lat, decimal lon, int precision, MidpointRounding rounding) =>
+      (decimal.Round(lat, precision, rounding), decimal.Round(lon, precision, rounding));
 
-    public static IOrderedQueryable<Raid> FindKnownGym(this DbSet<Raid> encounters, decimal lat, decimal lon, int? precision = null)
+    public static IOrderedQueryable<Raid> FindKnownGym(this DbSet<Raid> encounters, decimal lat, decimal lon, int? precision = null, MidpointRounding? rounding = null)
     {
       var possibleEncounters = encounters
         .Where(_ => _.Gym != null || _.PossibleGym != null)
@@ -17,10 +18,11 @@ namespace RaidBattlesBot.Model
 
       if (precision is int precisionValue)
       {
-        (lat, lon) = LowerPrecision(lat, lon, precisionValue);
+        var precisionRounding = rounding ?? Gyms.LowerDecimalPrecisionRounding;
+        (lat, lon) = LowerPrecision(lat, lon, precisionValue, precisionRounding);
         possibleEncounters = possibleEncounters
-          .Where(_ => decimal.Round(_.Lon.Value, precisionValue, MidpointRounding.ToEven) == lon)
-          .Where(_ => decimal.Round(_.Lat.Value, precisionValue, MidpointRounding.ToEven) == lat);
+          .Where(_ => decimal.Round(_.Lon.Value, precisionValue, precisionRounding) == lon)
+          .Where(_ => decimal.Round(_.Lat.Value, precisionValue, precisionRounding) == lat);
       }
       else
       {

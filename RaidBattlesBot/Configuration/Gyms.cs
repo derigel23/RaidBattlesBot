@@ -1,8 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using CsvHelper;
 using RaidBattlesBot.Model;
@@ -14,7 +16,9 @@ namespace RaidBattlesBot.Configuration
   public class Gyms
   {
     public const int LowerDecimalPrecision = 4;
-      
+    public const MidpointRounding LowerDecimalPrecisionRounding = default;
+    private static readonly decimal PrecisionOffset = (decimal) (5 / (Math.Pow(10, LowerDecimalPrecision + 1)));
+    
     private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
     private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
     
@@ -52,16 +56,20 @@ namespace RaidBattlesBot.Configuration
 
               var gymInfo = ((lat, lon), name);
               myGymInfo.Add((lat, lon), gymInfo);
-              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision)] = gymInfo;
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon + PrecisionOffset, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon - PrecisionOffset, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat - PrecisionOffset, lon, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
+              myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat + PrecisionOffset, lon, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
             }
           }
         }
       }
     }
 
-    public bool TryGet(decimal lat, decimal lon, out ((decimal lat, decimal lon) location, string name) gymInfo, int? precision = null) =>
+    public bool TryGet(decimal lat, decimal lon, out ((decimal lat, decimal lon) location, string name) gymInfo, int? precision = null, MidpointRounding? rounding = null) =>
       precision is int specifiedPrecision ?
-        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, specifiedPrecision), out gymInfo) :
+        myGymLowerPrecisionInfo.TryGetValue(RaidHelpers.LowerPrecision(lat, lon, specifiedPrecision, rounding ?? LowerDecimalPrecisionRounding), out gymInfo) :
         myGymInfo.TryGetValue((lat, lon) , out gymInfo);
   }
 }

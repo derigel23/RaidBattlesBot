@@ -53,7 +53,7 @@ namespace RaidBattlesBot.Handlers
       };
       var gymInfo = await raid
         .ParseRaidInfo(myPokemonInfo, match.Groups["name"].Value, venue.Address.Split(Environment.NewLine.ToCharArray(), 2)[0])
-        .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, Gyms.LowerDecimalPrecision, cancellationToken);
+        .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, Gyms.LowerDecimalPrecision, Gyms.LowerDecimalPrecisionRounding, cancellationToken);
       raid.Lat = gymInfo.location.lat;
       raid.Lon = gymInfo.location.lon;
 
