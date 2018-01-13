@@ -18,16 +18,14 @@ namespace RaidBattlesBot.Handlers
   public class VenueMessageHandler : IMessageHandler
   {
     private readonly RaidBattlesContext myDb;
-    private readonly RaidService myRaidService;
     private readonly PokemonInfo myPokemonInfo;
     private readonly GymHelper myGymHelper;
     private readonly Message myMessage;
     private readonly DateTimeZone myDateTimeZone;
 
-    public VenueMessageHandler(RaidBattlesContext db, RaidService raidService, PokemonInfo pokemonInfo, GymHelper gymHelper, Message message, DateTimeZone dateTimeZone)
+    public VenueMessageHandler(RaidBattlesContext db, PokemonInfo pokemonInfo, GymHelper gymHelper, Message message, DateTimeZone dateTimeZone)
     {
       myDb = db;
-      myRaidService = raidService;
       myPokemonInfo = pokemonInfo;
       myGymHelper = gymHelper;
       myMessage = message;
@@ -46,13 +44,16 @@ namespace RaidBattlesBot.Handlers
 
       var raid = new Raid
       {
-        StartTime = messageDate.ParseTime(match.Groups["start"].Value, out var startTime) ? startTime : messageDate.ToDateTimeOffset(),
-        RaidBossEndTime = messageDate.ParseTime(match.Groups["end"].Value, out var endTime) ? endTime : default(DateTimeOffset?),
         Lat = (decimal)venue.Location.Latitude,
         Lon = (decimal)venue.Location.Longitude,
       };
+
+      raid.ParseRaidInfo(myPokemonInfo, match.Groups["name"].Value, venue.Address.Split(Environment.NewLine.ToCharArray(), 2)[0]);
+
+      raid.StartTime = messageDate.ParseTime(match.Groups["start"].Value, out var startTime) ? startTime : messageDate.ToDateTimeOffset();
+      raid.RaidBossEndTime = messageDate.ParseTime(match.Groups["end"].Value, out var endTime) ? endTime : default(DateTimeOffset?);
+
       var gymInfo = await raid
-        .ParseRaidInfo(myPokemonInfo, match.Groups["name"].Value, venue.Address.Split(Environment.NewLine.ToCharArray(), 2)[0])
         .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, Gyms.LowerDecimalPrecision, Gyms.LowerDecimalPrecisionRounding, cancellationToken);
       raid.Lat = gymInfo.location.lat;
       raid.Lon = gymInfo.location.lon;
