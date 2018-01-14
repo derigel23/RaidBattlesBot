@@ -115,7 +115,7 @@ namespace RaidBattlesBot
         }
       }
 
-      var messageText = message.Poll.GetMessageText(urlHelper);
+      var messageText = message.Poll.GetMessageText(urlHelper).ToString();
       if (message.Chat is Chat chat)
       {
         var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, ParseMode.Markdown,
@@ -134,7 +134,7 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var messageText = poll.GetMessageText(urlHelper);
+      var messageText = poll.GetMessageText(urlHelper).ToString();
       foreach (var message in poll.Messages)
       {
         try

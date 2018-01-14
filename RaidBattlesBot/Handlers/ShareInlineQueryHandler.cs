@@ -54,7 +54,7 @@ namespace RaidBattlesBot.Handlers
             Description = "Клонировать голосование",
             HideUrl = true,
             ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(myUrlHelper), ParseMode = ParseMode.Markdown },
+            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(myUrlHelper).ToString(), ParseMode = ParseMode.Markdown },
             ReplyMarkup = poll.GetReplyMarkup()
           });
 

@@ -41,11 +41,5 @@ namespace RaidBattlesBot.Controllers
 
       return RedirectToAction("Status");
     }
-
-    [HttpGet("/")]
-    public IActionResult Index()
-    {
-      return RedirectToAction("Status");
-    }
   }
 }

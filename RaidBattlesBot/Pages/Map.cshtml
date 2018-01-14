@@ -1,0 +1,133 @@
+﻿@page "{handler?}"
+@using System.Globalization
+@using RaidBattlesBot
+@model RaidBattlesBot.Pages.MapModel
+@{
+  Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Title</title>
+  <meta property="og:title" content="Raid Battles" />
+  <meta property="og:description" content="Бот для организации рейдов в Покемон Го. Вопросы, замечания и предложения @@RaidBattlesChat." />
+  <meta property="og:site_name" content="Raid Battles" />
+  <meta property="og:image" content="@Url.AssetsContent("static_assets/png/raid_tut_raid.png")" />
+  <style>
+    html, body, map { width: 100%; height: 100%; }
+    img.icon {
+      height: 64px;
+      width: 64px;
+      margin-right: 6px;
+      float: right;
+    }
+  </style>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=@CultureInfo.CurrentCulture.Name" type="text/javascript"></script>
+  <script type="text/javascript">
+    ymaps.ready(init);
+
+    function init() {
+      var geolocation = ymaps.geolocation,
+        myMap = new ymaps.Map('map', {
+          center: [55.754093, 37.620407],
+          zoom: 10,
+          controls: ['zoomControl', 'geolocationControl']
+        }, {
+          searchControlProvider: 'yandex#search'
+        });
+
+      geolocation.get({
+        autoReverseGeocode: false,
+        mapStateAutoApply: true
+      }).then(function (result) {
+        result.geoObjects.options.set('preset', 'islands#geolocationIcon');
+        myMap.geoObjects.add(result.geoObjects);
+        });
+
+      myMap.container.enterFullscreen();
+
+      var titleTemplate = ymaps.templateLayoutFactory.createClass(
+        "{{ properties.title }}"
+      );
+
+      var descriptionTemplate = ymaps.templateLayoutFactory.createClass(
+        "<h3>{{ properties.title }}</h3><img src='{{ properties.img }}' alt='{{ properties.name }}' class='icon' />{{ properties.description }}<br /><a href='https://t.me/@Model.BotUser.Username?start={{ properties.id  }}'>Голосование</a>"
+      );
+
+      var objectManager = new ymaps.LoadingObjectManager('@Url.Page(null, "Data", null, "https")?bbox=%b',
+        {
+          splitRequests: false,
+          clusterize: true,
+
+          clusterHasBalloon: true,
+          clusterBalloonContentLayout: "cluster#balloonCarousel",
+          clusterBalloonItemContentLayout: descriptionTemplate,
+          
+          geoObjectOpenBalloonOnClick: true,
+          geoObjectBalloonContentLayout: descriptionTemplate,
+          geoObjectHintContentLayout: titleTemplate
+        });
+
+      objectManager.clusters.options.set({
+        preset: 'islands#grayClusterIcons',
+        hintContentLayout: ymaps.templateLayoutFactory.createClass('Несколько рейдов')
+      });
+
+      myMap.geoObjects.add(objectManager);
+      
+      var listBoxItems = ['R1', 'R2', 'R3', 'R4', 'R5']
+            .map(function(level) {
+              return new ymaps.control.ListBoxItem({
+                data: {
+                  content: level
+                },
+                state: {
+                  selected: true
+                }
+              });
+            }),
+        listBoxControl = new ymaps.control.ListBox({
+          data: {
+            content: 'Фильтр',
+            title: 'Фильтр'
+          },
+          items: listBoxItems,
+          state: {
+            expanded: false,
+            filters: listBoxItems.reduce(function(filters, filter) {
+              filters[filter.data.get('content')] = filter.isSelected();
+              return filters;
+            }, {})
+          }
+        });
+      myMap.controls.add(listBoxControl);
+
+      listBoxControl.events.add(['select', 'deselect'], function(e) {
+        var listBoxItem = e.get('target');
+        var filters = ymaps.util.extend({}, listBoxControl.state.get('filters'));
+        filters[listBoxItem.data.get('content')] = listBoxItem.isSelected();
+        listBoxControl.state.set('filters', filters);
+      });
+
+      var filterMonitor = new ymaps.Monitor(listBoxControl.state);
+      filterMonitor.add('filters', function(filters) {
+        objectManager.setFilter(getFilterFunction(filters));
+      });
+
+      function getFilterFunction(categories){
+        return function(obj){
+          var raidLevel = obj.properties.raidLevel;
+          return categories[raidLevel];
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="map"></div>
+</body>
+</html>

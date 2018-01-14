@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -136,6 +137,23 @@ namespace RaidBattlesBot.Model
       return raid;
     }
 
+    public static Color? GetEggColor(this Raid raid)
+    {
+      switch (raid.RaidBossLevel)
+      {
+        case 1:
+        case 2:
+          return Color.FromArgb(249, 125, 150  );
+        case 3:
+        case 4:
+          return Color.FromArgb(255, 200, 35);
+        case 5:
+          return Color.FromArgb(22, 55, 72);
+        default:
+          return null;
+      }
+    }
+    
     public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, StringBuilder description, GymHelper gymHelper, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
       var gymInfo = await gymHelper.ProcessGym(raid.SetTitle(title), description, precision, rounding, cancellationToken);

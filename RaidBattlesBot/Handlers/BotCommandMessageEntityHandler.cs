@@ -37,6 +37,7 @@ namespace RaidBattlesBot.Handlers
           return true;
 
         case var _ when command.StartsWith("/poll"):
+        case var _ when command.StartsWith("/start"):
           if (!int.TryParse(myMessage.Text.Substring(entity.Offset + entity.Length).Trim(), out var pollId))
             return false;
           

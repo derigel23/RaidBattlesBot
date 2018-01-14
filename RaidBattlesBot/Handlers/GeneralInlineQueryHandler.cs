@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
           ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent
           {
-            MessageText = fakePoll.GetMessageText(myUrlHelper),
+            MessageText = fakePoll.GetMessageText(myUrlHelper).ToString(),
             ParseMode = ParseMode.Markdown
           },
           ReplyMarkup = fakePoll.GetReplyMarkup()

@@ -1,8 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -15,11 +15,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myDb;
     private readonly Gyms myGyms;
+    private readonly IClock myClock;
 
-    public LocationMessageHandler(RaidBattlesContext db, Gyms gyms)
+    public LocationMessageHandler(RaidBattlesContext db, Gyms gyms, IClock clock)
     {
       myDb = db;
       myGyms = gyms;
+      myClock = clock;
     }
     public async Task<bool?> Handle(Message message, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
@@ -31,8 +33,9 @@ namespace RaidBattlesBot.Handlers
         return null;
       }
 
+      var now = myClock.GetCurrentInstant().ToDateTimeOffset();
       var existingRaid = await myDb.Raids
-        .Where(_ => _.RaidBossEndTime > DateTimeOffset.Now)
+        .Where(_ => _.RaidBossEndTime > now)
         .Where(_ => _.Lat == foundGym.location.lat && _.Lon == foundGym.location.lon)
         .IncludeRelatedData()
         .FirstOrDefaultAsync(cancellationToken);

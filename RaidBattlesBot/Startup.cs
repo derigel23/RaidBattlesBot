@@ -1,9 +1,11 @@
 ﻿using System.IO;
+using System.Linq;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -74,7 +76,13 @@ namespace RaidBattlesBot
           .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
 
       services.AddMemoryCache();
-      services.AddMvc().AddControllersAsServices();
+      services
+        .AddMvc(options =>
+        {
+          options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
+        })
+        .AddControllersAsServices()
+        .AddRazorPagesOptions(options => options.Conventions.AddPageRoute("/Map", "{handler?}"));
 
       services.AddDbContextPool<RaidBattlesContext>(options =>
         options.UseSqlServer(myConfiguration.GetConnectionString("RaidBattlesDatabase")));

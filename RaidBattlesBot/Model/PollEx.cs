@@ -78,7 +78,7 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static string GetMessageText(this Poll poll, IUrlHelper urlHelper)
+    public static StringBuilder GetMessageText(this Poll poll, IUrlHelper urlHelper)
     {
       var text = poll.GetDescription(urlHelper, ParseMode.Markdown).AppendLine();
       
@@ -114,7 +114,7 @@ namespace RaidBattlesBot.Model
         }
       }
 
-      return text.Append($"[\x200B]({poll.Raid()?.GetLink(urlHelper)})").ToString();
+      return text.Append($"[\x200B]({poll.Raid()?.GetLink(urlHelper)})");
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
