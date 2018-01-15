@@ -5,9 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
 using JetBrains.Annotations;
-using Markdig;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -78,31 +79,47 @@ namespace RaidBattlesBot
 
     #endregion
 
-    #region Markdown
+    #region Formatting
 
-    public static StringBuilder Format(this ParseMode mode, StringBuilder text)
+    static Helpers()
+    {
+      var encoderSettings = new TextEncoderSettings(UnicodeRanges.All);
+      encoderSettings.ForbidCharacters('*', '_', '`');
+      TelegramMarkdownEncoder = HtmlEncoder.Create(encoderSettings);
+    }
+
+    /* TODO: need better Markdown sanitizer*/
+    private static readonly HtmlEncoder TelegramMarkdownEncoder;
+
+    public static string Sanitize(this string text, ParseMode mode) =>
+      string.IsNullOrEmpty(text) ? text :
+      mode == ParseMode.Markdown ? TelegramMarkdownEncoder.Encode(text) :
+      mode == ParseMode.Html ? HtmlEncoder.Default.Encode(text) :
+      text;
+    
+    public static StringBuilder Bold(this StringBuilder builder, ParseMode mode, Action<StringBuilder> contentBuilder)
+    {
+      builder.Append(mode == ParseMode.Html ? "<b>" : mode == ParseMode.Markdown ? "*" : null);
+      contentBuilder(builder);
+      builder.Append(mode == ParseMode.Html ? "</b>" : mode == ParseMode.Markdown ? "*" : null);
+      return builder;
+    }
+
+    public static StringBuilder Link(this StringBuilder builder, string text, string link, ParseMode mode = ParseMode.Default)
     {
       switch (mode)
       {
         case ParseMode.Markdown:
-          return text;
+          return builder.Append($"[{text}]({link})");
 
         case ParseMode.Html:
-          using (var output = new StringWriter())
-          {
-            Markdown.ToHtml(text.ToString(), output);
-            return output.GetStringBuilder();
-          }
+          return builder.Append($"<a href='{link}'>{text}</a>");
 
         default:
-          using (var output = new StringWriter())
-          {
-            Markdown.ToPlainText(text.ToString(), output);
-            return output.GetStringBuilder();
-          }
+          return builder.Append(text);
       }
     }
-
+    
     #endregion
 
     #region Time

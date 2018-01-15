@@ -9,7 +9,6 @@ using Newtonsoft.Json.Serialization;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
 
@@ -54,7 +53,11 @@ namespace RaidBattlesBot.Handlers
             Description = "Клонировать голосование",
             HideUrl = true,
             ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-            InputMessageContent = new InputTextMessageContent { MessageText = poll.GetMessageText(myUrlHelper).ToString(), ParseMode = ParseMode.Markdown },
+            InputMessageContent = new InputTextMessageContent
+            {
+              MessageText = poll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString(),
+              ParseMode = RaidEx.ParseMode
+            },
             ReplyMarkup = poll.GetReplyMarkup()
           });
 

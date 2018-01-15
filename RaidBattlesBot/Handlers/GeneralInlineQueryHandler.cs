@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
 
@@ -45,11 +44,11 @@ namespace RaidBattlesBot.Handlers
           ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent
           {
-            MessageText = fakePoll.GetMessageText(myUrlHelper).ToString(),
-            ParseMode = ParseMode.Markdown
+            MessageText = fakePoll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString(),
+            ParseMode = RaidEx.ParseMode
           },
           ReplyMarkup = fakePoll.GetReplyMarkup()
-        },
+        }
       };
 
       return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);

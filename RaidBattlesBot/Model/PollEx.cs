@@ -28,14 +28,14 @@ namespace RaidBattlesBot.Model
       return  poll.Raid().GetThumbUrl(urlHelper);
     }
 
-    private static StringBuilder GetTitleBase(this Poll poll)
+    private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode)
     {
-      var result = poll.Raid()?.GetDescription() ?? new StringBuilder();
+      var result = poll.Raid()?.GetDescription(mode) ?? new StringBuilder();
       if (poll.Time != null)
       {
         if (result.Length > 0)
           result.Insert(0, RaidEx.Delimeter);
-        result.Insert(0, $"*Бой {poll.Time:t}*");
+        result.Insert(0, new StringBuilder().Bold(mode, builder => builder.Append($"Бой {poll.Time:t}")));
       }
 
       return result;
@@ -43,23 +43,24 @@ namespace RaidBattlesBot.Model
 
     public static string GetTitle(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var title = poll.GetTitleBase() ?? new StringBuilder();
+      var title = poll.GetTitleBase(mode) ?? new StringBuilder();
       if (title.Length == 0)
       {
-        title.Append(poll.Title);
+        title.Bold(mode, builder => builder.Append(poll.Title ?? $"Poll{poll.Id}"));
       }
 
-      return mode.Format(title).ToString();
+      return title.ToString();
     }
 
     public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var description = poll.GetTitleBase();
+      var description = poll.GetTitleBase(mode);
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
-          description.AppendLine();
-        description.Append(poll.Title);
+          description.AppendLine().Append(poll.Title.Sanitize(mode));
+        else
+          description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
       }
       switch (mode)
       {
@@ -70,7 +71,7 @@ namespace RaidBattlesBot.Model
           {
             description
               .Append(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter)
-              .Append($"[Карта]({raid.GetLink(urlHelper)})");
+              .Link("Карта", raid.GetLink(urlHelper), mode);
           }
           break;
       }
@@ -78,13 +79,15 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static StringBuilder GetMessageText(this Poll poll, IUrlHelper urlHelper)
+    public static StringBuilder GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
-      var text = poll.GetDescription(urlHelper, ParseMode.Markdown).AppendLine();
+      var text = poll.GetDescription(urlHelper, mode).AppendLine();
       
       if (poll.Cancelled)
       {
-        text.AppendLine().AppendLine("*Отмена!*");
+        text
+          .AppendLine()
+          .Bold(mode, builder => builder.AppendLine("Отмена!"));
       }
 
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
@@ -102,19 +105,19 @@ namespace RaidBattlesBot.Model
           {
             text
               .Append(vote.Key?.GetDescription()).Append('\x00A0')
-              .AppendJoin(", ", votes.Select(v => v.User.GetLink()))
+              .AppendJoin(", ", votes.Select(v => v.User.GetLink(mode)))
               .AppendLine();
           }
           else
           {
             text
-              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.GetDescription()} {v.User.GetLink()}"))
+              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.GetDescription()} {v.User.GetLink(mode)}"))
               .AppendLine();
           }
         }
       }
 
-      return text.Append($"[\x200B]({poll.Raid()?.GetLink(urlHelper)})");
+      return text.Link("\x200B", poll.Raid()?.GetLink(urlHelper), mode);
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)

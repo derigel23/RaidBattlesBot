@@ -9,36 +9,45 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class RaidEx
   {
     public const string Delimeter = " ∙ ";
-
-    public static StringBuilder GetDescription(this Raid raid)
+    public const ParseMode ParseMode = Telegram.Bot.Types.Enums.ParseMode.Html;
+    
+    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
     {
       var description = new StringBuilder();
-      description.Append('*');
-      if (raid.RaidBossLevel is int raidBossLevel)
-      {
-        description.Append($@"[R{raidBossLevel}] ");
-      }
 
-      description.Append($"{raid.Name}");
-      description.Append('*');
+      description.Bold(mode, builder =>
+      {
+        if (raid.RaidBossLevel is int raidBossLevel)
+        {
+          builder.Append($@"[R{raidBossLevel}] ");
+        }
+
+        builder.Append($"{raid.Name}");
+      });
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
       {
-        description.Append(Delimeter).Append('*').Append(raid.Gym ?? raid.PossibleGym).Append('*');
+        description
+          .Append(Delimeter)
+          .Bold(mode, builder => builder.Append(raid.Gym ?? raid.PossibleGym));
       }
       else if (raid.NearByAddress != null)
       {
-        description.Append(Delimeter).Append('*').Append(raid.NearByAddress).Append('*');
+        description
+          .Append(Delimeter)
+          .Bold(mode, builder => builder.Append(raid.NearByAddress));
       }
 
       if (description.Length == 0)
-        description.Append('*').Append(raid.Title).Append('*');
+        description
+          .Bold(mode, builder => builder.Append(raid.Title));
       
       return description;
     }
