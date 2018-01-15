@@ -9,8 +9,6 @@ namespace RaidBattlesBot.Model
 {
     public class Raid : ITrackable
     {
-      private static readonly TimeSpan BossLifetime = TimeSpan.FromMinutes(45);
-
       public int Id { get; set; }
       public decimal? Lat { get; set; }
       public decimal? Lon { get; set; }
@@ -33,10 +31,13 @@ namespace RaidBattlesBot.Model
 
       public bool IsEgg => (RaidBossLevel != null) && (Pokemon == null);
 
+      private static readonly TimeSpan BossLifetime = TimeSpan.FromMinutes(45);
+      private static readonly TimeSpan BossTimePrecision = TimeSpan.FromMinutes(1);
+
       [Computed, NotMapped]
       public DateTimeOffset? RaidBossEndTime
       {
-        get => !IsEgg ? EndTime : EndTime?.Add(BossLifetime); // plus boss lifetime
+        get => (!IsEgg ? EndTime : EndTime?.Add(BossLifetime))?.Floor(BossTimePrecision); // plus boss lifetime, reset seconds part
         set => EndTime = !IsEgg ? value : value?.Add(-BossLifetime); // minus boss lifetime
       }
 
