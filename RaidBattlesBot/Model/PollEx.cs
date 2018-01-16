@@ -90,6 +90,7 @@ namespace RaidBattlesBot.Model
           .Bold(mode, builder => builder.AppendLine("Отмена!"));
       }
 
+      var compactMode = poll.Votes.Count > 10;
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
         .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value)
         .OrderBy(voteGroup => voteGroup.Key.Order))
@@ -101,7 +102,7 @@ namespace RaidBattlesBot.Model
         foreach (var vote in voteGroup.GroupBy(_ => _.Team).OrderBy(_ => _.Key))
         {
           var votes = vote.OrderBy(v => v.Modified);
-          if (votesNumber > 10) // compact mode
+          if (compactMode)
           {
             text
               .Append(vote.Key?.GetDescription()).Append('\x00A0')
