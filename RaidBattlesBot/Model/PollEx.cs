@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
@@ -90,7 +91,7 @@ namespace RaidBattlesBot.Model
           .Bold(mode, builder => builder.AppendLine("Отмена!"));
       }
 
-      var compactMode = poll.Votes.Count > 10;
+      var compactMode = poll.Votes?.Count > 10;
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
         .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value)
         .OrderBy(voteGroup => voteGroup.Key.Order))
@@ -105,14 +106,14 @@ namespace RaidBattlesBot.Model
           if (compactMode)
           {
             text
-              .Append(vote.Key?.GetDescription()).Append('\x00A0')
+              .Append(vote.Key?.AsString(EnumFormat.Description)).Append('\x00A0')
               .AppendJoin(", ", votes.Select(v => v.User.GetLink(mode)))
               .AppendLine();
           }
           else
           {
             text
-              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.GetDescription()} {v.User.GetLink(mode)}"))
+              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.AsString(EnumFormat.Description)} {v.User.GetLink(mode)}"))
               .AppendLine();
           }
         }
@@ -129,7 +130,7 @@ namespace RaidBattlesBot.Model
       var pollId = poll.Id;
 
       InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
-        new InlineKeyboardCallbackButton(vote.GetDescription(), $"vote:{pollId}:{vote}");
+        new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.Description), $"vote:{pollId}:{vote}");
 
       return new InlineKeyboardMarkup(new[]
       {

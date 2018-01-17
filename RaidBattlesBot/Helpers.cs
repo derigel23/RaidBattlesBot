@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -60,21 +58,6 @@ namespace RaidBattlesBot
       var halfIntervalTicks = (interval.Ticks + 1) >> 1;
 
       return dateTime.AddTicks(halfIntervalTicks - ((dateTime.Ticks + halfIntervalTicks) % interval.Ticks));
-    }
-
-    #endregion
-
-    #region Enum
-
-    public static string GetDescription(this Enum value)
-    {
-      return
-        value
-          .GetType()
-          .GetMember(value.ToString())
-          .FirstOrDefault()
-          ?.GetCustomAttribute<DescriptionAttribute>()
-          ?.Description;
     }
 
     #endregion
