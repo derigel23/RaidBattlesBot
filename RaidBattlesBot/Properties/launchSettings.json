@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "https://3f293ac1.ngrok.io",
+      "launchUrl": "https://38efa715.ngrok.io",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -19,7 +19,7 @@
     "RaidBattlesBot": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://3f293ac1.ngrok.io",
+      "launchUrl": "https://38efa715.ngrok.io",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
