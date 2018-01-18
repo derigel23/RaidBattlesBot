@@ -54,6 +54,7 @@ namespace RaidBattlesBot.Pages
       var polls = await myDb.Polls
         .IncludeRelatedData()
         .Where(_ => _.Raid.RaidBossEndTime > now)
+        .Where(_ => _.Raid.EggRaidId == null) // no eggs if boss is already knonw
         .Where(_ => _.Raid.Lat >= latLow && _.Raid.Lat <= latHigh)
         .Where(_ => _.Raid.Lon >= lonLow && _.Raid.Lon <= lonHigh)
         .DecompileAsync()
