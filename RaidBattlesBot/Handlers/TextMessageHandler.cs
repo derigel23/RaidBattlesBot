@@ -56,9 +56,10 @@ namespace RaidBattlesBot.Handlers
           break;
       }
 
-      if (result is bool success && success)
+      if (result is bool success)
       {
-        if (string.IsNullOrEmpty(pollMessage.Poll.Title) &&
+        if (success &&
+            string.IsNullOrEmpty(pollMessage.Poll.Title) &&
             myCache.TryGetValue<Message>(message.Chat.Id, out var prevMessage) &&
             (prevMessage.From?.Id == message.From?.Id))
         {
@@ -66,8 +67,7 @@ namespace RaidBattlesBot.Handlers
           myCache.Remove(message.Chat.Id);
         }
       }
-
-      if ((message.ForwardFrom == null) && (message.ForwardFromChat == null))
+      else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Entities.Count == 0))
       {
         myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
       }
