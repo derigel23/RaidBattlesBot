@@ -29,25 +29,25 @@ namespace RaidBattlesBot.Model
           builder.Append($@"[R{raidBossLevel}] ");
         }
 
-        builder.Append($"{raid.Name}");
+        builder.Append(raid.Name.Sanitize(mode));
       });
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
       {
         description
           .Append(Delimeter)
-          .Bold(mode, builder => builder.Append(raid.Gym ?? raid.PossibleGym));
+          .Bold(mode, builder => builder.Append((raid.Gym ?? raid.PossibleGym).Sanitize(mode)));
       }
       else if (raid.NearByAddress != null)
       {
         description
           .Append(Delimeter)
-          .Bold(mode, builder => builder.Append(raid.NearByAddress));
+          .Bold(mode, builder => builder.Append(raid.NearByAddress.Sanitize(mode)));
       }
 
       if (description.Length == 0)
         description
-          .Bold(mode, builder => builder.Append(raid.Title));
+          .Bold(mode, builder => builder.Append(raid.Title.Sanitize(mode)));
       
       return description;
     }

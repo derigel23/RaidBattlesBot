@@ -47,7 +47,7 @@ namespace RaidBattlesBot.Model
       var title = poll.GetTitleBase(mode) ?? new StringBuilder();
       if (title.Length == 0)
       {
-        title.Bold(mode, builder => builder.Append(poll.Title ?? $"Poll{poll.Id}"));
+        title.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode) ?? $"Poll{poll.Id}"));
       }
 
       return title.ToString();
