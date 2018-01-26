@@ -185,7 +185,7 @@ namespace RaidBattlesBot.Handlers
                 endTimeExplicitlySpecified = true;
               }
               else if (ourPoketrackSecLeftDetector.Match(messageText) is var secLeftMatch && secLeftMatch.Success &&
-                        int.TryParse(minLeftMatch.Value, out var secLeft))
+                        int.TryParse(secLeftMatch.Value, out var secLeft))
               {
                 dateTime = dateTime.AddSeconds(secLeft);
                 endTimeExplicitlySpecified = true;
