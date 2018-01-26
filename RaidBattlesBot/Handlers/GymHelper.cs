@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -75,12 +76,21 @@ namespace RaidBattlesBot.Handlers
           RankBy = RankBy.Distance,
         });
 
+        var stopwatch = Stopwatch.StartNew();
         var geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, cancellationToken);
-        if (geoResponse.Status == Status.ZERO_RESULTS)
+        switch (geoResponse.Status)
         {
-          geoRequest.Type = "locality";
-          geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, cancellationToken);
+          case Status.ZERO_RESULTS:
+            geoRequest.Type = "locality";
+            geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, cancellationToken);
+            break;
         }
+        stopwatch.Stop();
+
+        var uri = geoRequest.GetUri();
+        myTelemetryClient.TrackDependency(nameof(GoogleMaps), uri.Host, nameof(GoogleMaps.PlacesNearBy), uri.ToString(),
+          DateTimeOffset.MinValue, stopwatch.Elapsed, geoResponse.Status.ToString(), geoResponse.Status == Status.OK);
+
         var address = geoResponse.Results.FirstOrDefault();
         
         if (address != null)
