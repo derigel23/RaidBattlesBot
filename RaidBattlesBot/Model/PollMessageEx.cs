@@ -30,8 +30,12 @@ namespace RaidBattlesBot.Model
             
           // channel, not cancelled
           // replace share button with clone button
-          inlineKeyboardButtons[1][2] =
-            new InlineKeyboardCallbackButton("🌐", $"clone:{message.GetPollId()}");
+          for (var i = 0; i < inlineKeyboardButtons.Length; i++)
+          for (var j = 0; j < inlineKeyboardButtons[i].Length; j++)
+          {
+            if (inlineKeyboardButtons[i][j].Text == "🌐" )
+              inlineKeyboardButtons[i][j] = new InlineKeyboardCallbackButton("🌐", $"clone:{message.GetPollId()}");
+          }
 
           return pollReplyMarkup;
         

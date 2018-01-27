@@ -132,20 +132,14 @@ namespace RaidBattlesBot.Model
       InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
         new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.Description), $"vote:{pollId}:{vote}");
 
-      return new InlineKeyboardMarkup(new[]
+      return new InlineKeyboardMarkup(new InlineKeyboardButton[]
       {
-        new InlineKeyboardButton[]
-        {
-          GetVoteButton(VoteEnum.Valor),
-          GetVoteButton(VoteEnum.Instinct),
-          GetVoteButton(VoteEnum.Mystic),
-        },
-        new InlineKeyboardButton[]
-        {
-          GetVoteButton(VoteEnum.MayBe),
-          GetVoteButton(VoteEnum.Cancel),
-          new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
-        }
+        GetVoteButton(VoteEnum.Valor),
+        GetVoteButton(VoteEnum.Instinct),
+        GetVoteButton(VoteEnum.Mystic),
+        GetVoteButton(VoteEnum.MayBe),
+        GetVoteButton(VoteEnum.Cancel),
+        new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
       });
     }
 
