@@ -49,7 +49,7 @@ namespace RaidBattlesBot.Handlers
       if (gym == null)
       {
         raid.PossibleGym = await myDbContext.Raids
-          .FindKnownGym((decimal) raid.Lat, (decimal) raid.Lon, precision)
+          .FindKnownGym((decimal) raid.Lat, (decimal) raid.Lon, precision, rounding)
           .Select(_ => _.Gym ?? _.PossibleGym)
           .FirstOrDefaultAsync(cancellationToken);
       }

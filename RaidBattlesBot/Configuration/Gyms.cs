@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using CsvHelper;
 using RaidBattlesBot.Model;
@@ -19,9 +18,11 @@ namespace RaidBattlesBot.Configuration
     public const MidpointRounding LowerDecimalPrecisionRounding = default;
     private static readonly decimal PrecisionOffset = (decimal) (5 / (Math.Pow(10, LowerDecimalPrecision + 1)));
     
-    private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
-    private readonly IDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
+    private readonly ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymLowerPrecisionInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
+    private readonly ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)> myGymInfo = new ConcurrentDictionary<(decimal lat, decimal lon), ((decimal lat, decimal lon), string)>();
     
+    public IEnumerable<((decimal lat, decimal lon) location, string gym)> GymInfo => myGymInfo.Values;
+
     public Gyms(Stream stream)
     {
       using (var streamReader = new StreamReader(stream, Encoding.UTF8))
@@ -55,7 +56,7 @@ namespace RaidBattlesBot.Configuration
               }
 
               var gymInfo = ((lat, lon), name);
-              myGymInfo.Add((lat, lon), gymInfo);
+              myGymInfo[(lat, lon)] = gymInfo;
               myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
               myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon + PrecisionOffset, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
               myGymLowerPrecisionInfo[RaidHelpers.LowerPrecision(lat, lon - PrecisionOffset, LowerDecimalPrecision, LowerDecimalPrecisionRounding)] = gymInfo;
