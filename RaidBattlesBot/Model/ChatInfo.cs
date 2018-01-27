@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
@@ -20,28 +21,28 @@ namespace RaidBattlesBot.Model
       myBot = bot;
     }
 
-    public async Task<bool> IsAdmin(ChatId chatId, int? userId, CancellationToken cancellationToken = default)
+    public async Task<ChatMemberStatus> GetChatMemberStatus(ChatId chat, long? userId, CancellationToken cancellation = default)
     {
-      if (chatId == null) return false;
+      if (!(chat?.Identifier is long chatId) || chatId == 0)
+        return ChatMemberStatus.Left;
 
-      if (!(userId is int id)) return false;
+      if (!(userId is long id))
+        return ChatMemberStatus.Left;
 
-      // regular user, admin
-      if (chatId.Identifier == id) return true;
+      // regular user, itself
+      if (chatId == id)
+        return ChatMemberStatus.Creator;
 
-      // regular user, not admin
-      if (chatId.Identifier > 0) return false;
+      // regular user, not itself
+      if ((chatId > 0) || (userId < 0))
+        return ChatMemberStatus.Restricted;
 
-      // channel/group
-      var key = "Admins:" + chatId;
-      if (!myMemoryCache.TryGetValue<IImmutableSet<int>>(key, out var chatAdministrators))
+      var key = (chatId, id: (int)id);
+      return await myMemoryCache.GetOrCreateAsync(key, async entry =>
       {
-        var chatMembers = await myBot.GetChatAdministratorsAsync(chatId, cancellationToken);
-        chatAdministrators = chatMembers.Select(_ => _.User.Id).ToImmutableHashSet();
-        myMemoryCache.Set(key, chatAdministrators, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(5)});
-      }
-
-      return chatAdministrators.Contains(id);
+        entry.SlidingExpiration = TimeSpan.FromMinutes(5);
+        return (await myBot.GetChatMemberAsync(key.chatId, key.id, cancellation)).Status;
+      });
     }
   }
 }

@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
 
       var user = data.From;
 
-      if (!await myChatInfo.IsAdmin(poll.Owner, user.Id, cancellationToken))
+      if (!await myChatInfo.CandEditPoll(poll.Owner, user.Id, cancellationToken))
         return ("Вы не можете отменить голосование", true, null);
 
       poll.Cancelled = true;

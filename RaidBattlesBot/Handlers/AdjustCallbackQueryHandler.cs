@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
 
       var user = data.From;
 
-      if (!await myChatInfo.IsAdmin(poll.Owner, user.Id, cancellationToken))
+      if (!await myChatInfo.CandEditPoll(poll.Owner, user.Id, cancellationToken))
         return ("Вы не можете редактировать голосование", true, null);
 
       poll.Time = poll.Time?.AddMinutes(offset);

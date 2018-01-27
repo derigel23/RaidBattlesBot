@@ -44,7 +44,7 @@ namespace RaidBattlesBot.Model
           return pollReplyMarkup;
       }
 
-      if (!await chatInfo.IsAdmin(message.Poll.Owner, message.UserId, cancellationToken))
+      if (!await chatInfo.CandEditPoll(message.Poll.Owner, message.UserId, cancellationToken))
         return pollReplyMarkup;
 
       if (pollReplyMarkup == null) // cancelled
