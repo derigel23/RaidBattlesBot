@@ -74,12 +74,13 @@ namespace RaidBattlesBot
               .FirstOrDefaultAsync(cancellationToken);
             if ((eggRaid != null) && (raid.Id != eggRaid.Id))
             {
-              raid.Polls = raid.Polls ?? new List<Poll>(eggRaid.Polls?.Count ?? 0);
+              var eggRaidPolls = eggRaid.Polls = eggRaid.Polls ?? new List<Poll>(0);
+              var raidPolls = raid.Polls = raid.Polls ?? new List<Poll>(eggRaidPolls.Count);
               // on post egg raid creation update all existing polls to new raid
-              foreach (var eggRaidPoll in eggRaid.Polls?.ToList() ?? Enumerable.Empty<Poll>())
+              foreach (var eggRaidPoll in new List<Poll>(eggRaidPolls))
               {
-                eggRaid.Polls.Remove(eggRaidPoll);
-                raid.Polls.Add(eggRaidPoll);
+                eggRaidPolls.Remove(eggRaidPoll);
+                raidPolls.Add(eggRaidPoll);
                 eggRaidPoll.Raid = raid;
                 // use exisiting poll (any) for new poll message
                 message.Poll = eggRaidPoll;
