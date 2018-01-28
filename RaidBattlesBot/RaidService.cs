@@ -61,20 +61,24 @@ namespace RaidBattlesBot
               existingRaid.PossibleGym = raid.Gym ?? raid.PossibleGym;
               raidUpdated = true;
             }
-            
-            // use exisiting poll if have rights for any prev message
-            foreach (var existingRaidPoll in existingRaid.Polls)
+
+            if (string.IsNullOrEmpty(message.Poll.Title))
             {
-              foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
+              // use exisiting poll if have rights for any prev message
+              foreach (var existingRaidPoll in existingRaid.Polls)
               {
-                if (await myChatInfo.CanReadPoll(existingRaidPollMessage.Chat, message.UserId ?? message.ChatId, cancellationToken))
+                foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
                 {
-                  message.Poll = existingRaidPoll;
-                  break;
+                  if (await myChatInfo.CanReadPoll(existingRaidPollMessage.Chat, message.UserId ?? message.ChatId, cancellationToken))
+                  {
+                    message.Poll = existingRaidPoll;
+                    break;
+                  }
                 }
+
+                if (message.Poll == existingRaidPoll)
+                  break;
               }
-              if (message.Poll == existingRaidPoll)
-                break;
             }
 
             raid = message.Poll.Raid = existingRaid;
@@ -98,6 +102,10 @@ namespace RaidBattlesBot
                 raidPolls.Add(eggRaidPoll);
                 eggRaidPoll.Raid = raid;
                 raidUpdated = true;
+                
+                if (!string.IsNullOrEmpty(message.Poll.Title))
+                  continue;
+                
                 // use exisiting poll if have rights for any prev message
                 foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
                 {
