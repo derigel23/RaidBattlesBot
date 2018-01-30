@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -35,7 +36,8 @@ namespace RaidBattlesBot.Handlers
 
       if (resultParts[0] == "create")
       {
-        return await myRaidService.AddPoll(data.Query, new PollMessage(data), myUrlHelper, cancellationToken);
+        return await myRaidService.AddPoll(data.Query, FlagEnums.TryParseFlags(resultParts.ElementAtOrDefault(2), out VoteEnum allowedVotes) ? allowedVotes : VoteEnum.Standard,
+          new PollMessage(data), myUrlHelper, cancellationToken);
       }
 
       return null;

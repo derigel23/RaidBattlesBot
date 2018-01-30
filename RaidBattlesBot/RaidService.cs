@@ -28,11 +28,12 @@ namespace RaidBattlesBot
       myChatInfo = chatInfo;
     }
 
-    public async Task<bool> AddPoll(string text, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<bool> AddPoll(string text, VoteEnum allowedVotes, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
       message.Poll = new Poll
       {
         Title = text,
+        AllowedVotes = allowedVotes,
         Owner = message.UserId,
       };
 

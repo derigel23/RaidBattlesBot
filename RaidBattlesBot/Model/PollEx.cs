@@ -15,13 +15,9 @@ namespace RaidBattlesBot.Model
   {
     private static readonly Dictionary<VoteEnum, (int Order, string Singular, string Plural)> ourVoteDescription = new Dictionary<VoteEnum, (int, string, string)>
     {
-      { VoteEnum.Valor, (1, "идёт", "идут") },
-      { VoteEnum.Instinct, (1, "идёт", "идут") },
-      { VoteEnum.Mystic, (1, "идёт", "идут") },
-      
-      { VoteEnum.MayBe, (2, "думает", "думают") },
-      
-      { VoteEnum.Cancel, (3, "передумал", "передумали") },
+      { VoteEnum.Going, (1, "идёт", "идут") },
+      { VoteEnum.Thinking, (2, "думает", "думают") },
+      { VoteEnum.ChangedMind, (3, "передумал", "передумали") },
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
@@ -93,27 +89,27 @@ namespace RaidBattlesBot.Model
 
       var compactMode = poll.Votes?.Count > 10;
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
-        .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => _.Key == vote.Team).Value)
+        .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Key) ?? false).Value)
         .OrderBy(voteGroup => voteGroup.Key.Order))
       {
-        var votesNumber = voteGroup.Count();
+        var votesNumber = voteGroup.Aggregate(0, (i, vote) => vote.Team.GetPlusVotesCount() + 1);
         var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
         text.AppendLine().AppendLine($"{votesNumber} {countStr}");
 
-        foreach (var vote in voteGroup.GroupBy(_ => _.Team).OrderBy(_ => _.Key))
+        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Plus)).OrderBy(_ => _.Key))
         {
           var votes = vote.OrderBy(v => v.Modified);
           if (compactMode)
           {
             text
-              .Append(vote.Key?.AsString(EnumFormat.Description)).Append('\x00A0')
-              .AppendJoin(", ", votes.Select(v => v.User.GetLink(mode)))
+              .Append(vote.Key?.Description()).Append('\x00A0')
+              .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
               .AppendLine();
           }
           else
           {
             text
-              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.AsString(EnumFormat.Description)} {v.User.GetLink(mode)}"))
+              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.Description()} {v.GetUserLinkWithPluses(mode)}"))
               .AppendLine();
           }
         }
@@ -132,15 +128,13 @@ namespace RaidBattlesBot.Model
       InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
         new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.Description), $"vote:{pollId}:{vote}");
 
-      return new InlineKeyboardMarkup(new InlineKeyboardButton[]
+      var buttons = new List<InlineKeyboardButton>();
+      foreach (var voteButton in (poll.AllowedVotes ?? VoteEnum.Standard).GetFlags())
       {
-        GetVoteButton(VoteEnum.Valor),
-        GetVoteButton(VoteEnum.Instinct),
-        GetVoteButton(VoteEnum.Mystic),
-        GetVoteButton(VoteEnum.MayBe),
-        GetVoteButton(VoteEnum.Cancel),
-        new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"),
-      });
+        buttons.Add(GetVoteButton(voteButton));
+      }
+      buttons.Add(new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"));
+      return new InlineKeyboardMarkup(buttons.ToArray());
     }
 
     public static IQueryable<Poll> IncludeRelatedData(this IQueryable<Poll> polls)

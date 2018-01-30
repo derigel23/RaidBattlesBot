@@ -1,5 +1,8 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
@@ -27,19 +30,32 @@ namespace RaidBattlesBot.Handlers
       if (string.IsNullOrEmpty(query))
         return null;
 
-      var fakePoll = new Poll
+      var fakePolls = new Poll[]
       {
-        Title = query
+        new Poll
+        {
+          Title = query,
+          AllowedVotes = VoteEnum.Standard
+        },
+        new Poll
+        {
+          Title = query,
+          AllowedVotes = VoteEnum.Compact
+        },
+        new Poll
+        {
+          Title = query,
+          AllowedVotes = VoteEnum.Minimal
+        }
       };
 
-      var inlineQueryResults = new InlineQueryResult[]
-      {
+      InlineQueryResult[] inlineQueryResults = fakePolls.Select(fakePoll =>
         new InlineQueryResultArticle
         {
-          Id = $"create:{query.GetHashCode()}",
+          Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes}",
           Title = fakePoll.GetTitle(myUrlHelper),
-          Description = "Создать голосование",
-          //Url = "https://static-maps.yandex.ru/1.x/?l=map&ll=37.626187,55.741424&pt=37.618977,55.744091,pm2ntl",
+          Description = new StringBuilder("Создать голосование ")
+            .AppendJoin("", fakePoll.AllowedVotes?.GetFlags().Select(_ => _.AsString(EnumFormat.Description))).ToString(),
           HideUrl = true,
           ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent
@@ -48,8 +64,7 @@ namespace RaidBattlesBot.Handlers
             ParseMode = RaidEx.ParseMode
           },
           ReplyMarkup = fakePoll.GetReplyMarkup()
-        }
-      };
+        }).ToArray();
 
       return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
     }

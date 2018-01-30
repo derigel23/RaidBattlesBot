@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
@@ -63,10 +63,14 @@ namespace RaidBattlesBot.Handlers
       vote.User = user; // update firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
-      if (!Enum.TryParse(teamAbbr, true, out VoteEnum team))
+      if (!FlagEnums.TryParseFlags(teamAbbr, out VoteEnum team))
         return ("Неправильный голос", true, null);
 
-      vote.Team = team;
+
+      vote.Team = team == VoteEnum.Plus1 ?
+        vote.Team?.CommonFlags(VoteEnum.SomePlus) is VoteEnum clearedVote ?
+          clearedVote != default ? clearedVote.IncreaseVotesCount(1) : VoteEnum.Yes : VoteEnum.Yes : team;
+
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {

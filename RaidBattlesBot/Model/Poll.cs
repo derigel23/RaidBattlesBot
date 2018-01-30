@@ -21,6 +21,7 @@ namespace RaidBattlesBot.Model
     public DateTimeOffset? Time { get; set; }
     public DateTimeOffset? Modified { get; set; }
     public bool Cancelled { get; set; }
+    public VoteEnum? AllowedVotes { get; set; }
 
     public Raid Raid { get; set; }
     public List<PollMessage> Messages { get; set; }
