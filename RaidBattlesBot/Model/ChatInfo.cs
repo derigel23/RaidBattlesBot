@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -21,7 +22,7 @@ namespace RaidBattlesBot.Model
       myBot = bot;
     }
 
-    public async Task<ChatMemberStatus> GetChatMemberStatus(ChatId chat, long? userId, CancellationToken cancellation = default)
+    public async Task<ChatMemberStatus> GetChatMemberStatus([CanBeNull] ChatId chat, long? userId, CancellationToken cancellation = default)
     {
       if (!(chat?.Identifier is long chatId) || chatId == 0)
         return ChatMemberStatus.Left;

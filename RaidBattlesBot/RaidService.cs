@@ -70,7 +70,7 @@ namespace RaidBattlesBot
               {
                 foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
                 {
-                  if (await myChatInfo.CanReadPoll(existingRaidPollMessage.Chat, message.UserId ?? message.ChatId, cancellationToken))
+                  if (await myChatInfo.CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
                     message.Poll = existingRaidPoll;
                     break;
@@ -110,7 +110,7 @@ namespace RaidBattlesBot
                 // use exisiting poll if have rights for any prev message
                 foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
                 {
-                  if (await myChatInfo.CanReadPoll(eggRaidPollMessage.Chat, message.UserId ?? message.ChatId, cancellationToken))
+                  if (await myChatInfo.CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
                     message.Poll = eggRaidPoll;
                     break;

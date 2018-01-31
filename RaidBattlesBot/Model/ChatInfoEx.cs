@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -8,7 +9,7 @@ namespace RaidBattlesBot.Model
 {
   public static class ChatInfoEx
   {
-    public static async Task<bool> CandEditPoll(this ChatInfo chatInfo, ChatId chat, long? userId, CancellationToken cancellation = default)
+    public static async Task<bool> CandEditPoll(this ChatInfo chatInfo, [CanBeNull] ChatId chat, long? userId, CancellationToken cancellation = default)
     {
       switch (await chatInfo.GetChatMemberStatus(chat, userId, cancellation))
       {
@@ -20,7 +21,7 @@ namespace RaidBattlesBot.Model
       }
     }
     
-    public static async Task<bool> CanReadPoll(this ChatInfo chatInfo, ChatId chat, long? userId, CancellationToken cancellation = default)
+    public static async Task<bool> CanReadPoll(this ChatInfo chatInfo, [CanBeNull] ChatId chat, long? userId, CancellationToken cancellation = default)
     {
       switch (await chatInfo.GetChatMemberStatus(chat, userId, cancellation))
       {

@@ -3,7 +3,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:50574/",
+      "applicationUrl": "http://localhost:56708/",
       "sslPort": 0
     }
   },
@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "https://38efa715.ngrok.io",
+      "launchUrl": "https://045529df.ngrok.io/refresh",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -19,7 +19,7 @@
     "RaidBattlesBot": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://38efa715.ngrok.io",
+      "launchUrl": "https://045529df.ngrok.io/refresh",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
