@@ -28,6 +28,9 @@ namespace RaidBattlesBot.Handlers
       var location = message.Location;
       if (location == null) return null;
 
+      if (message.Chat.Type == ChatType.Channel)
+        return false;
+
       if (!myGyms.TryGet((decimal) location.Latitude, (decimal) location.Longitude, out var foundGym, Gyms.LowerDecimalPrecision))
       {
         return null;

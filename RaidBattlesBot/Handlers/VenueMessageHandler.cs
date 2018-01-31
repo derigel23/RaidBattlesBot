@@ -20,15 +20,13 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myDb;
     private readonly PokemonInfo myPokemonInfo;
     private readonly GymHelper myGymHelper;
-    private readonly Message myMessage;
     private readonly DateTimeZone myDateTimeZone;
 
-    public VenueMessageHandler(RaidBattlesContext db, PokemonInfo pokemonInfo, GymHelper gymHelper, Message message, DateTimeZone dateTimeZone)
+    public VenueMessageHandler(RaidBattlesContext db, PokemonInfo pokemonInfo, GymHelper gymHelper, DateTimeZone dateTimeZone)
     {
       myDb = db;
       myPokemonInfo = pokemonInfo;
       myGymHelper = gymHelper;
-      myMessage = message;
       myDateTimeZone = dateTimeZone;
     }
 
@@ -37,10 +35,13 @@ namespace RaidBattlesBot.Handlers
       var venue = venueMessage.Venue;
       if (venue == null) return null;
 
+      if (venueMessage.Chat.Type == ChatType.Channel)
+        return false;
+
       var match = ourRaidPattern.Match(venue.Title);
       if (!match.Success) return null;
 
-      var messageDate = myMessage.GetMessageDate(myDateTimeZone);
+      var messageDate = venueMessage.GetMessageDate(myDateTimeZone);
 
       var raid = new Raid
       {
@@ -58,7 +59,7 @@ namespace RaidBattlesBot.Handlers
       raid.Lat = gymInfo.location.lat;
       raid.Lon = gymInfo.location.lon;
 
-      pollMessage.Poll = new Poll(myMessage)
+      pollMessage.Poll = new Poll(venueMessage)
       {
         Raid = raid,
         Time = raid.GetDefaultPollTime()
