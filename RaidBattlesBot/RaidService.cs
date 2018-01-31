@@ -72,8 +72,11 @@ namespace RaidBattlesBot
                 {
                   if (await myChatInfo.CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
-                    message.Poll = existingRaidPoll;
-                    break;
+                    if ((existingRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
+                    {
+                      message.Poll = existingRaidPoll;
+                      break;
+                    }
                   }
                 }
 
@@ -112,8 +115,11 @@ namespace RaidBattlesBot
                 {
                   if (await myChatInfo.CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
-                    message.Poll = eggRaidPoll;
-                    break;
+                    if ((eggRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
+                    {
+                      message.Poll = eggRaidPoll;
+                      break;
+                    }
                   }
                 }
               }
