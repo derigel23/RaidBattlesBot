@@ -92,7 +92,7 @@ namespace RaidBattlesBot.Model
         .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Key) ?? false).Value)
         .OrderBy(voteGroup => voteGroup.Key.Order))
       {
-        var votesNumber = voteGroup.Aggregate(0, (i, vote) => vote.Team.GetPlusVotesCount() + 1);
+        var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
         var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
         text.AppendLine().AppendLine($"{votesNumber} {countStr}");
 
