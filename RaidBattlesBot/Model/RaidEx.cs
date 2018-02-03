@@ -127,9 +127,13 @@ namespace RaidBattlesBot.Model
           .Append(raid.Name);
       }
 
-      if (raid.EndTime != null)
+      if (raid.EndTime is DateTimeOffset endTime)
       {
-        title.Append($" ∙ {raid.EndTime:t}");
+        title.Append($" ∙ {endTime:t}");
+        if (raid.RaidBossEndTime != endTime)
+        {
+          title.Append($"→{raid.RaidBossEndTime:t}");
+        }
       }
 
 
