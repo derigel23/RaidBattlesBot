@@ -21,16 +21,16 @@ namespace RaidBattlesBot.Model
     [Description("💙")]
     Mystic = Instinct << 1,
 
-    [Description("✚𝟭")]
+    [Description("+1")]
     Plus1 = Mystic << 1,
 
-    [Description("✚𝟮")]
+    [Description("+2")]
     Plus2 = Plus1 << 1,
 
-    [Description("✚𝟰")]
+    [Description("+4")]
     Plus4 = Plus2 << 1,
 
-    [Description("✚𝟴")]
+    [Description("+8")]
     Plus8 = Plus4 << 1,
 
     [Description("💤")]
