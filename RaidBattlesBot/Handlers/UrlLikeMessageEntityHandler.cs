@@ -231,7 +231,7 @@ namespace RaidBattlesBot.Handlers
       }
     }
 
-    private static readonly Regex ourRaidInfoBotGymDetector = new Regex("(?<=<body>\n).+(?=<br>)");
+    private static readonly Regex ourRaidInfoBotGymDetector = new Regex("(?<=<body>\n).+?(?=<br>)");
 
     private static readonly Regex ourPoketrackStartTimeDetector = new Regex("(?<=Starts at:\\s+).+");
     private static readonly Regex ourPoketrackEndTimeDetector = new Regex("(?<=Ends at:\\s+).+");
