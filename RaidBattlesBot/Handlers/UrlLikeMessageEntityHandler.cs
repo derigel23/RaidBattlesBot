@@ -88,7 +88,7 @@ namespace RaidBattlesBot.Handlers
             try
             {
               var poketrackResponseContent = await poketrackResponse.Content.ReadAsStringAsync();
-              if (ourRaidInfoBotGymDetector.Match(poketrackResponseContent) is var raidInfoBotGymMatch && raidInfoBotGymMatch.Success)
+              if (ourRaidInfoBotGymDetector.Match(poketrackResponseContent) is var raidInfoBotGymMatch && raidInfoBotGymMatch.Success && raidInfoBotGymMatch.Value.Length > 0)
               {
                 raid.PossibleGym = raidInfoBotGymMatch.Value;
               }
@@ -103,6 +103,10 @@ namespace RaidBattlesBot.Handlers
               if (movesString?.IndexOf("{подробнее}", StringComparison.Ordinal) is int tail && tail >= 0)
               {
                 movesString = movesString.Remove(tail);
+              }
+              else if (movesString?.IndexOf("📌", StringComparison.Ordinal) is int tail2 && tail2 >= 0)
+              {
+                movesString = movesString.Remove(tail2);
               }
               raid.ParseRaidInfo(myPokemons, boss.ToString(), movesString);
 
@@ -231,7 +235,7 @@ namespace RaidBattlesBot.Handlers
       }
     }
 
-    private static readonly Regex ourRaidInfoBotGymDetector = new Regex("(?<=<body>\n).+?(?=<br>)");
+    private static readonly Regex ourRaidInfoBotGymDetector = new Regex("(?<=<body>\n).*?(?=<br>)");
 
     private static readonly Regex ourPoketrackStartTimeDetector = new Regex("(?<=Starts at:\\s+).+");
     private static readonly Regex ourPoketrackEndTimeDetector = new Regex("(?<=Ends at:\\s+).+");
