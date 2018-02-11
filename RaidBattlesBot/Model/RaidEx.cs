@@ -118,15 +118,15 @@ namespace RaidBattlesBot.Model
       return raid;
     }
 
-    public static string GetTitle(this Raid raid,bool extended = true)
-    {
-      var title = new StringBuilder();
-      raid.SetTitle(title, extended);
-      return title.ToString();
-    }
-
     public static Raid SetTitle(this Raid raid, StringBuilder title, bool extended = true)
     {
+      raid.Title = raid.GetTitle(title, extended).ToString();
+      return raid;
+    }
+
+    public static StringBuilder GetTitle(this Raid raid, StringBuilder title = null, bool extended = true)
+    {
+      title = title ?? new StringBuilder();
       if (title.Length == 0)
       {
         title
@@ -152,9 +152,8 @@ namespace RaidBattlesBot.Model
       //  if (raid.Move2 != null)
       //    title.Append('|').Append(GetMoveAbbreviation(raid.Move2));
       //}
-      raid.Title = title.ToString();
 
-      return raid;
+      return title;
     }
 
     public static Color? GetEggColor(this Raid raid)
