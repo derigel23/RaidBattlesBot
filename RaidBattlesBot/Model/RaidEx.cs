@@ -118,7 +118,14 @@ namespace RaidBattlesBot.Model
       return raid;
     }
 
-    public static Raid SetTitle(this Raid raid, StringBuilder title)
+    public static string GetTitle(this Raid raid,bool extended = true)
+    {
+      var title = new StringBuilder();
+      raid.SetTitle(title, extended);
+      return title.ToString();
+    }
+
+    public static Raid SetTitle(this Raid raid, StringBuilder title, bool extended = true)
     {
       if (title.Length == 0)
       {
@@ -130,7 +137,7 @@ namespace RaidBattlesBot.Model
       if (raid.EndTime is DateTimeOffset endTime)
       {
         title.Append($" ∙ {endTime:t}");
-        if (raid.RaidBossEndTime != endTime)
+        if (raid.IsEgg && extended)
         {
           title.Append($"→{raid.RaidBossEndTime:t}");
         }
