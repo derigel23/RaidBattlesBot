@@ -2,7 +2,6 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
@@ -30,27 +29,13 @@ namespace RaidBattlesBot.Handlers
       if (string.IsNullOrEmpty(query))
         return null;
 
-      var fakePolls = new Poll[]
-      {
-        new Poll
+      InlineQueryResult[] inlineQueryResults = VoteEnumEx.AllowedVoteFormats
+        .Select(_ => new Poll
         {
           Title = query,
-          AllowedVotes = VoteEnum.Standard
-        },
-        new Poll
-        {
-          Title = query,
-          AllowedVotes = VoteEnum.Compact
-        },
-        new Poll
-        {
-          Title = query,
-          AllowedVotes = VoteEnum.Minimal
-        }
-      };
-
-      InlineQueryResult[] inlineQueryResults = fakePolls.Select(fakePoll =>
-        new InlineQueryResultArticle
+          AllowedVotes = _
+        })
+        .Select(fakePoll => new InlineQueryResultArticle
         {
           Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes:D}",
           Title = fakePoll.GetTitle(myUrlHelper),

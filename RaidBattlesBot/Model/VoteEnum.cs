@@ -55,6 +55,8 @@ namespace RaidBattlesBot.Model
 
   public static class VoteEnumEx
   {
+    public static readonly VoteEnum[] AllowedVoteFormats = { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.Minimal };
+
     private static readonly int FirstPlusBit = (int)Math.Log((int)VoteEnum.Plus1, 2);
 
     public static int GetPlusVotesCount(this VoteEnum? vote) =>

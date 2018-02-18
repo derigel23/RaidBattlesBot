@@ -62,7 +62,7 @@ namespace RaidBattlesBot.Handlers
         case var _ when command.StartsWith("/set") && myMessage.Chat.Type == ChatType.Private:
 
           IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
-            new[] { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.Minimal }
+            VoteEnumEx.AllowedVoteFormats
               .Select(flags => new InlineKeyboardButton[] { new InlineKeyboardCallbackButton(flags.Format(new StringBuilder()).ToString(), $"set:{flags:D}") }).ToArray());
 
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите формат голосования по умолчанию:", disableNotification: true,
