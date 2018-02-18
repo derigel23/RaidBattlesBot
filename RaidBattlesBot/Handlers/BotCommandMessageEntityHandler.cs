@@ -59,7 +59,7 @@ namespace RaidBattlesBot.Handlers
           pollMessage.Poll = existingPoll;
           return true;
 
-        case var _ when command.StartsWith("/set") && myMessage.Chat.Type == ChatType.Private:
+        case var _ when command.StartsWith("/set"):
 
           IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
             VoteEnumEx.AllowedVoteFormats

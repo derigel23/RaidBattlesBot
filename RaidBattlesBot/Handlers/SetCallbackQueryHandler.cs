@@ -19,13 +19,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly User myBot;
+    private readonly ChatInfo myChatInfo;
 
-    public SetCallbackQueryHandler(RaidBattlesContext context, ITelegramBotClient telegramBotClient, User bot)
+    public SetCallbackQueryHandler(RaidBattlesContext context, ITelegramBotClient telegramBotClient, ChatInfo chatInfo)
     {
       myContext = context;
       myTelegramBotClient = telegramBotClient;
-      myBot = bot;
+      myChatInfo = chatInfo;
     }
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -33,6 +33,9 @@ namespace RaidBattlesBot.Handlers
       var callback = data.Data.Split(':');
       if (callback[0] != "set")
         return (null, false, null);
+
+      if (!await myChatInfo.CandEditPoll(data.Message.Chat, data.From?.Id ,cancellationToken))
+        return ("У вас недостаточно прав", true, null);
 
       if (!FlagEnums.TryParseFlags(callback.ElementAtOrDefault(1) ?? "", out VoteEnum allowedVotes, EnumFormat.DecimalValue) || (allowedVotes == VoteEnum.None))
         return (null, false, null);
