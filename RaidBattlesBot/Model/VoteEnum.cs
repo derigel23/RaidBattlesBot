@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Text;
 using EnumsNET;
 
 namespace RaidBattlesBot.Model
@@ -66,5 +68,8 @@ namespace RaidBattlesBot.Model
     public static string Description(this VoteEnum vote) =>
       (vote.RemoveFlags(VoteEnum.Plus) is VoteEnum voteWithoutPlus && voteWithoutPlus.HasAnyFlags() ?
         voteWithoutPlus : vote.HasAnyFlags(VoteEnum.Plus) ? VoteEnum.Yes : vote).AsString(EnumFormat.Description);
+
+    public static StringBuilder Format(this VoteEnum vote, StringBuilder builder, EnumFormat enumFormat = EnumFormat.Description) =>
+      builder.AppendJoin("", vote.GetFlags().Select(_ => _.AsString(enumFormat)));
   }
 }

@@ -52,10 +52,9 @@ namespace RaidBattlesBot.Handlers
       InlineQueryResult[] inlineQueryResults = fakePolls.Select(fakePoll =>
         new InlineQueryResultArticle
         {
-          Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes}",
+          Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes:D}",
           Title = fakePoll.GetTitle(myUrlHelper),
-          Description = new StringBuilder("Создать голосование ")
-            .AppendJoin("", fakePoll.AllowedVotes?.GetFlags().Select(_ => _.AsString(EnumFormat.Description))).ToString(),
+          Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
           HideUrl = true,
           ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
           InputMessageContent = new InputTextMessageContent

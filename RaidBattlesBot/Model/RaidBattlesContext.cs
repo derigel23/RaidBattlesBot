@@ -11,6 +11,7 @@ namespace RaidBattlesBot.Model
     public DbSet<Poll> Polls { get; set; }
     public DbSet<PollMessage> Messages { get; set; }
     public DbSet<Vote> Votes { get; set; }
+    public DbSet<Settings> Settings { get; set; }
 
     public RaidBattlesContext(DbContextOptions<RaidBattlesContext> options)
       : base(options) { }
@@ -31,12 +32,16 @@ namespace RaidBattlesBot.Model
 
       var messageEntity = modelBuilder.Entity<PollMessage>();
       messageEntity.HasKey(message => message.Id);
-      //messageEntity.HasIndex(message => new { Chat = message.ChatId, message.MesssageId, message.InlineMesssageId });
       messageEntity.Ignore(message => message.Chat);
 
       var voteEntity = modelBuilder.Entity<Vote>();
       voteEntity.HasKey(vote => new { vote.PollId, User = vote.UserId });
       voteEntity.Ignore(vote => vote.User);
+
+      var settingsEntity = modelBuilder.Entity<Settings>();
+      settingsEntity.ToTable("Settings");
+      settingsEntity.HasKey(vote => vote.Chat);
+      settingsEntity.Property(vote => vote.Chat).ValueGeneratedNever();
     }
 
     public override int SaveChanges()

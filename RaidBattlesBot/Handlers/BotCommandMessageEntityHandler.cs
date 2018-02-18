@@ -1,10 +1,14 @@
 ﻿using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineKeyboardButtons;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -13,20 +17,23 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myContext;
     private readonly Message myMessage;
+    private readonly ITelegramBotClient myTelegramBotClient;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient)
     {
       myContext = context;
       myMessage = message;
+      myTelegramBotClient = telegramBotClient;
     }
 
     public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       var command = myMessage.Text.Substring(entity.Offset, entity.Length);
+      var commandText = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
       switch (command)
       {
         case var _ when command.StartsWith("/new"):
-          var title = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
+          var title = commandText;
           if (string.IsNullOrEmpty(title))
             return false;
           
@@ -38,7 +45,7 @@ namespace RaidBattlesBot.Handlers
 
         case var _ when command.StartsWith("/poll"):
         case var _ when command.StartsWith("/start"):
-          if (!int.TryParse(myMessage.Text.Substring(entity.Offset + entity.Length).Trim(), out var pollId))
+          if (!int.TryParse(commandText, out var pollId))
             return false;
           
           var existingPoll = await myContext.Polls
@@ -51,6 +58,22 @@ namespace RaidBattlesBot.Handlers
 
           pollMessage.Poll = existingPoll;
           return true;
+
+        case var _ when command.StartsWith("/set") && myMessage.Chat.Type == ChatType.Private:
+
+          IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
+            new[] { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.Minimal }
+              .Select(flags => new InlineKeyboardButton[] { new InlineKeyboardCallbackButton(flags.Format(new StringBuilder()).ToString(), $"set:{flags:D}") }).ToArray());
+
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите формат голосования по умолчанию:", disableNotification: true,
+            replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+          
+          return false; // processed, but not pollMessage
+
+        case var _ when command.StartsWith("/help") && myMessage.Chat.Type == ChatType.Private:
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
+          
+          return false; // processed, but not pollMessage
       }
 
       return null;

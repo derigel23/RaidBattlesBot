@@ -36,8 +36,8 @@ namespace RaidBattlesBot.Handlers
 
       if (resultParts[0] == "create")
       {
-        return await myRaidService.AddPoll(data.Query, FlagEnums.TryParseFlags(resultParts.ElementAtOrDefault(2), out VoteEnum allowedVotes) ? allowedVotes : VoteEnum.Standard,
-          new PollMessage(data), myUrlHelper, cancellationToken);
+        return await myRaidService.AddPoll(data.Query, FlagEnums.TryParseFlags(resultParts.ElementAtOrDefault(2), out VoteEnum allowedVotes, EnumFormat.DecimalValue, EnumFormat.Name) ?
+            allowedVotes : VoteEnum.Standard, new PollMessage(data), myUrlHelper, cancellationToken);
       }
 
       return null;

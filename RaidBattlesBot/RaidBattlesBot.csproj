@@ -9,6 +9,10 @@
     <None Include="PogoAssets\**\*" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Migrations\20180218083944_DefaultAllowedVotesEx.cs" />
+    <Compile Remove="Migrations\20180218083944_DefaultAllowedVotesEx.Designer.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
     <PackageReference Include="CsvHelper" Version="6.1.0" />

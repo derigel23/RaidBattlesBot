@@ -42,6 +42,9 @@ namespace RaidBattlesBot
 
     public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
+      message.Poll.AllowedVotes =
+        message.Poll.AllowedVotes ?? (await myContext.Settings.FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
+
       var raidUpdated = false;
       var eggRaidUpdated = false;
       if (message.Poll.Raid is Raid raid)
@@ -156,7 +159,9 @@ namespace RaidBattlesBot
       if (message.Chat is Chat chat)
       {
         var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, RaidEx.ParseMode,
-          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
+          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true,
+          
+          cancellationToken: cancellationToken);
         message.Chat = postedMessage.Chat;
         message.MesssageId = postedMessage.MessageId;
       }
