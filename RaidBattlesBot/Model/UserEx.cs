@@ -10,7 +10,7 @@ namespace RaidBattlesBot.Model
     {
       return new StringBuilder().Link(
         " ".JoinNonEmpty(user.FirstName, user.LastName).Sanitize(mode),
-        $"tg://user?id={user.Id}", mode);
+        string.IsNullOrEmpty(user.Username) ? $"tg://user?id={user.Id}" : $"https://t.me/{user.Username}", mode);
     }
   }
 }
