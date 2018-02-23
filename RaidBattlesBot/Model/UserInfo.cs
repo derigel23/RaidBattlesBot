@@ -23,8 +23,11 @@ namespace RaidBattlesBot.Model
       myTelemetryClient = telemetryClient;
     }
 
+    private static readonly Task<bool> IsUserAllowedTrue = Task.FromResult(true);
+
     public Task<bool> IsUserAllowed(int userId, CancellationToken cancellationToken = default)
     {
+      return IsUserAllowedTrue;
       return myMemoryCache.GetOrCreateAsync($"user:{userId}", async entry =>
       {
         entry.SetSlidingExpiration(TimeSpan.FromMinutes(10));
