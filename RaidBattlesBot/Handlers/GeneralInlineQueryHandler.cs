@@ -16,11 +16,13 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
+    private readonly UserInfo myUserInfo;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper)
+    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
+      myUserInfo = userInfo;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -29,26 +31,27 @@ namespace RaidBattlesBot.Handlers
       if (string.IsNullOrEmpty(query))
         return null;
 
-      InlineQueryResult[] inlineQueryResults = VoteEnumEx.AllowedVoteFormats
-        .Select(_ => new Poll
-        {
-          Title = query,
-          AllowedVotes = _
-        })
-        .Select(fakePoll => new InlineQueryResultArticle
-        {
-          Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes:D}",
-          Title = fakePoll.GetTitle(myUrlHelper),
-          Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
-          HideUrl = true,
-          ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
-          InputMessageContent = new InputTextMessageContent
+      InlineQueryResult[] inlineQueryResults = await
+        Task.WhenAll(VoteEnumEx.AllowedVoteFormats
+          .Select(_ => new Poll
           {
-            MessageText = fakePoll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString(),
-            ParseMode = RaidEx.ParseMode
-          },
-          ReplyMarkup = fakePoll.GetReplyMarkup()
-        }).ToArray();
+            Title = query,
+            AllowedVotes = _
+          })
+          .Select(async fakePoll => new InlineQueryResultArticle
+          {
+            Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes:D}",
+            Title = fakePoll.GetTitle(myUrlHelper),
+            Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+            HideUrl = true,
+            ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
+            InputMessageContent = new InputTextMessageContent
+            {
+              MessageText = (await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
+              ParseMode = RaidEx.ParseMode
+            },
+            ReplyMarkup = fakePoll.GetReplyMarkup()
+          }));
 
       return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
     }

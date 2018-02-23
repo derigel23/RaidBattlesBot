@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class VoteEx
   {
-    public static StringBuilder GetUserLinkWithPluses(this Vote vote, ParseMode mode = ParseMode.Default)
+    public static async Task<string> GetUserLinkWithPluses(this Vote vote, UserInfo userInfo, ParseMode mode = ParseMode.Default, CancellationToken cancellationToken = default)
     {
-      var result = vote.User.GetLink(mode);
+      var result = await vote.User.GetLink(userInfo, mode, cancellationToken);
 
       if (vote.Team.GetPlusVotesCount() is var plusCount && plusCount > 0)
       {
@@ -19,7 +21,7 @@ namespace RaidBattlesBot.Model
             ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)));
       }
 
-      return result;
+      return result.ToString();
     }
 
     public static readonly IReadOnlyDictionary<char, char> ourSuperScriptNumbers = new Dictionary<char, char>()

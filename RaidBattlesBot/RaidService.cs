@@ -19,13 +19,15 @@ namespace RaidBattlesBot
     private readonly ITelegramBotClient myBot;
     private readonly TelemetryClient myTelemetryClient;
     private readonly ChatInfo myChatInfo;
+    private readonly UserInfo myUserInfo;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, UserInfo userInfo)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
       myChatInfo = chatInfo;
+      myUserInfo = userInfo;
     }
 
     public async Task<bool> AddPoll(string text, VoteEnum allowedVotes, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
@@ -155,7 +157,7 @@ namespace RaidBattlesBot
         }
       }
 
-      var messageText = message.Poll.GetMessageText(urlHelper, RaidEx.ParseMode).ToString();
+      var messageText = (await message.Poll.GetMessageText(urlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString();
       if (message.Chat is Chat chat)
       {
         var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, RaidEx.ParseMode,
@@ -176,7 +178,7 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var messageText = poll.GetMessageText(urlHelper, RaidEx.ParseMode).ToString();
+      var messageText = (await poll.GetMessageText(urlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString();
       foreach (var message in poll.Messages)
       {
         try

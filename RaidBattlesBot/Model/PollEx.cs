@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -76,7 +78,7 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static StringBuilder GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
+    public static async Task<StringBuilder> GetMessageText(this Poll poll, IUrlHelper urlHelper, UserInfo userInfo, ParseMode mode = ParseMode.Default, CancellationToken cancellationToken = default)
     {
       var text = poll.GetDescription(urlHelper, mode).AppendLine();
       
@@ -103,13 +105,13 @@ namespace RaidBattlesBot.Model
           {
             text
               .Append(vote.Key?.Description()).Append('\x00A0')
-              .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
+              .AppendJoin(", ", await Task.WhenAll(votes.Select(v => v.GetUserLinkWithPluses(userInfo, mode, cancellationToken))))
               .AppendLine();
           }
           else
           {
             text
-              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.Description()} {v.GetUserLinkWithPluses(mode)}"))
+              .AppendJoin(Environment.NewLine, await Task.WhenAll(votes.Select(async v => $"{v.Team?.Description()} {await v.GetUserLinkWithPluses(userInfo, mode, cancellationToken)}")))
               .AppendLine();
           }
         }

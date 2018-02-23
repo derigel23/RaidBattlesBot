@@ -20,12 +20,14 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
+    private readonly UserInfo myUserInfo;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo)
     {
       myContext = context;
       myBot = bot;
       myUrlHelper = urlHelper;
+      myUserInfo = userInfo;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -55,7 +57,7 @@ namespace RaidBattlesBot.Handlers
             ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
             InputMessageContent = new InputTextMessageContent
             {
-              MessageText = poll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString(),
+              MessageText = (await poll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
               ParseMode = RaidEx.ParseMode
             },
             ReplyMarkup = poll.GetReplyMarkup()
