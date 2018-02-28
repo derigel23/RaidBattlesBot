@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DelegateDecompiler.EntityFramework;
+using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,14 +43,17 @@ namespace RaidBattlesBot
       return await AddPollMessage(message, urlHelper, cancellationToken);
     }
 
-    public async Task<bool> AddPollMessage(PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<bool> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
+      if (message?.Poll == null)
+        return false;
+      
       message.Poll.AllowedVotes =
         message.Poll.AllowedVotes ?? (await myContext.Settings.FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
 
       var raidUpdated = false;
       var eggRaidUpdated = false;
-      if (message.Poll.Raid is Raid raid)
+      if (message.Poll?.Raid is Raid raid)
       {
         if (raid.Id == 0)
         {
@@ -140,7 +144,7 @@ namespace RaidBattlesBot
       await myContext.SaveChangesAsync(cancellationToken);
 
       // update current raid poll messages if changed
-      if (raidUpdated && message.Poll?.Raid is Raid raidToUpdate)
+      if (raidUpdated && message.Poll.Raid is Raid raidToUpdate)
       {
         foreach (var poll in raidToUpdate.Polls ?? Enumerable.Empty<Poll>())
         {
@@ -149,7 +153,7 @@ namespace RaidBattlesBot
       }
 
       // update egg raid poll messages if any
-      if (eggRaidUpdated && message.Poll?.Raid?.EggRaid is Raid eggRaidToUpdate)
+      if (eggRaidUpdated && message.Poll.Raid?.EggRaid is Raid eggRaidToUpdate)
       {
         foreach (var poll in eggRaidToUpdate.Polls ?? Enumerable.Empty<Poll>())
         {

@@ -91,7 +91,7 @@ namespace RaidBattlesBot.Controllers
         var pollMessage = new PollMessage(message);
         if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
         {
-          switch (pollMessage.Poll.Raid)
+          switch (pollMessage.Poll?.Raid)
           {
             // regular pokemons in private chat
             case Raid raid when raid.RaidBossLevel == null && message.Chat?.Type == ChatType.Private:
