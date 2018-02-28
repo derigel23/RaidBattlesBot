@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
@@ -148,9 +149,9 @@ namespace RaidBattlesBot.Model
         .ThenInclude(raid => raid.PostEggRaid);
     }
 
-    public static int? GetRaidId(this Poll poll)
+    public static int? GetRaidId([CanBeNull] this Poll poll)
     {
-      return poll.Raid?.Id ?? poll.RaidId;
+      return poll?.Raid?.Id ?? poll?.RaidId;
     }
 
     public static Raid Raid(this Poll poll)

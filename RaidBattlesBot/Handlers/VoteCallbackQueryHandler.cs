@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
         poll.Votes.Add(vote = new Vote());
       }
 
-      vote.User = user; // update firstname/lastname if necessary
+      vote.User = user; // update username/firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
       if (!FlagEnums.TryParseFlags(teamAbbr, out VoteEnum team))

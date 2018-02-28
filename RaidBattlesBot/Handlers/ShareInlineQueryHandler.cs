@@ -58,7 +58,8 @@ namespace RaidBattlesBot.Handlers
             InputMessageContent = new InputTextMessageContent
             {
               MessageText = (await poll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
-              ParseMode = RaidEx.ParseMode
+              ParseMode = RaidEx.ParseMode,
+              DisableWebPagePreview = poll.GetRaidId() == null
             },
             ReplyMarkup = poll.GetReplyMarkup()
           });

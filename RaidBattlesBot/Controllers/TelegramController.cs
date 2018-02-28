@@ -109,7 +109,7 @@ namespace RaidBattlesBot.Controllers
         }
 
         myTelemetryClient.Context.Properties["pollId"] = pollMessage.GetPollId()?.ToString();
-        myTelemetryClient.Context.Properties["raidId"] = pollMessage.Poll?.GetRaidId()?.ToString();
+        myTelemetryClient.Context.Properties["raidId"] = pollMessage.Poll.GetRaidId()?.ToString();
 
         return Ok() /* TODO: not handled */;
 

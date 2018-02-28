@@ -7,6 +7,7 @@ namespace RaidBattlesBot.Model
   {
     public int PollId { get; set; }
     public int UserId { get; set; }
+    public string Username { get; set; }
     public string FirstName { get; set; }
     public string LasttName { get; set; }
     public VoteEnum? Team { get; set; }
@@ -14,10 +15,17 @@ namespace RaidBattlesBot.Model
 
     public User User
     {
-      get => new User { Id = UserId, FirstName = FirstName, LastName = LasttName };
+      get => new User
+      {
+        Id = UserId,
+        Username = Username,
+        FirstName = FirstName,
+        LastName = LasttName
+      };
       set
       {
         UserId = value.Id;
+        Username = value.Username;
         FirstName = value.FirstName;
         LasttName = value.LastName;
       }

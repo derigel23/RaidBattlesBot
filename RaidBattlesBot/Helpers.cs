@@ -92,11 +92,11 @@ namespace RaidBattlesBot
     {
       switch (mode)
       {
-        case ParseMode.Markdown:
+        case ParseMode.Markdown when !string.IsNullOrEmpty(link):
           return builder.Append($"[{text}]({link})");
 
-        case ParseMode.Html:
-          return builder.Append($"<a href='{link}'>{text}</a>");
+        case ParseMode.Html when !string.IsNullOrEmpty(link):
+          return builder.Append($"<a href=\"{link}\">{text}</a>");
 
         default:
           return builder.Append(text);

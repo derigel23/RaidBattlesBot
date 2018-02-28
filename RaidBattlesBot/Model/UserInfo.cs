@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Model
 {
@@ -25,23 +25,19 @@ namespace RaidBattlesBot.Model
 
     private static readonly Task<bool> IsUserAllowedTrue = Task.FromResult(true);
 
-    public Task<bool> IsUserAllowed(int userId, CancellationToken cancellationToken = default)
+    public Task<bool> IsUserAllowed(User user, CancellationToken cancellationToken = default)
     {
-      return IsUserAllowedTrue;
-      return myMemoryCache.GetOrCreateAsync($"user:{userId}", async entry =>
+      return myMemoryCache.GetOrCreateAsync($"user:{user.Id}", async entry =>
       {
         entry.SetSlidingExpiration(TimeSpan.FromMinutes(10));
         try
         {
-          //await myBot.SendChatActionAsync(userId, ChatAction.Typing, cancellationToken);
+          await myBot.GetUserProfilePhotosAsync(user.Id, 0, 0, cancellationToken);
           return true;
         }
         catch (ApiRequestException ex)
         {
-          myTelemetryClient.TrackException(ex, new Dictionary<string, string>
-          {
-            { "userId", userId.ToString() }
-          });
+          myTelemetryClient.TrackDependency(nameof(UserInfo), user.Id.ToString(), $"{nameof(myBot.GetUserProfilePhotosAsync)}:{user.Id}", JsonConvert.SerializeObject(user), DateTimeOffset.MinValue, TimeSpan.Zero, ex.Message, false);
           return false;
         }
       });

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using static System.String;
 
 namespace RaidBattlesBot.Model
 {
@@ -10,9 +11,12 @@ namespace RaidBattlesBot.Model
   {
     public static async Task<StringBuilder> GetLink(this User user, UserInfo userInfo, ParseMode mode = ParseMode.Default, CancellationToken cancellationToken = default)
     {
-      return new StringBuilder().Link(
-        " ".JoinNonEmpty(user.FirstName, user.LastName).Sanitize(mode), $"tg://user?id={user.Id}",
-        await userInfo.IsUserAllowed(user.Id, cancellationToken) ? mode : ParseMode.Default);
+      var userUri = !await userInfo.IsUserAllowed(user, cancellationToken)
+        ? IsNullOrEmpty(user.Username) ? null : $"https://t.me/{user.Username}"
+        : $"tg://user?id={user.Id}";
+
+      return new StringBuilder()
+        .Link(" ".JoinNonEmpty(user.FirstName, user.LastName).Sanitize(mode), userUri, mode);
     }
   }
 }
