@@ -45,6 +45,8 @@ namespace RaidBattlesBot.Controllers
       IActionResult Return(bool? result) =>
         result is bool success && success ? Ok() : Ok(); // TODO: not handled
 
+      PollMessage pollMessage = null;
+
       try
       {
         Message message = null;
@@ -88,7 +90,7 @@ namespace RaidBattlesBot.Controllers
         myTelemetryClient.Context.Properties["messageType"] = message.Type.ToString();
         myTelemetryClient.Context.Properties["chat"] = message.Chat.Username;
 
-        var pollMessage = new PollMessage(message);
+        pollMessage = new PollMessage(message);
         if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
         {
           switch (pollMessage.Poll?.Raid)
@@ -108,21 +110,18 @@ namespace RaidBattlesBot.Controllers
           }
         }
 
-        myTelemetryClient.Context.Properties["pollId"] = pollMessage.GetPollId()?.ToString();
-        myTelemetryClient.Context.Properties["raidId"] = pollMessage.Poll.GetRaidId()?.ToString();
-
         return Ok() /* TODO: not handled */;
 
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackException(ex);
+        myTelemetryClient.TrackException(ex, pollMessage.GetTrackingProperties());
         return Ok();
       }
       finally
       {
         var eventName = update.Type.ToString();
-        myTelemetryClient.TrackEvent(eventName);
+        myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
       }
     }
   }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
@@ -87,6 +88,16 @@ namespace RaidBattlesBot.Model
         .Include(_ => _.Poll)
         .ThenInclude(_ => _.Raid)
         .ThenInclude(raid => raid.PostEggRaid);
+    }
+
+    public static IDictionary<string, string> GetTrackingProperties([CanBeNull] this PollMessage pollMessage)
+    {
+      return new Dictionary<string, string>
+      {
+        { "messageId", pollMessage?.Id is int pollMessageId && pollMessageId > 0 ? pollMessageId.ToString() : null },
+        { "pollId", pollMessage?.GetPollId()?.ToString() },
+        { "raidId", pollMessage?.Poll.GetRaidId()?.ToString() }
+      };
     }
   }
 } 
