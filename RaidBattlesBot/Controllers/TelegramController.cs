@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
@@ -18,13 +19,14 @@ namespace RaidBattlesBot.Controllers
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
     private readonly RaidService myRaidService;
+    private readonly IMemoryCache myCache;
     private readonly IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> myMessageHandlers;
     private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     public TelegramController(TelemetryClient telemetryClient,
-      ITelegramBotClient telegramBotClient, RaidService raidService,
+      ITelegramBotClient telegramBotClient, RaidService raidService, IMemoryCache cache, 
       IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
@@ -33,6 +35,7 @@ namespace RaidBattlesBot.Controllers
       myTelemetryClient = telemetryClient;
       myTelegramBotClient = telegramBotClient;
       myRaidService = raidService;
+      myCache = cache;
       myMessageHandlers = messageHandlers;
       myCallbackQueryHandlers = callbackQueryHandlers;
       myInlineQueryHandlers = inlineQueryHandlers;
@@ -91,23 +94,38 @@ namespace RaidBattlesBot.Controllers
         myTelemetryClient.Context.Properties["chat"] = message.Chat.Username;
 
         pollMessage = new PollMessage(message);
-        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success && success)
+        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success)
         {
-          switch (pollMessage.Poll?.Raid)
+          if (success)
           {
-            // regular pokemons in private chat
-            case Raid raid when raid.RaidBossLevel == null && message.Chat?.Type == ChatType.Private:
-              goto case null;
+            if (string.IsNullOrEmpty(pollMessage.Poll.Title) &&
+                myCache.TryGetValue<Message>(message.Chat.Id, out var prevMessage) &&
+                (prevMessage.From?.Id == message.From?.Id))
+            {
+              pollMessage.Poll.Title = prevMessage.Text;
+              myCache.Remove(message.Chat.Id);
+            }
 
-            // raid pokemons everywhere
-            case Raid raid when raid.RaidBossLevel != null:
-              goto case null;
+            switch (pollMessage.Poll?.Raid)
+            {
+              // regular pokemons in private chat
+              case Raid raid when raid.RaidBossLevel == null && message.Chat?.Type == ChatType.Private:
+                goto case null;
 
-            // polls without raids
-            case null:
-              await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
-              break;
+              // raid pokemons everywhere
+              case Raid raid when raid.RaidBossLevel != null:
+                goto case null;
+
+              // polls without raids
+              case null:
+                await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
+                break;
+            }
           }
+        }
+        else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Type == MessageType.TextMessage) && (message.Entities.Count == 0))
+        {
+          myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
         }
 
         return Ok() /* TODO: not handled */;

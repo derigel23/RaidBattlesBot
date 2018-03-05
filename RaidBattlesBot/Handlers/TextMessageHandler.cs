@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -17,14 +16,12 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly Message myMessage;
     private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
-    private readonly IMemoryCache myCache;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(Message message, IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers, IMemoryCache cache, RaidBattlesContext db)
+    public TextMessageHandler(Message message, IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
     {
       myMessage = message;
       myMessageEntityHandlers = messageEntityHandlers;
-      myCache = cache;
       myDb = db;
     }
 
@@ -54,22 +51,6 @@ namespace RaidBattlesBot.Handlers
         result = await HandlerExtentions<bool?>.Handle(handlers, entity, pollMessage, cancellationToken);
         if (result.HasValue)
           break;
-      }
-
-      if (result is bool success)
-      {
-        if (success &&
-            string.IsNullOrEmpty(pollMessage.Poll.Title) &&
-            myCache.TryGetValue<Message>(message.Chat.Id, out var prevMessage) &&
-            (prevMessage.From?.Id == message.From?.Id))
-        {
-          pollMessage.Poll.Title = prevMessage.Text;
-          myCache.Remove(message.Chat.Id);
-        }
-      }
-      else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Entities.Count == 0))
-      {
-        myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
       }
 
       return result;
