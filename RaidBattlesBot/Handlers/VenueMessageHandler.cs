@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
-using RaidBattlesBot.Migrations;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -46,6 +43,7 @@ namespace RaidBattlesBot.Handlers
       };
       string startTimeString = null;
       string endTimeString = null;
+      string bossEndTimeString = null;
       switch (venue.Title)
       {
         case string title when ourUser275BossPattern.Match(title) is var pokemon275match && pokemon275match.Success:
@@ -54,13 +52,14 @@ namespace RaidBattlesBot.Handlers
           raid.Move2 = pokemon275match.Groups["move2"].Value;
           if (ourUser275EndTimePattern.Match(venue.Address) is var endTimeMatch && endTimeMatch.Success)
           {
-            endTimeString = endTimeMatch.Groups["end"].Value;
+            bossEndTimeString = endTimeMatch.Groups["end"].Value;
           }
           if (ourUser275GymPattern.Match(venue.Address) is var bossGymMatch && bossGymMatch.Success)
           {
             raid.Gym = bossGymMatch.Groups["gym"].Value;
           }
           break;
+
         case string title when ourUser275EggPattern.Match(title) is var egg275match && egg275match.Success:
           raid.Name = "Egg";
           raid.RaidBossLevel = int.TryParse(egg275match.Groups["level"].Value, out int raidBossLevel) ? raidBossLevel : default(int?);
@@ -70,10 +69,11 @@ namespace RaidBattlesBot.Handlers
             raid.Gym = eggGymMatch.Groups["gym"].Value;
           }
           break;
+
         case string title when ourRaidPattern.Match(title) is var match && match.Success:
           raid.ParseRaidInfo(myPokemonInfo, match.Groups["name"].Value, venue.Address.Split(Environment.NewLine.ToCharArray(), 2)[0]);
           startTimeString = match.Groups["start"].Value;
-          endTimeString = match.Groups["end"].Value;
+          bossEndTimeString = match.Groups["end"].Value;
           break;
         default:
           return null;
@@ -81,7 +81,14 @@ namespace RaidBattlesBot.Handlers
  
       var messageDate = venueMessage.GetMessageDate(myDateTimeZone);
       raid.StartTime = messageDate.ParseTime(startTimeString, out var startTime) ? startTime : messageDate.ToDateTimeOffset();
-      raid.RaidBossEndTime = messageDate.ParseTime(endTimeString, out var endTime) ? endTime : default(DateTimeOffset?);
+      if (messageDate.ParseTime(endTimeString, out var endTime))
+      {
+        raid.EndTime = endTime;
+      }
+      else if (messageDate.ParseTime(bossEndTimeString, out var bossEndTime))
+      {
+        raid.RaidBossEndTime = bossEndTime;
+      }
 
       var gymInfo = await raid
         .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, Gyms.LowerDecimalPrecision, Gyms.LowerDecimalPrecisionRounding, cancellationToken);
@@ -97,11 +104,11 @@ namespace RaidBattlesBot.Handlers
       return true;
     }
 
-    private static readonly Regex ourRaidPattern = new Regex(@"(?<name>.+) (?<start>\d+:\d+)→(?<end>\d+:\d+)");
+    private static readonly Regex ourRaidPattern = new Regex(@"(?<name>.+?)\s+(?<start>\d+:\d+)→(?<end>\d+:\d+)");
     
-    private static readonly Regex ourUser275BossPattern = new Regex(@"(?<name>.+) \((?<move1>.+)/(?<move2>.+)\)");
-    private static readonly Regex ourUser275EggPattern = new Regex(@"Egg (?<level>\d) lvl - (?<end>\d+:\d+(:\d+)?)");
-    private static readonly Regex ourUser275EndTimePattern = new Regex(@"Until: (?<end>\d+:\d+(:\d+)?)");
-    private static readonly Regex ourUser275GymPattern = new Regex(@"Gym: (?<gym>.+?)( \(.+?\))?\.");
+    private static readonly Regex ourUser275BossPattern = new Regex(@"(?<name>.+?)\s+\((?<move1>.+?)/(?<move2>.+?)\)");
+    private static readonly Regex ourUser275EggPattern = new Regex(@"Egg\s+(?<level>\d)\s+lvl\s+-\s+(?<end>\d+:\d+(:\d+)?)");
+    private static readonly Regex ourUser275EndTimePattern = new Regex(@"Until:\s+(?<end>\d+:\d+(:\d+)?)");
+    private static readonly Regex ourUser275GymPattern = new Regex(@"Gym:\s+(?<gym>.+?)(\s+\(.+?\))?\.");
   }
 }
