@@ -122,7 +122,7 @@ namespace RaidBattlesBot.Handlers
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackException(ex);
+        myTelemetryClient.TrackExceptionEx(ex);
       }
 
       return (location, gym, distance);

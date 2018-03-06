@@ -95,7 +95,7 @@ namespace RaidBattlesBot.Handlers
             }
             catch (Exception e)
             {
-              myTelemetryClient.TrackException(e, pollMessage.GetTrackingProperties());
+              myTelemetryClient.TrackExceptionEx(e, pollMessage.GetTrackingProperties());
             }
             if (query.TryGetValue("b", out var boss))
             {

@@ -133,7 +133,7 @@ namespace RaidBattlesBot.Controllers
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackException(ex, pollMessage.GetTrackingProperties());
+        myTelemetryClient.TrackExceptionEx(ex, pollMessage.GetTrackingProperties());
         return Ok();
       }
       finally

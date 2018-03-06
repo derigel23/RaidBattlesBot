@@ -200,7 +200,7 @@ namespace RaidBattlesBot
         }
         catch (Exception ex)
         {
-          myTelemetryClient.TrackException(ex, message.GetTrackingProperties());
+          myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties());
         }
       }
     }

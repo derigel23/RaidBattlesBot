@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,9 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -126,5 +129,15 @@ namespace RaidBattlesBot
     }
 
     #endregion
+
+    public static void TrackExceptionEx(this TelemetryClient telemetryClient, Exception exception, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null)
+    {
+      if (exception is AggregateException aggregateException)
+      {
+        aggregateException.Handle(ex => !(ex is TaskCanceledException));
+      }
+      
+      telemetryClient.TrackException(exception, properties, metrics);
+    }
   }
 }
