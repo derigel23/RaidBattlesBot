@@ -141,13 +141,45 @@ namespace RaidBattlesBot.Handlers
               {
                 raid.Name = "Egg";
               }
-              title
-                .AppendFormat("[R{0}] ", raidBossLevelMatch.Value)
-                .Append(raid.Name);
 
               if ((raidBossLevelMatch.Groups["info"].Success || raidBossMatch.Groups["info"].Success) && (firstLine != "Gym"))
               {
                 raid.Gym = firstLine;
+              }
+            }
+            else if (ourKuzminkiBotEggDetector.Match(messageText) is var kuzminkiBotEggMatch && kuzminkiBotEggMatch.Success)
+            {
+              if (int.TryParse(kuzminkiBotEggMatch.Groups["RaidLevel"].Value, out var raidBossLevel))
+              {
+                raid.RaidBossLevel = raidBossLevel;
+              }
+              raid.Name = "Egg";
+              raid.Gym = myMessage.Text.Substring(entity.Offset, entity.Length);
+              if (messageDate.ParseTimePattern(messageText, ourKuzminkiBotStartTimeDetector, out var kuzminkiBotStartTime))
+              {
+                raid.EndTime = kuzminkiBotStartTime;
+              }
+            }
+            else if (ourKuzminkiBotRaidDetector.Match(messageText) is var kuzminkiBotRaidMatch && kuzminkiBotRaidMatch.Success)
+            {
+              if (int.TryParse(kuzminkiBotRaidMatch.Groups["RaidLevel"].Value, out var raidBossLevel))
+              {
+                raid.RaidBossLevel = raidBossLevel;
+              }
+              if (int.TryParse(kuzminkiBotRaidMatch.Groups["PokemonNumber"].Value, out var pokemon))
+              {
+                raid.Pokemon = pokemon;
+              }
+              raid.Name = kuzminkiBotRaidMatch.Groups["RaidBossName"].Value;
+              if (ourKuzminkiBotRaidBossMovesDetector.Match(messageText) is var movesMatch && movesMatch.Success)
+              {
+                raid.Move1 = movesMatch.Groups["Move1"].Value;
+                raid.Move2 = movesMatch.Groups["Move2"].Value;
+              }
+              raid.Gym = myMessage.Text.Substring(entity.Offset, entity.Length);
+              if (messageDate.ParseTimePattern(messageText, ourKuzminkiBotEndTimeDetector, out var kuzminkiBotEndTime))
+              {
+                raid.EndTime = kuzminkiBotEndTime;
               }
             }
             else
@@ -235,6 +267,12 @@ namespace RaidBattlesBot.Handlers
       }
     }
 
+    private static readonly Regex ourKuzminkiBotEggDetector = new Regex("Появилось яйцо (?<RaidLevel>\\d+)\\!");
+    private static readonly Regex ourKuzminkiBotRaidDetector = new Regex("Доступен рейд (?<RaidLevel>\\d+) на (?<RaidBossName>.+?) \\(#(?<PokemonNumber>\\d+)\\)\\!");
+    private static readonly Regex ourKuzminkiBotRaidBossMovesDetector = new Regex("Атаки босса (?<Move1>.+?)/(?<Move2>.+?)\\.");
+    private static readonly Regex ourKuzminkiBotStartTimeDetector = new Regex("(?<=Рейд начнётся в\\s+).+?(?=\\.)");
+    private static readonly Regex ourKuzminkiBotEndTimeDetector = new Regex("(?<=Рейд закончится в\\s+).+?(?=\\.)");
+    
     private static readonly Regex ourRaidInfoBotGymDetector = new Regex("(?<=<body>\n).*?(?=<br>)");
 
     private static readonly Regex ourPoketrackStartTimeDetector = new Regex("(?<=Starts at:\\s+).+");
