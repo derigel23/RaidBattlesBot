@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineKeyboardButtons;
+using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Model
@@ -55,7 +57,7 @@ namespace RaidBattlesBot.Model
     public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
       var description = poll.GetTitleBase(mode);
-      if (!string.IsNullOrEmpty(poll.Title))
+      if (!String.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
           description.AppendLine().Append(poll.Title.Sanitize(mode));
@@ -157,6 +159,25 @@ namespace RaidBattlesBot.Model
     public static Raid Raid(this Poll poll)
     {
       return poll.Raid?.PostEggRaid ?? poll.Raid;
+    }
+
+    public static async Task<InlineQueryResultArticle> ClonePoll(this Poll poll, IUrlHelper urlHelper, UserInfo userInfo, CancellationToken cancellationToken = default)
+    {
+      return new InlineQueryResultArticle
+      {
+        Id = $"poll:{poll.Id}",
+        Title = poll.GetTitle(urlHelper),
+        Description = "Клонировать голосование",
+        HideUrl = true,
+        ThumbUrl = poll.GetThumbUrl(urlHelper).ToString(),
+        InputMessageContent = new InputTextMessageContent
+        {
+          MessageText = (await poll.GetMessageText(urlHelper, userInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
+          ParseMode = RaidEx.ParseMode,
+          DisableWebPagePreview = poll.GetRaidId() == null
+        },
+        ReplyMarkup = poll.GetReplyMarkup()
+      };
     }
   }
 }

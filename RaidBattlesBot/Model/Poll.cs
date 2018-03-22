@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using DelegateDecompiler;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Model
@@ -22,6 +24,12 @@ namespace RaidBattlesBot.Model
     public DateTimeOffset? Modified { get; set; }
     public bool Cancelled { get; set; }
     public VoteEnum? AllowedVotes { get; set; }
+
+    private static readonly TimeSpan LiveTime = TimeSpan.FromHours(1);
+
+    [Computed, NotMapped]
+    public DateTimeOffset? EndTime => Raid != null ? Raid.RaidBossEndTime : Modified?.Add(LiveTime);
+
 
     public Raid Raid { get; set; }
     public List<PollMessage> Messages { get; set; }

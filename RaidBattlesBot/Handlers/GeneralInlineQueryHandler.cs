@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DelegateDecompiler.EntityFramework;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -17,22 +21,46 @@ namespace RaidBattlesBot.Handlers
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
     private readonly UserInfo myUserInfo;
+    private readonly RaidBattlesContext myDb;
+    private readonly IClock myClock;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo)
+    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, RaidBattlesContext db, IClock clock)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
       myUserInfo = userInfo;
+      myDb = db;
+      myClock = clock;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var query = data.Query;
-      if (string.IsNullOrEmpty(query))
-        return null;
+      InlineQueryResult[] inlineQueryResults;
 
-      InlineQueryResult[] inlineQueryResults = await
-        Task.WhenAll(VoteEnumEx.AllowedVoteFormats
+      var query = data.Query;
+      if (string.IsNullOrWhiteSpace(query))
+      {
+        var userId = data.From.Id;
+        var now = myClock.GetCurrentInstant().ToDateTimeOffset();
+
+        // active raids or polls
+        var polls = await myDb.Polls
+          .IncludeRelatedData()
+          .Where(_ => _.EndTime > now) // live poll
+          .Where(_ => _.Raid.EggRaidId == null) // no eggs if boss is already known
+          .Where(_ => _.Owner == userId || _.Votes.Any(vote => vote.UserId == userId))
+          .OrderBy(_ => _.EndTime)
+          //.Take(10)
+          .DecompileAsync()
+          .ToArrayAsync(cancellationToken);
+
+        inlineQueryResults = await
+          Task.WhenAll(polls.Select(poll => poll.ClonePoll(myUrlHelper, myUserInfo, cancellationToken)));
+      }
+      else
+      {
+        inlineQueryResults = await
+          Task.WhenAll(VoteEnumEx.AllowedVoteFormats
           .Select(_ => new Poll
           {
             Title = query,
@@ -53,6 +81,7 @@ namespace RaidBattlesBot.Handlers
             },
             ReplyMarkup = fakePoll.GetReplyMarkup()
           }));
+      }
 
       return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
     }

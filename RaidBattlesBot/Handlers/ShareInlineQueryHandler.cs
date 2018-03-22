@@ -47,22 +47,7 @@ namespace RaidBattlesBot.Handlers
       var inlineQueryResults = new List<InlineQueryResult>();
       if (poll != null)
       {
-        inlineQueryResults.Add(
-          new InlineQueryResultArticle
-          {
-            Id = $"poll:{poll.Id}",
-            Title = poll.GetTitle(myUrlHelper),
-            Description = "Клонировать голосование",
-            HideUrl = true,
-            ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-            InputMessageContent = new InputTextMessageContent
-            {
-              MessageText = (await poll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
-              ParseMode = RaidEx.ParseMode,
-              DisableWebPagePreview = poll.GetRaidId() == null
-            },
-            ReplyMarkup = poll.GetReplyMarkup()
-          });
+        inlineQueryResults.Add(await poll.ClonePoll(myUrlHelper, myUserInfo, cancellationToken));
 
         if (poll.Raid() is Raid raid)
         {
