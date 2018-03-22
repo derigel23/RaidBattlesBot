@@ -126,23 +126,28 @@ namespace RaidBattlesBot.Handlers
           }
           else
           {
-            if (ourPoketrackRaidBossLevelDetector.Match(messageText) is var raidBossLevelMatch && raidBossLevelMatch.Success)
+            Match raidBossLevelMatch = null;
+            Match raidInfoMatch = null;
+            if (ourPoketrackRaidBossDetector.Match(messageText) is var raidBossMatch && raidBossMatch.Success)
+            {
+              raid.Name = raidBossMatch.Value;
+              raidBossLevelMatch = ourPoketracLevelDetector.Match(messageText);
+              raidInfoMatch = raidBossMatch;
+            }
+            else if (ourPoketrackRaidLevelDetector.Match(messageText) is var raidLevelMatch && raidLevelMatch.Success)
+            {
+              raid.Name = "Egg";
+              raidBossLevelMatch = raidLevelMatch;
+              raidInfoMatch = raidLevelMatch;
+            }
+
+            if (raidBossLevelMatch != null)
             {
               if (int.TryParse(raidBossLevelMatch.Value, out var raidBossLevel))
               {
                 raid.RaidBossLevel = raidBossLevel;
               }
-              if (ourPoketrackRaidBossDetector.Match(messageText) is var raidBossMatch && raidBossMatch.Success)
-              {
-                //raid.IV = 100; // raid bosses are always 100%
-                raid.Name = raidBossMatch.Value;
-              }
-              else
-              {
-                raid.Name = "Egg";
-              }
-
-              if ((raidBossLevelMatch.Groups["info"].Success || raidBossMatch.Groups["info"].Success) && (firstLine != "Gym"))
+              if (raidInfoMatch.Groups["info"].Success && (firstLine != "Gym"))
               {
                 raid.Gym = firstLine;
               }
@@ -279,7 +284,8 @@ namespace RaidBattlesBot.Handlers
     private static readonly Regex ourPoketrackEndTimeDetector = new Regex("(?<=Ends at:\\s+).+");
 
     private static readonly Regex ourPoketrackRaidBossDetector = new Regex("(?<=Raid (?<info>Info\\n)?Boss:\\s+).+");
-    private static readonly Regex ourPoketrackRaidBossLevelDetector = new Regex("(?<=(Raid (?<info>Info\\n)?)?Level:\\s+).+");
+    private static readonly Regex ourPoketrackRaidLevelDetector = new Regex("(?<=Raid (?<info>Info\\n)?Level:\\s+).+");
+    private static readonly Regex ourPoketracLevelDetector = new Regex("(?<=Level:\\s+).+");
 
     private static readonly Regex ourPoketrackIVLevelDetector = new Regex("(?<=IV: .+\\()\\d+(?=%\\))");
 
