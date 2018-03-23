@@ -45,6 +45,7 @@ namespace RaidBattlesBot.Model
     StandardNoDoubt = Valor | Instinct | Mystic | Cancel,
     Compact =  Yes | Plus1 | MayBe | Cancel,
     Minimal =  Yes | Plus1 | Cancel,
+    YesNo =  Yes | Cancel,
 
     Going = Yes | Valor | Instinct | Mystic,
     Thinking = MayBe,
@@ -56,7 +57,7 @@ namespace RaidBattlesBot.Model
 
   public static class VoteEnumEx
   {
-    public static readonly VoteEnum[] AllowedVoteFormats = { VoteEnum.Standard, VoteEnum.StandardNoDoubt, VoteEnum.Compact, VoteEnum.Minimal };
+    public static readonly VoteEnum[] AllowedVoteFormats = { VoteEnum.Standard, VoteEnum.StandardNoDoubt, VoteEnum.Compact, VoteEnum.Minimal, VoteEnum.YesNo };
 
     private static readonly int FirstPlusBit = (int)Math.Log((int)VoteEnum.Plus1, 2);
 
