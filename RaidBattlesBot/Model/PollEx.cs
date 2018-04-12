@@ -131,14 +131,12 @@ namespace RaidBattlesBot.Model
       var pollId = poll.Id;
 
       InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
-        new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.Description), $"vote:{pollId}:{vote}");
+        new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"vote:{pollId}:{vote}");
 
-      var buttons = new List<InlineKeyboardButton>();
-      foreach (var voteButton in (poll.AllowedVotes ?? VoteEnum.Standard).GetFlags())
+      var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard).Select(GetVoteButton))
       {
-        buttons.Add(GetVoteButton(voteButton));
-      }
-      buttons.Add(new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}"));
+        new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}")
+      };
       return new InlineKeyboardMarkup(buttons.ToArray());
     }
 

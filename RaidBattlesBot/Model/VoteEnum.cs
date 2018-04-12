@@ -1,5 +1,6 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using EnumsNET;
@@ -11,39 +12,51 @@ namespace RaidBattlesBot.Model
   {
     None = 0,
 
-    [Description("✔")]
+    [Display(Name = "✔", Order = 10)]
     Yes = 1 << 0,
 
-    [Description("❤")]
+    [Display(Name = "❤", Order = 10)]
     Valor = Yes << 1,
 
-    [Description("💛")]
+    [Display(Name = "💛", Order = 10)]
     Instinct = Valor << 1,
 
-    [Description("💙")]
+    [Display(Name = "💙", Order = 10)]
     Mystic = Instinct << 1,
 
-    [Description("+1")]
+    [Display(Name = "+1", Order = 15)]
     Plus1 = Mystic << 1,
 
-    [Description("+2")]
+    [Display(Name = "+2", Order = 15)]
     Plus2 = Plus1 << 1,
 
-    [Description("+4")]
+    [Display(Name = "+4", Order = 15)]
     Plus4 = Plus2 << 1,
 
-    [Description("+8")]
+    [Display(Name = "+8", Order = 15)]
     Plus8 = Plus4 << 1,
 
-    [Description("💤")]
+    [Display(Name = "💤", Order = 20)]
     MayBe = Plus8 << 1,
 
-    [Description("✖")]
+    [Display(Name = "✖", Order = 100)]
     Cancel = MayBe << 1,
 
-    Standard = Valor | Instinct | Mystic | MayBe | Cancel,
+    [Display(Name = "❤⁺¹", Order = 1)]
+    ValorPlusOne = Valor | Plus1,
+
+    [Display(Name = "💛⁺¹", Order = 1)]
+    InstinctPlusOne = Instinct | Plus1,
+
+    [Display(Name = "💙⁺¹", Order = 1)]
+    MysticPlusOne = Mystic | Plus1,
+
+    [Display(Name = "✔⁺¹", Order = 1)]
+    YesPlus1 = Yes | Plus1,
+
+    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | MayBe | Cancel,
     StandardNoDoubt = Valor | Instinct | Mystic | Cancel,
-    Compact =  Yes | Plus1 | MayBe | Cancel,
+    Compact =  YesPlus1 | MayBe | Cancel,
     Minimal =  Yes | Plus1 | Cancel,
     YesNo =  Yes | Cancel,
     Full = Valor | Instinct | Mystic | Plus1 | MayBe | Cancel,
@@ -51,7 +64,8 @@ namespace RaidBattlesBot.Model
 
     Going = Yes | Valor | Instinct | Mystic,
     Thinking = MayBe,
-    SomePlus = Going | MayBe | Plus,
+    Some = Going | MayBe ,
+    SomePlus = Some | Plus,
     ChangedMind = Cancel,
 
     Plus = Plus1 | Plus2 | Plus4 | Plus8
@@ -60,7 +74,9 @@ namespace RaidBattlesBot.Model
   public static class VoteEnumEx
   {
     public static readonly VoteEnum[] AllowedVoteFormats = 
-      { VoteEnum.Standard, VoteEnum.StandardNoDoubt, VoteEnum.Compact, VoteEnum.Minimal, VoteEnum.YesNo, VoteEnum.Full, VoteEnum.FullNoDoubt };
+      new [] { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.YesNo }
+        .Distinct()
+        .ToArray();
 
     private static readonly int FirstPlusBit = (int)Math.Log((int)VoteEnum.Plus1, 2);
 
@@ -74,9 +90,22 @@ namespace RaidBattlesBot.Model
 
     public static string Description(this VoteEnum vote) =>
       (vote.RemoveFlags(VoteEnum.Plus) is VoteEnum voteWithoutPlus && voteWithoutPlus.HasAnyFlags() ?
-        voteWithoutPlus : vote.HasAnyFlags(VoteEnum.Plus) ? VoteEnum.Yes : vote).AsString(EnumFormat.Description);
+        voteWithoutPlus : vote.HasAnyFlags(VoteEnum.Plus) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName, EnumFormat.Description);
 
-    public static StringBuilder Format(this VoteEnum vote, StringBuilder builder, EnumFormat enumFormat = EnumFormat.Description) =>
-      builder.AppendJoin("", vote.GetFlags().Select(_ => _.AsString(enumFormat)));
+    public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
+    {
+      var processed = VoteEnum.None;
+      foreach (var possiblleVote in Enums.GetValues<VoteEnum>(EnumMemberSelection.DisplayOrder | EnumMemberSelection.Distinct))
+      {
+        if (vote.HasAllFlags(possiblleVote) && !processed.HasAllFlags(possiblleVote))
+        {
+          processed |= possiblleVote;
+          yield return possiblleVote;
+        }
+      }
+    }
+    
+    public static StringBuilder Format(this VoteEnum vote, StringBuilder builder) =>
+      builder.AppendJoin("", GetFlags(vote).Select(_ => _.AsString(EnumFormat.DisplayName, EnumFormat.Description)));
   }
 }
