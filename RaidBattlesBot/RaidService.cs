@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -21,32 +22,88 @@ namespace RaidBattlesBot
     private readonly TelemetryClient myTelemetryClient;
     private readonly ChatInfo myChatInfo;
     private readonly UserInfo myUserInfo;
+    private readonly IMemoryCache myMemoryCache;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, UserInfo userInfo)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, UserInfo userInfo, IMemoryCache memoryCache)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
       myChatInfo = chatInfo;
       myUserInfo = userInfo;
+      myMemoryCache = memoryCache;
     }
 
-    public async Task<bool> AddPoll(string text, VoteEnum allowedVotes, PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<int> GetPollId(InlineQuery data, CancellationToken cancellationToken = default)
     {
-      message.Poll = new Poll
+      using (var connection = myContext.Database.GetDbConnection())
       {
-        Title = text,
-        AllowedVotes = allowedVotes,
-        Owner = message.UserId,
-      };
+        try
+        {
+          await connection.OpenAsync(cancellationToken);
+          using (var command = connection.CreateCommand())
+          {
+            command.CommandText = "SELECT NEXT VALUE FOR PollId";
+            var pollId = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+            using (var entry = myMemoryCache.CreateEntry(this[pollId]))
+            {
+              entry.Value = data;
+              entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
+            }
+            return pollId;
+          }
+        }
+        finally
+        {
+          connection.Close();
+        }
+      }
 
-      return await AddPollMessage(message, urlHelper, cancellationToken);
     }
 
-    public async Task<bool> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    {
+      var pollId = pollMessage.PollId;
+      var poll = await myContext.Polls
+        .Where(_ => _.Id == pollId)
+        .IncludeRelatedData()
+        .FirstOrDefaultAsync(cancellationToken);
+
+      if (poll != null)
+      {
+        var existingMessage = poll.Messages.SingleOrDefault(_ => _.InlineMesssageId == pollMessage.InlineMesssageId && _.ChatId == pollMessage.ChatId && _.MesssageId == pollMessage.MesssageId);
+        if (existingMessage != null)
+          return existingMessage;
+
+        pollMessage.Poll = poll;
+        return await AddPollMessage(pollMessage, urlHelper, cancellationToken);
+      }
+
+      var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
+      var pollIdBase = pollId - votesFormatIndex;
+      var pollData = myMemoryCache.Get<InlineQuery>(this[pollIdBase]);
+      if (pollData == null) return null;
+
+      pollMessage.Poll = new Poll
+      {
+        Id = pollId,
+        Title = pollData.Query,
+        AllowedVotes = VoteEnumEx.AllowedVoteFormats[votesFormatIndex],
+        Owner = pollData.From.Id,
+        Votes = new List<Vote>()
+      };
+      var pollEntity = myContext.Attach(pollMessage.Poll);
+      pollEntity.State = EntityState.Added;
+
+      return await AddPollMessage(pollMessage, urlHelper, cancellationToken);
+    }
+
+    private string this[int pollId] => $"poll:data:{pollId}";
+
+    public async Task<PollMessage> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
       if (message?.Poll == null)
-        return false;
+        return message;
       
       message.Poll.AllowedVotes =
         message.Poll.AllowedVotes ?? (await myContext.Settings.FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
@@ -173,11 +230,11 @@ namespace RaidBattlesBot
       }
       else if (message.InlineMesssageId is string inlineMessageId)
       {
-        await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
-          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
+        //await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
+        //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
       }
 
-      return await myContext.SaveChangesAsync(cancellationToken) > 0;
+      return message;
     }
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)

@@ -43,11 +43,7 @@ namespace RaidBattlesBot.Handlers
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
         return ("Голование подготавливается. Повторите позже", true, null);
 
-      var poll = await myContext
-        .Polls
-        .Where(_ => _.Id == pollId)
-        .IncludeRelatedData()
-        .FirstOrDefaultAsync(cancellationToken);
+      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken))?.Poll;
 
       if (poll == null)
         return ("Голосование не найдено", true, null);
@@ -66,10 +62,12 @@ namespace RaidBattlesBot.Handlers
       if (!FlagEnums.TryParseFlags(teamAbbr, out VoteEnum team))
         return ("Неправильный голос", true, null);
 
-
-      vote.Team = team == VoteEnum.Plus1 ?
-        vote.Team?.CommonFlags(VoteEnum.SomePlus) is VoteEnum clearedVote ?
-          clearedVote != default ? clearedVote.IncreaseVotesCount(1) : VoteEnum.Yes : VoteEnum.Yes : team;
+      var clearTeam = team.RemoveFlags(VoteEnum.Plus);
+      if (clearTeam == default)
+        clearTeam = VoteEnum.Yes;
+      
+      vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is VoteEnum voted && voted.HasAllFlags(clearTeam) ?
+        voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)

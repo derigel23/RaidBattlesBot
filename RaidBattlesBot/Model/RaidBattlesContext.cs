@@ -16,6 +16,8 @@ namespace RaidBattlesBot.Model
     public RaidBattlesContext(DbContextOptions<RaidBattlesContext> options)
       : base(options) { }
 
+    public const int PollIdSeed = 10100;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       var raidEntity = modelBuilder.Entity<Raid>();
@@ -25,8 +27,11 @@ namespace RaidBattlesBot.Model
       raidEntity.Property(p => p.Lat).HasColumnType("decimal(18,15)");
       raidEntity.Property(p => p.Lon).HasColumnType("decimal(18,15)");
 
+      modelBuilder.HasSequence<int>("PollId").StartsAt(PollIdSeed).IncrementsBy(VoteEnumEx.AllowedVoteFormats.Length);
+      
       var pollEntity = modelBuilder.Entity<Poll>();
-      pollEntity.HasKey(poll => poll.Id);
+      pollEntity.Property(poll => poll.Id).HasDefaultValueSql("NEXT VALUE FOR PollId");
+      pollEntity.HasIndex(poll => poll.Id).IsUnique();
       pollEntity.HasMany(poll => poll.Messages).WithOne(message => message.Poll).HasForeignKey(message => message.PollId);
       pollEntity.HasMany(poll => poll.Votes).WithOne().HasForeignKey(vote => vote.PollId);
 

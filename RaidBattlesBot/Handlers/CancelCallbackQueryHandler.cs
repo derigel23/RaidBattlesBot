@@ -34,11 +34,7 @@ namespace RaidBattlesBot.Handlers
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
         return ("Голование подготавливается. Повторите позже", true, null);
 
-      var poll = await myContext
-        .Polls
-        .Where(_ => _.Id == pollId)
-        .IncludeRelatedData()
-        .FirstOrDefaultAsync(cancellationToken);
+      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken))?.Poll;
 
       if (poll == null)
         return ("Голосование не найдено", true, null);

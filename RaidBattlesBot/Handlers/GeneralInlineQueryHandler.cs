@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -18,13 +20,15 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly UserInfo myUserInfo;
     private readonly ShareInlineQueryHandler myShareInlineQueryHandler;
+    private readonly RaidService myRaidService;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, ShareInlineQueryHandler shareInlineQueryHandler)
+    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
       myUserInfo = userInfo;
       myShareInlineQueryHandler = shareInlineQueryHandler;
+      myRaidService = raidService;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -38,28 +42,30 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        inlineQueryResults = await
-          Task.WhenAll(VoteEnumEx.AllowedVoteFormats
-          .Select(_ => new Poll
-          {
-            Title = query,
-            AllowedVotes = _
-          })
-          .Select(async fakePoll => new InlineQueryResultArticle
-          {
-            Id = $"create:{query.GetHashCode()}:{fakePoll.AllowedVotes:D}",
-            Title = fakePoll.GetTitle(myUrlHelper),
-            Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
-            HideUrl = true,
-            ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
-            InputMessageContent = new InputTextMessageContent
+        var pollId = await myRaidService.GetPollId(data, cancellationToken);
+        inlineQueryResults = await Task.WhenAll(
+          VoteEnumEx.AllowedVoteFormats
+            .Select((_, i) => new Poll
             {
-              MessageText = (await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
-              ParseMode = RaidEx.ParseMode,
-              DisableWebPagePreview = fakePoll.GetRaidId() == null
-            },
-            ReplyMarkup = fakePoll.GetReplyMarkup()
-          }));
+              Id = pollId + i,
+              Title = query,
+              AllowedVotes = _
+            })
+            .Select(async fakePoll => new InlineQueryResultArticle
+            {
+              Id = $"create:{fakePoll.Id}",
+              Title = fakePoll.GetTitle(myUrlHelper),
+              Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+              HideUrl = true,
+              ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
+              InputMessageContent = new InputTextMessageContent
+              {
+                MessageText = (await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
+                ParseMode = RaidEx.ParseMode,
+                DisableWebPagePreview = fakePoll.GetRaidId() == null
+              },
+              ReplyMarkup = fakePoll.GetReplyMarkup()
+            }));
       }
 
       return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);

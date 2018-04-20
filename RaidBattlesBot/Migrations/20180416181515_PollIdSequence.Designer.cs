@@ -12,14 +12,15 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20180416181515_PollIdSequence")]
+    partial class PollIdSequence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125")
-                .HasAnnotation("Relational:Sequence:.PollId", "'PollId', '', '10100', '3', '', '', 'Int32', 'False'")
+                .HasAnnotation("Relational:Sequence:.PollId", "'PollId', '', '10000', '1', '', '', 'Int32', 'False'")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("RaidBattlesBot.Model.Poll", b =>

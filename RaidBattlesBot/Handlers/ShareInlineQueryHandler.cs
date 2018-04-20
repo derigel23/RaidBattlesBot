@@ -24,14 +24,16 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly UserInfo myUserInfo;
     private readonly IClock myClock;
+    private readonly RaidService myRaidService;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, IClock clock)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, IClock clock, RaidService raidService)
     {
       myContext = context;
       myBot = bot;
       myUrlHelper = urlHelper;
       myUserInfo = userInfo;
       myClock = clock;
+      myRaidService = raidService;
     }
 
     async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -47,10 +49,7 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var poll = await myContext.Polls
-          .Where(_ => _.Id == pollid)
-          .IncludeRelatedData()
-          .FirstOrDefaultAsync(cancellationToken);
+        var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollid}, myUrlHelper, cancellationToken))?.Poll;
 
         inlineQueryResults = new List<InlineQueryResult>();
         if (poll != null)

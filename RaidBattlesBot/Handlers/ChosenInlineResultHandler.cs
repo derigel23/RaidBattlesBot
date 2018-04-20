@@ -24,20 +24,14 @@ namespace RaidBattlesBot.Handlers
     public async Task<bool?> Handle(ChosenInlineResult data, object context = default, CancellationToken cancellationToken = default)
     {
       var resultParts = data.ResultId.Split(':');
-      if (resultParts[0] == "poll" && int.TryParse(resultParts.ElementAtOrDefault(1) ?? "", out var pollId))
+      switch (resultParts[0])
       {
-        myContext.Messages.Add(new PollMessage
-        {
-          PollId = pollId,
-          InlineMesssageId = data.InlineMessageId
-        });
-        return await myContext.SaveChangesAsync(cancellationToken) > 0;
-      }
+          case "poll":
+          case "create":
+            if (!int.TryParse(resultParts.ElementAtOrDefault(1) ?? "", out var pollId))
+              return null;
 
-      if (resultParts[0] == "create")
-      {
-        return await myRaidService.AddPoll(data.Query, FlagEnums.TryParseFlags(resultParts.ElementAtOrDefault(2), out VoteEnum allowedVotes, EnumFormat.DecimalValue, EnumFormat.Name) ?
-            allowedVotes : VoteEnum.Standard, new PollMessage(data), myUrlHelper, cancellationToken);
+            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId, }, myUrlHelper, cancellationToken)) != null;
       }
 
       return null;

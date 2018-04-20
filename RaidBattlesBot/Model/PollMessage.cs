@@ -20,6 +20,19 @@ namespace RaidBattlesBot.Model
       InlineMesssageId = inlineResult.InlineMessageId;
     }
 
+    public PollMessage(InlineQuery inlineResult)
+    {
+      UserId = inlineResult.From?.Id;
+    }
+
+    public PollMessage(CallbackQuery callbackQuery)
+    {
+      UserId = callbackQuery.From?.Id;
+      InlineMesssageId = callbackQuery.InlineMessageId;
+      Chat = callbackQuery.Message?.Chat;
+      MesssageId = callbackQuery.Message?.MessageId;
+    }
+
     public int Id { get; set; }
     public int PollId { get; set; }
     public int? UserId { get; set; }
