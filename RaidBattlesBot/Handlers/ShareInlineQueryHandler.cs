@@ -36,7 +36,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
     }
 
-    async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
+    async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context, CancellationToken cancellationToken)
     {
       var queryParts = data.Query.Split(':');
       if (queryParts[0] != "share")

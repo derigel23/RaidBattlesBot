@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -26,6 +27,7 @@ namespace RaidBattlesBot
     {
       myConfiguration = configuration;
     }
+
     // This method gets called by the runtime. Use this method to add services to the container.
     // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     public void ConfigureServices(IServiceCollection services)
@@ -81,6 +83,7 @@ namespace RaidBattlesBot
         {
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
         })
+        .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
         .AddControllersAsServices()
         .AddRazorPagesOptions(options => options.Conventions.AddPageRoute("/Map", "{handler?}"));
 
