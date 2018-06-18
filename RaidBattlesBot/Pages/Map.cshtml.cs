@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -8,7 +7,6 @@ using DelegateDecompiler.EntityFramework;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NodaTime;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -22,12 +20,11 @@ namespace RaidBattlesBot.Pages
     private readonly RaidBattlesContext myDb;
     private readonly IClock myClock;
 
-    public MapModel(IOptions<MvcOptions> mvcOptions, RaidBattlesContext db, IClock clock, User botUser)
+    public MapModel(RaidBattlesContext db, IClock clock, User botUser)
     {
       BotUser = botUser;
       myDb = db;
       myClock = clock;
-      myJsonpMediaTypeFormatter = mvcOptions.Value.OutputFormatters.OfType<JsonpMediaTypeFormatter>().Single();
     }
     
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
@@ -40,8 +37,7 @@ namespace RaidBattlesBot.Pages
       return new OkResult();
     }
 
-    private readonly JsonpMediaTypeFormatter myJsonpMediaTypeFormatter;
-
+    [Produces(typeof(JsonpMediaTypeFormatter))]
     public async Task<IActionResult> OnGetDataAsync(string bbox, CancellationToken cancellationToken)
     {
       var parts = bbox.Split(',', 4);
@@ -89,10 +85,7 @@ namespace RaidBattlesBot.Pages
         })
       };
 
-      return new OkObjectResult(response)
-      {
-        Formatters = { myJsonpMediaTypeFormatter }
-      };
+      return new OkObjectResult(response);
     }
   }
 }
