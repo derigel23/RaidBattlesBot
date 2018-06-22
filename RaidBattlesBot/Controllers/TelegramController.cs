@@ -53,8 +53,26 @@ namespace RaidBattlesBot.Controllers
 
       try
       {
+        if (update == null)
+        {
+          foreach (var errorEntry in ModelState)
+          {
+            myTelemetryClient.Context.Properties[$"ModelState.{errorEntry.Key}"] = errorEntry.Value.AttemptedValue;
+            var errors = errorEntry.Value.Errors;
+            for (var i = 0; i < errors.Count; i++)
+            {
+              myTelemetryClient.Context.Properties[$"ModelState.{errorEntry.Key}.{i}"] = errors[i].ErrorMessage;
+              if (errors[i].Exception is Exception exception)
+              {
+                myTelemetryClient.TrackException(exception, new Dictionary<string, string> { { errorEntry.Key, errorEntry.Value.AttemptedValue } });
+              };
+            }
+          }
+          throw new ArgumentNullException(nameof(update));
+        }
+
         Message message = null;
-        switch (update?.Type)
+        switch (update.Type)
         {
           case UpdateType.MessageUpdate:
             message = update.Message;
@@ -139,9 +157,9 @@ namespace RaidBattlesBot.Controllers
       }
       finally
       {
-        if (update != null)
+        var eventName = update?.Type.ToString();
+        if (eventName != null)
         {
-          var eventName = update.Type.ToString();
           myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
         }
       }
