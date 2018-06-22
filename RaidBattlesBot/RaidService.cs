@@ -246,7 +246,7 @@ namespace RaidBattlesBot
         {
           if (message.InlineMesssageId is string inlineMessageId)
           {
-            await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.GetRaidId() == null,
+            await myBot.EditMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.GetRaidId() == null,
               replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
           }
           else if (message.ChatId is long chatId && message.MesssageId is int messageId)

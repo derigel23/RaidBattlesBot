@@ -7,7 +7,6 @@ using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
@@ -63,7 +62,7 @@ namespace RaidBattlesBot.Handlers
 
           IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
             VoteEnumEx.AllowedVoteFormats
-              .Select(flags => new InlineKeyboardButton[] { new InlineKeyboardCallbackButton(flags.Format(new StringBuilder()).ToString(), $"set:{flags:D}") }).ToArray());
+              .Select(flags => new[] { InlineKeyboardButton.WithCallbackData(flags.Format(new StringBuilder()).ToString(), $"set:{flags:D}") }).ToArray());
 
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите формат голосования по умолчанию:", disableNotification: true,
             replyMarkup: replyMarkup, cancellationToken: cancellationToken);

@@ -1,15 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -33,7 +30,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      InlineQueryResult[] inlineQueryResults;
+      InlineQueryResultBase[] inlineQueryResults;
 
       var query = data.Query;
       if (string.IsNullOrWhiteSpace(query))
@@ -51,24 +48,21 @@ namespace RaidBattlesBot.Handlers
               Title = query,
               AllowedVotes = _
             })
-            .Select(async fakePoll => new InlineQueryResultArticle
-            {
-              Id = $"create:{fakePoll.Id}",
-              Title = fakePoll.GetTitle(myUrlHelper),
-              Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
-              HideUrl = true,
-              ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
-              InputMessageContent = new InputTextMessageContent
-              {
-                MessageText = (await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
-                ParseMode = RaidEx.ParseMode,
+            .Select(async fakePoll => new InlineQueryResultArticle($"create:{fakePoll.Id}", fakePoll.GetTitle(myUrlHelper),
+              new InputTextMessageContent((await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString())
+              {ParseMode = RaidEx.ParseMode,
                 DisableWebPagePreview = fakePoll.GetRaidId() == null
-              },
-              ReplyMarkup = fakePoll.GetReplyMarkup()
+              })
+              {
+                Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+                HideUrl = true,
+                ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
+                ReplyMarkup = fakePoll.GetReplyMarkup()
             }));
       }
 
-      return await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
+      await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults, cacheTime: 0, cancellationToken: cancellationToken);
+      return true;
     }
   }
 }

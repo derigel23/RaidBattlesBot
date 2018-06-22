@@ -6,7 +6,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType = MessageType.PhotoMessage)]
+  [MessageType(MessageType = MessageType.Photo)]
   public class PhotoMessageHandler : IMessageHandler
   {
     public async Task<bool?> Handle(Message data, PollMessage pollMessage = default, CancellationToken cancellationToken = default)

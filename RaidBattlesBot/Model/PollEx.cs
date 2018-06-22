@@ -9,9 +9,7 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Model
@@ -130,12 +128,12 @@ namespace RaidBattlesBot.Model
 
       var pollId = poll.Id;
 
-      InlineKeyboardCallbackButton GetVoteButton(VoteEnum vote) =>
-        new InlineKeyboardCallbackButton(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"vote:{pollId}:{vote}");
+      InlineKeyboardButton GetVoteButton(VoteEnum vote) =>
+        InlineKeyboardButton.WithCallbackData(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"vote:{pollId}:{vote}");
 
       var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard).Select(GetVoteButton))
       {
-        new InlineKeyboardSwitchInlineQueryButton("🌐", $"share:{pollId}")
+        InlineKeyboardButton.WithSwitchInlineQuery("🌐", $"share:{pollId}")
       };
       return new InlineKeyboardMarkup(buttons.ToArray());
     }
@@ -161,19 +159,16 @@ namespace RaidBattlesBot.Model
 
     public static async Task<InlineQueryResultArticle> ClonePoll(this Poll poll, IUrlHelper urlHelper, UserInfo userInfo, CancellationToken cancellationToken = default)
     {
-      return new InlineQueryResultArticle
+      return new InlineQueryResultArticle($"poll:{poll.Id}", poll.GetTitle(urlHelper),
+        new InputTextMessageContent((await poll.GetMessageText(urlHelper, userInfo, RaidEx.ParseMode, cancellationToken)).ToString())
+        {
+          ParseMode = RaidEx.ParseMode,
+          DisableWebPagePreview = poll.GetRaidId() == null
+        })
       {
-        Id = $"poll:{poll.Id}",
-        Title = poll.GetTitle(urlHelper),
         Description = "Клонировать голосование",
         HideUrl = true,
         ThumbUrl = poll.GetThumbUrl(urlHelper).ToString(),
-        InputMessageContent = new InputTextMessageContent
-        {
-          MessageText = (await poll.GetMessageText(urlHelper, userInfo, RaidEx.ParseMode, cancellationToken)).ToString(),
-          ParseMode = RaidEx.ParseMode,
-          DisableWebPagePreview = poll.GetRaidId() == null
-        },
         ReplyMarkup = poll.GetReplyMarkup()
       };
     }

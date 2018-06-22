@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType = MessageType.LocationMessage)]
+  [MessageType(MessageType = MessageType.Location)]
   public class LocationMessageHandler : IMessageHandler
   {
     private readonly RaidBattlesContext myDb;

@@ -74,7 +74,7 @@ namespace RaidBattlesBot.Controllers
         Message message = null;
         switch (update.Type)
         {
-          case UpdateType.MessageUpdate:
+          case UpdateType.Message:
             message = update.Message;
             break;
 
@@ -82,20 +82,21 @@ namespace RaidBattlesBot.Controllers
             message = update.ChannelPost;
             break;
 
-          case UpdateType.CallbackQueryUpdate:
+          case UpdateType.CallbackQuery:
             var callbackQuery = update.CallbackQuery;
             HttpContext.Items["uid"] = callbackQuery.From?.Username;
             HttpContext.Items["data"] = callbackQuery.Data;
             (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
-            return Return(await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken));
+            await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken);
+            return Ok();
 
-          case UpdateType.InlineQueryUpdate:
+          case UpdateType.InlineQuery:
             var inlineQuery = update.InlineQuery;
             HttpContext.Items["uid"] = inlineQuery.From?.Username;
             HttpContext.Items["query"] = inlineQuery.Query;
             return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken));
 
-          case UpdateType.ChosenInlineResultUpdate:
+          case UpdateType.ChosenInlineResult:
             var chosenInlineResult = update.ChosenInlineResult;
             HttpContext.Items["uid"] = chosenInlineResult.From?.Username;
             HttpContext.Items["query"] = chosenInlineResult.Query;
@@ -142,7 +143,7 @@ namespace RaidBattlesBot.Controllers
             }
           }
         }
-        else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Type == MessageType.TextMessage) && (message.Entities.Count == 0))
+        else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Type == MessageType.Text) && (message.Entities.Length == 0))
         {
           myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
         }

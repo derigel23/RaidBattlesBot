@@ -11,7 +11,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType = MessageType.TextMessage)]
+  [MessageType(MessageType = MessageType.Text)]
   public class TextMessageHandler : IMessageHandler
   {
     private readonly Message myMessage;
