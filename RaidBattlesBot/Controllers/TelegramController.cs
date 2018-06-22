@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -43,7 +44,7 @@ namespace RaidBattlesBot.Controllers
     }
 
     [HttpPost("/update")]
-    public async Task<IActionResult> Update([FromBody] Update update, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Update([CanBeNull, FromBody] Update update, CancellationToken cancellationToken = default)
     {
       IActionResult Return(bool? result) =>
         result is bool success && success ? Ok() : Ok(); // TODO: not handled
@@ -53,7 +54,7 @@ namespace RaidBattlesBot.Controllers
       try
       {
         Message message = null;
-        switch (update.Type)
+        switch (update?.Type)
         {
           case UpdateType.MessageUpdate:
             message = update.Message;
@@ -138,8 +139,11 @@ namespace RaidBattlesBot.Controllers
       }
       finally
       {
-        var eventName = update.Type.ToString();
-        myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
+        if (update != null)
+        {
+          var eventName = update.Type.ToString();
+          myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
+        }
       }
     }
   }
