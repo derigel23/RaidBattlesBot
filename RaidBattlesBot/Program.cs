@@ -1,6 +1,8 @@
 ﻿using Autofac.Extensions.DependencyInjection;
+using CsvHelper;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace RaidBattlesBot
 {
@@ -14,6 +16,13 @@ namespace RaidBattlesBot
         .CreateDefaultBuilder(args)
         .UseApplicationInsights()
         .UseStartup<Startup>()
-        .ConfigureServices(services => services.AddAutofac());
+        .ConfigureServices(services => services.AddAutofac())
+        .ConfigureAppConfiguration((context, builder) =>
+        {
+          if (context.HostingEnvironment.IsDevelopment())
+          {
+            builder.AddJsonFile($"appsettings.{EnvironmentName.Development}.user.json", true);
+          }
+        });
   }
 }
