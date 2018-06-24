@@ -46,7 +46,7 @@ namespace RaidBattlesBot.Handlers
       
       var handlers = myMessageEntityHandlers.Bind(message).ToList();
       bool? result = default;
-      foreach (var entity in message.Entities)
+      foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
         result = await HandlerExtentions<bool?>.Handle(handlers, entity, pollMessage, cancellationToken);
         if (result.HasValue)
