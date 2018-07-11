@@ -64,7 +64,8 @@ namespace RaidBattlesBot
     public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
       var pollId = pollMessage.PollId;
-      var poll = await myContext.Polls
+      var poll = await myContext
+        .Set<Poll>()
         .Where(_ => _.Id == pollId)
         .IncludeRelatedData()
         .FirstOrDefaultAsync(cancellationToken);
@@ -106,7 +107,7 @@ namespace RaidBattlesBot
         return message;
       
       message.Poll.AllowedVotes =
-        message.Poll.AllowedVotes ?? (await myContext.Settings.FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
+        message.Poll.AllowedVotes ?? (await myContext.Set<Settings>().FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
 
       var raidUpdated = false;
       var eggRaidUpdated = false;
@@ -114,7 +115,8 @@ namespace RaidBattlesBot
       {
         if (raid.Id == 0)
         {
-          var sameRaids = myContext.Raids
+          var sameRaids = myContext
+            .Set<Raid>()
             .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
           var existingRaid = await sameRaids
             .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
@@ -131,7 +133,7 @@ namespace RaidBattlesBot
 
             if (string.IsNullOrEmpty(message.Poll.Title))
             {
-              // use exisiting poll if have rights for any prev message
+              // use existing poll if have rights for any prev message
               foreach (var existingRaidPoll in existingRaid.Polls)
               {
                 foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
@@ -176,7 +178,7 @@ namespace RaidBattlesBot
                 if (!string.IsNullOrEmpty(message.Poll.Title))
                   continue;
                 
-                // use exisiting poll if have rights for any prev message
+                // use existing poll if have rights for any prev message
                 foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
                 {
                   if (await myChatInfo.CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))

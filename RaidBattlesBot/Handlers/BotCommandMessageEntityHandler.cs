@@ -47,7 +47,8 @@ namespace RaidBattlesBot.Handlers
           if (!int.TryParse(commandText, out var pollId))
             return false;
           
-          var existingPoll = await myContext.Polls
+          var existingPoll = await myContext
+            .Set<Poll>()
             .Where(_ => _.Id == pollId)
             .IncludeRelatedData()
             .FirstOrDefaultAsync(cancellationToken);

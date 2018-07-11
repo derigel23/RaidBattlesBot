@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +21,8 @@ namespace RaidBattlesBot.Pages
 
       public async Task<IActionResult> OnGetAsync(int raidId, CancellationToken cancellationToken = default)
       {
-        Raid = await myDbContext.Raids
+        Raid = await myDbContext
+          .Set<Raid>()
           .Where(_ => _.Id == raidId)
           .FirstOrDefaultAsync(cancellationToken);
         if (Raid == null)

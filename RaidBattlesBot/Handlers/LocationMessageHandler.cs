@@ -37,7 +37,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
-      var existingRaid = await myDb.Raids
+      var existingRaid = await myDb.Set<Raid>()
         .Where(_ => _.RaidBossEndTime > now)
         .Where(_ => _.Lat == foundGym.location.lat && _.Lon == foundGym.location.lon)
         .IncludeRelatedData()

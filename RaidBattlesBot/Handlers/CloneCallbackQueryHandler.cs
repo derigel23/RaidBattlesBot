@@ -36,7 +36,7 @@ namespace RaidBattlesBot.Handlers
         return ("Голование подготавливается. Повторите позже", true, null);
 
       var poll = await myContext
-        .Polls
+        .Set<Poll>()
         .Where(_ => _.Id == pollId)
         .IncludeRelatedData()
         .FirstOrDefaultAsync(cancellationToken);

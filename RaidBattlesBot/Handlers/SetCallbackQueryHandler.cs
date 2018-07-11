@@ -1,16 +1,12 @@
-﻿using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -41,8 +37,9 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
 
       var chatId = data.Message.Chat.Id;
-      var settings = await myContext.Settings.FirstOrDefaultAsync(_ => _.Chat == chatId, cancellationToken);
-      settings = settings ?? myContext.Settings.Add(new Settings { Chat = chatId }).Entity;
+      var polls = myContext.Set<Settings>();
+      var settings = await polls.FirstOrDefaultAsync(_ => _.Chat == chatId, cancellationToken);
+      settings = settings ?? polls.Add(new Settings { Chat = chatId }).Entity;
       settings.DefaultAllowedVotes = allowedVotes;
       await myContext.SaveChangesAsync(cancellationToken);
 

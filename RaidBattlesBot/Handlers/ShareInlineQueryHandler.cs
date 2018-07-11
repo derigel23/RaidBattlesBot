@@ -76,7 +76,8 @@ namespace RaidBattlesBot.Handlers
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
 
       // active raids or polls
-      var polls = await myContext.Polls
+      var polls = await myContext
+        .Set<Poll>()
         .IncludeRelatedData()
         .Where(_ => _.EndTime > now) // live poll
         .Where(_ => _.Raid.EggRaidId == null) // no eggs if boss is already known

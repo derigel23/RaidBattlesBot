@@ -21,7 +21,7 @@ namespace RaidBattlesBot
 {
   public class Startup
   {
-    private IConfiguration myConfiguration;
+    private readonly IConfiguration myConfiguration;
 
     public Startup(IConfiguration configuration)
     {
@@ -36,8 +36,9 @@ namespace RaidBattlesBot
       services.AddOptions();
 
       // Register configuration handlers
-      Configure<BotConfiguration>(services, myConfiguration.GetSection("BotConfiguration"));
-      Configure<GeoCoderConfiguration>(services, myConfiguration.GetSection("GeoCoder"));
+      services.Configure<BotConfiguration>(myConfiguration.GetSection("BotConfiguration"));
+      services.Configure<GeoCoderConfiguration>(myConfiguration.GetSection("GeoCoder"));
+      services.Configure<IngressConfiguration>(myConfiguration.GetSection("Ingress"));
 
       services.AddSingleton(provider =>
       {
@@ -89,12 +90,6 @@ namespace RaidBattlesBot
 
       services.AddDbContextPool<RaidBattlesContext>(options =>
         options.UseSqlServer(myConfiguration.GetConnectionString("RaidBattlesDatabase")));
-    }
-
-    private static void Configure<TOptions>(IServiceCollection services, IConfiguration configuration)
-      where TOptions : class
-    {
-      services.Configure<TOptions>(configuration);
     }
 
     public void ConfigureContainer(ContainerBuilder builder)

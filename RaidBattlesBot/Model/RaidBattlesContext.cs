@@ -7,12 +7,6 @@ namespace RaidBattlesBot.Model
 {
   public class RaidBattlesContext : DbContext
   {
-    public DbSet<Raid> Raids { get; set; }
-    public DbSet<Poll> Polls { get; set; }
-    public DbSet<PollMessage> Messages { get; set; }
-    public DbSet<Vote> Votes { get; set; }
-    public DbSet<Settings> Settings { get; set; }
-
     public RaidBattlesContext(DbContextOptions<RaidBattlesContext> options)
       : base(options) { }
 
@@ -20,33 +14,56 @@ namespace RaidBattlesBot.Model
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-      var raidEntity = modelBuilder.Entity<Raid>();
-      raidEntity.HasKey(raid => raid.Id);
-      raidEntity.HasMany(raid => raid.Polls).WithOne(poll => poll.Raid).HasForeignKey(poll => poll.RaidId);
-      raidEntity.HasOne(raid => raid.EggRaid).WithOne(raid => raid.PostEggRaid).HasForeignKey<Raid>(raid => raid.EggRaidId);
-      raidEntity.Property(p => p.Lat).HasColumnType("decimal(18,15)");
-      raidEntity.Property(p => p.Lon).HasColumnType("decimal(18,15)");
-
-      modelBuilder.HasSequence<int>("PollId").StartsAt(PollIdSeed).IncrementsBy(VoteEnumEx.AllowedVoteFormats.Length);
+      modelBuilder.Entity<Raid>(raidEntity =>
+      {
+        raidEntity.ToTable("Raids");
+        raidEntity.HasKey(raid => raid.Id);
+        raidEntity.HasOne(raid => raid.EggRaid).WithOne(raid => raid.PostEggRaid).HasForeignKey<Raid>(raid => raid.EggRaidId);
+        raidEntity.Property(p => p.Lat).HasColumnType("decimal(18,15)");
+        raidEntity.Property(p => p.Lon).HasColumnType("decimal(18,15)");
+      });
       
-      var pollEntity = modelBuilder.Entity<Poll>();
-      pollEntity.Property(poll => poll.Id).HasDefaultValueSql("NEXT VALUE FOR PollId");
-      pollEntity.HasIndex(poll => poll.Id).IsUnique();
-      pollEntity.HasMany(poll => poll.Messages).WithOne(message => message.Poll).HasForeignKey(message => message.PollId);
-      pollEntity.HasMany(poll => poll.Votes).WithOne().HasForeignKey(vote => vote.PollId);
+      modelBuilder.Entity<Poll>(pollEntity =>
+      {
+        var pollIdSequence = modelBuilder.HasSequence<int>("PollId").StartsAt(PollIdSeed).IncrementsBy(VoteEnumEx.AllowedVoteFormats.Length);
 
-      var messageEntity = modelBuilder.Entity<PollMessage>();
-      messageEntity.HasKey(message => message.Id);
-      messageEntity.Ignore(message => message.Chat);
+        pollEntity.ToTable("Polls");
+        pollEntity.Property(poll => poll.Id).HasDefaultValueSql($"NEXT VALUE FOR {pollIdSequence.Metadata.Name}");
+        pollEntity.HasIndex(poll => poll.Id).IsUnique();
+        pollEntity.HasMany(poll => poll.Messages).WithOne(message => message.Poll).HasForeignKey(message => message.PollId);
+        pollEntity.HasMany(poll => poll.Votes).WithOne().HasForeignKey(vote => vote.PollId);
+        pollEntity.HasOne(poll => poll.Raid).WithMany(raid => raid.Polls).HasForeignKey(poll => poll.RaidId);
+        pollEntity.HasOne(poll => poll.Portal).WithMany().HasForeignKey(poll => poll.PortalId);
+      });
 
-      var voteEntity = modelBuilder.Entity<Vote>();
-      voteEntity.HasKey(vote => new { vote.PollId, User = vote.UserId });
-      voteEntity.Ignore(vote => vote.User);
+      modelBuilder.Entity<PollMessage>(messageEntity =>
+      {
+        messageEntity.ToTable("Messages");
+        messageEntity.HasKey(message => message.Id);
+        messageEntity.Ignore(message => message.Chat);
+      });
 
-      var settingsEntity = modelBuilder.Entity<Settings>();
-      settingsEntity.ToTable("Settings");
-      settingsEntity.HasKey(vote => vote.Chat);
-      settingsEntity.Property(vote => vote.Chat).ValueGeneratedNever();
+      modelBuilder.Entity<Vote>(voteEntity =>
+      {
+        voteEntity.ToTable("Votes");
+        voteEntity.HasKey(vote => new {vote.PollId, User = vote.UserId});
+        voteEntity.Ignore(vote => vote.User);
+      });
+
+      modelBuilder.Entity<Settings>(settingsEntity =>
+      {
+        settingsEntity.ToTable("Settings");
+        settingsEntity.HasKey(vote => vote.Chat);
+        settingsEntity.Property(vote => vote.Chat).ValueGeneratedNever();
+      });
+      
+      modelBuilder.Entity<Portal>(builder =>
+      {
+        builder.ToTable("Portals");
+        builder.HasKey(portal => portal.Guid);
+        builder.Property(portal => portal.Latitude).HasColumnType("decimal(18,15)");
+        builder.Property(portal => portal.Longitude).HasColumnType("decimal(18,15)");
+      });
     }
 
     public override int SaveChanges()

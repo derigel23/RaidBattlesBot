@@ -16,7 +16,13 @@ namespace RaidBattlesBot.Model
     }
 
     public int Id { get; set; }
+
     public int? RaidId { get; set; }
+    public Raid Raid { get; set; }
+
+    public string PortalId { get; set; }
+    public Portal Portal { get; set; }
+    
     /// <remarks>Chat Id (equals user Id for private chat with bot)</remarks>
     public long? Owner { get; set; }
     public string Title { get; set; }
@@ -31,7 +37,6 @@ namespace RaidBattlesBot.Model
     public DateTimeOffset? EndTime => Raid != null ? Raid.RaidBossEndTime : Modified?.Add(LiveTime);
 
 
-    public Raid Raid { get; set; }
     public List<PollMessage> Messages { get; set; }
     public List<Vote> Votes { get; set; }
   }

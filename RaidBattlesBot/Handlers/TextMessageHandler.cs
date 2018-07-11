@@ -32,7 +32,8 @@ namespace RaidBattlesBot.Handlers
 
       if (message.ForwardFromChat is Chat forwarderFromChat)
       {
-        var forwardedPollMessage = await myDb.Messages
+        var forwardedPollMessage = await myDb
+          .Set<PollMessage>()
           .Where(_ => _.ChatId == forwarderFromChat.Id && _.MesssageId == message.ForwardFromMessageId)
           .IncludeRelatedData()
           .FirstOrDefaultAsync(cancellationToken);
