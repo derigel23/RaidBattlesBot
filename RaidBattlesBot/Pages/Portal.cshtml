@@ -1,0 +1,214 @@
+﻿@page "~/{guid:minlength(32)}"
+
+@using System.Globalization
+@using RaidBattlesBot
+@using RaidBattlesBot.Model
+@model RaidBattlesBot.Pages.PortalModel
+
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Raid Battles</title>
+  @if (Model.Portal is Portal portal)
+  {
+    <meta property="og:title" content="@portal.Name"/>
+    <meta property="og:description" content="@portal.Address"/>
+    <meta property="og:site_name" content="Raid Battles"/>
+    <meta property="og:image" content="@portal.GetImage(Url)"/>
+    <meta property="place:location:latitude" content="@portal.Latitude.ToString(CultureInfo.InvariantCulture)"/>
+    <meta property="place:location:longitude" content="@portal.Longitude.ToString(CultureInfo.InvariantCulture)"/>
+  }
+   else
+   {
+     <meta property="og:title" content="Raid Battles" />
+     <meta property="og:description" content="Бот для организации рейдов в Покемон Го. Вопросы, замечания и предложения @@team_23." />
+     <meta property="og:site_name" content="Raid Battles" />
+     <meta property="og:image" content="@Url.AssetsContent("static_assets/png/raid_tut_raid.png")" />
+   }
+  <style>
+    html, body, map { width: 100%; height: 100%; }
+    img.icon {
+      height: 64px;
+      width: 64px;
+      float: right;
+      margin-bottom: 1em;
+    }
+    div.my_icon
+    {
+      width: 32px;
+      height: 32px;
+      text-align: center;
+      vertical-align: middle;
+      left: -16px;
+      top: -16px;
+      position: absolute;
+      line-height: 32px;
+      background: white url("@Url.AssetsContent("static_assets/png/panel_outline_green_64px.png").ForceHttps()");
+      background-size: 32px 32px;
+      border-radius: 50%;
+    }
+    div.my_icon img {
+      height: 32px;
+      width: 32px;
+    }
+    div.quest, div.portal
+    {
+      clear: both;
+      margin-bottom: 1em;
+    }
+      div.quest h3
+      {
+        margin: 0;
+      }
+    div.portal h3
+    {
+      margin: 0;
+    }
+    div.user
+    {
+      clear: both;
+      text-align: right;
+    }
+  </style>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=@CultureInfo.CurrentCulture.Name" type="text/javascript"></script>
+  <script type="text/javascript">
+    ymaps.ready(init);
+
+    function init() {
+      var myMap = new ymaps.Map('map',
+        {
+          center: @Html.Json((Model.Portal?.GetCoordinates() ?? new [] { 55.754093m, 37.620407m })),
+          zoom: @(Model.Portal is null ? 10 : 18),
+          controls: ['zoomControl', 'geolocationControl', 'searchControl']
+        },
+        {
+//          searchControlProvider: 'yandex#search'
+          //balloonPanelMaxMapArea: Infinity
+        
+        });
+
+      @if (Model.Portal is null)
+      {
+        <text>
+          ymaps.geolocation.get({
+            autoReverseGeocode: false,
+            mapStateAutoApply: true
+          }).then(function(result) {
+            result.geoObjects.options.set('preset', 'islands#geolocationIcon');
+            myMap.geoObjects.add(result.geoObjects);
+          });
+        </text>
+      }
+      myMap.container.enterFullscreen();
+
+      var titleTemplate = ymaps.templateLayoutFactory.createClass(
+        "{{ properties.quest.description }} 📍 {{ properties.portal.name }}"
+      );
+
+      var descriptionTemplate = ymaps.templateLayoutFactory.createClass(
+        "{% if properties.quest.title %}<div class='quest'><img src='{{ properties.quest.image }}' alt='{{ properties.quest.title }}' class='icon' /><h3>{{ properties.quest.description }}</h3>{{ properties.quest.title }}</div>{% endif %}" +
+        "<div class='portal'><img src='{% if properties.portal.image %}{{ properties.portal.image }}=s64-c{% else %}@(default(Portal).GetImage(Url).ForceHttps()){% endif %}' alt='{{ properties.portal.name }}' class='icon' /><h3>{{ properties.portal.name }}</h3>{{ properties.portal.address }}</div>" +
+        "{% if properties.username %}<div class='user'>Reported by <a href='https://t.me/{{ properties.username }}'>{{ properties.user|default:properties.username }}</a></div>{% endif %}"
+      );
+
+      var myIcon = ymaps.templateLayoutFactory.createClass('<div class="my_icon">' +
+        '<img src="{% if properties.quest.image %}{{ properties.quest.image }}{% elseif properties.quest.id %}@Url.AssetsContent("static_assets/png/Badge_Quests_SILVER_01.png").ForceHttps(){% else %}@(default(Portal).GetImage(Url).ForceHttps()){% endif %}" />' +
+        '</div>');
+
+      var managerOptions =
+      {
+        splitRequests: false,
+        clusterize: true,
+
+        clusterIcons: [
+          {
+            href: '@Url.AssetsContent("static_assets/png/panel_outline_green_64px.png").ForceHttps()',
+            size: [32, 32],
+            offset: [-16, -16],
+            shape: {
+              type: 'Circle',
+              coordinates: [0, 0],
+              radius: 16
+            }
+          }
+        ],
+        clusterHasBalloon: true,
+        clusterBalloonContentLayout: "cluster#balloonCarousel",
+        clusterBalloonItemContentLayout: descriptionTemplate,
+
+        geoObjectOpenBalloonOnClick: true,
+        geoObjectBalloonContentLayout: descriptionTemplate,
+        geoObjectHintContentLayout: titleTemplate
+      };
+
+      var clusterOptions = {
+        hintContentLayout: ymaps.templateLayoutFactory.createClass('Several quests')
+      };
+
+      var objectOptions = {
+        iconLayout: myIcon,
+        iconShape: {
+          type: 'Circle',
+          coordinates: [0, 0],
+          radius: 16
+        }
+      };
+
+      var loadingObjectManager = new ymaps.LoadingObjectManager('@Url.Page(null, "Data", null, "https")?bbox=%b', managerOptions);
+      loadingObjectManager.clusters.options.set(clusterOptions);
+      loadingObjectManager.objects.options.set(objectOptions);
+      @if (Model.Portal != null)
+      {
+        <text>
+        @if (true)
+        {
+          <text>
+            var manager = new ymaps.ObjectManager(managerOptions);
+            manager.clusters.options.set(clusterOptions);
+            manager.objects.options.set(objectOptions);
+            myMap.geoObjects.add(manager);
+          </text>
+        }
+        else
+        {
+          @: var manager = loadingObjectManager;
+        }
+        manager.objects.events.add("add", function(e)
+        {
+          var id = e.get('objectId');
+          if (id === '@Model.Portal.Guid')
+            {
+              var objectState = manager.getObjectState(id);
+              var object = manager.objects.getById(id);
+              myMap.setCenter(object.geometry.coordinates, 18)
+                .then(function ()
+                {
+                  if (objectState.isClustered)
+                  {
+                    manager.clusters.state.set('activeObject', object);
+                    manager.clusters.balloon.open(objectState.cluster.id);
+                  }
+                  else
+                  {
+                    manager.objects.balloon.open(id);
+                  }
+                });
+            }
+          });
+          @if (Model.Portal != null)
+          {
+            @: manager.objects.add(@Html.Json(Model.PrepareData(Model.Portal)));
+          }
+        </text>
+      }
+      myMap.geoObjects.add(loadingObjectManager);
+    }
+  </script>
+</head>
+<body>
+  <div id="map"></div>
+</body>
+</html>

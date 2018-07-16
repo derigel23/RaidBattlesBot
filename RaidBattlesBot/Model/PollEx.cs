@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -69,10 +69,10 @@ namespace RaidBattlesBot.Model
         else
         {
           description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
-          if (poll.Portal != null)
+          if (poll.Portal is Portal portal)
           {
             description.Append(RaidEx.Delimeter);
-            description.Bold(mode, builder => builder.Append(poll.Portal.Name.Sanitize(mode)));
+            description.Link(portal.Name.Sanitize(mode), urlHelper.Page("/Portal", null, new { guid = portal.Guid }, protocol: "https"), mode);//);
           }
         }
       }
@@ -167,6 +167,11 @@ namespace RaidBattlesBot.Model
       return poll?.Raid?.Id ?? poll?.RaidId;
     }
 
+    public static bool DisableWebPreview([CanBeNull] this Poll poll)
+    {
+      return GetRaidId(poll) == null && (poll?.Portal?.Guid ?? poll?.PortalId) == null;
+    }
+
     public static Raid Raid(this Poll poll)
     {
       return poll.Raid?.PostEggRaid ?? poll.Raid;
@@ -178,7 +183,7 @@ namespace RaidBattlesBot.Model
         new InputTextMessageContent((await poll.GetMessageText(urlHelper, userInfo, RaidEx.ParseMode, cancellationToken)).ToString())
         {
           ParseMode = RaidEx.ParseMode,
-          DisableWebPagePreview = poll.GetRaidId() == null
+          DisableWebPagePreview = poll.DisableWebPreview()
         })
       {
         Description = "Клонировать голосование",

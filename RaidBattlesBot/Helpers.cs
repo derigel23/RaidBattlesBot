@@ -11,9 +11,13 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using NodaTime;
 using Telegram.Bot.Types.Enums;
 
@@ -23,6 +27,14 @@ namespace RaidBattlesBot
   {
     #region Web
 
+    public static Uri ForceHttps(this Uri uri)
+    {
+      if (uri == null)
+        return null;
+      
+      return new UriBuilder(uri) { Scheme = "https", Port = -1 }.Uri;
+    }
+
     public static Uri AssetsContent(this IUrlHelper urlHelper, [PathReference("~/PogoAssets")] string contentPath)
     {
       var assetsRoot = new Uri(urlHelper.ActionContext.HttpContext.Request.GetUri(),
@@ -30,6 +42,10 @@ namespace RaidBattlesBot
       var assetpath = Path.Combine(assetsRoot.AbsolutePath, urlHelper.Content(contentPath));
       return new Uri(assetsRoot, assetpath);
     }
+
+    public static IHtmlContent Json(this IHtmlHelper helper, object obj) =>
+      helper.Raw(JsonConvert.SerializeObject(obj, JsonSerializerSettingsProvider.CreateSerializerSettings()));
+
 
     #endregion
 

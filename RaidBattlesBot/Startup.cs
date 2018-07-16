@@ -88,8 +88,7 @@ namespace RaidBattlesBot
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
         })
         .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-        .AddControllersAsServices()
-        .AddRazorPagesOptions(options => options.Conventions.AddPageRoute("/Map", "{handler?}"));
+        .AddControllersAsServices();
 
       services.AddDbContextPool<RaidBattlesContext>(options =>
         options.UseSqlServer(myConfiguration.GetConnectionString("RaidBattlesDatabase")));

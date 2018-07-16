@@ -234,7 +234,7 @@ namespace RaidBattlesBot
       var messageText = (await message.Poll.GetMessageText(urlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString();
       if (message.Chat is Chat chat)
       {
-        var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
+        var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.DisableWebPreview(),
           replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true,
           
           cancellationToken: cancellationToken);
@@ -259,12 +259,12 @@ namespace RaidBattlesBot
         {
           if (message.InlineMesssageId is string inlineMessageId)
           {
-            await myBot.EditMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.GetRaidId() == null,
+            await myBot.EditMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.DisableWebPreview(),
               replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
           }
           else if (message.ChatId is long chatId && message.MesssageId is int messageId)
           {
-            await myBot.EditMessageTextAsync(chatId, messageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.GetRaidId() == null,
+            await myBot.EditMessageTextAsync(chatId, messageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.DisableWebPreview(),
               replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
           }
         }
