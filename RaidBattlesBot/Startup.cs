@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Net.Http;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -79,6 +81,7 @@ namespace RaidBattlesBot
           .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
 
       services.AddMemoryCache();
+      services.AddHttpClient<IngressClient>();
       services
         .AddMvc(options =>
         {

@@ -15,6 +15,12 @@ namespace RaidBattlesBot.Model
       Owner = message.From?.Id ?? message.Chat.Id;
     }
 
+    public Poll(InlineQuery inlineQuery)
+    {
+      Owner = inlineQuery.From?.Id;
+      Title = inlineQuery.Query;
+    }
+
     public int Id { get; set; }
 
     public int? RaidId { get; set; }

@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -31,7 +30,7 @@ namespace RaidBattlesBot.Handlers
             if (!int.TryParse(resultParts.ElementAtOrDefault(1) ?? "", out var pollId))
               return null;
 
-            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId, }, myUrlHelper, cancellationToken)) != null;
+            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken)) != null;
       }
 
       return null;

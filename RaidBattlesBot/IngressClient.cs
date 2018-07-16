@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Geolocation;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using RaidBattlesBot.Configuration;
@@ -36,17 +37,11 @@ namespace RaidBattlesBot
     {
       var portalSet = myContext.Set<Portal>();
       var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
-      if (portal == null)
-      {
-        var portals = await Search(guid, location ?? myDefaultLocation, cancellationToken);
-        portal = portals.FirstOrDefault(p => p.Guid == guid);
-        if (portal != null)
-      {
-          portalSet.Add(portal);
-        }
-      }
-
-      return portal;
+      if (portal != null)
+        return portal;
+      
+      var portals = await Search(guid, location ?? myDefaultLocation, cancellationToken);
+      return portals.FirstOrDefault(p => p.Guid == guid);
     }
 
     public async Task<Portal[]> Search(string query, Location location = default, CancellationToken cancellationToken = default)

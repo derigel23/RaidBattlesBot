@@ -47,6 +47,11 @@ namespace RaidBattlesBot.Model
       if (title.Length == 0)
       {
         title.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode) ?? $"Poll{poll.Id}"));
+        if (poll.Portal != null)
+        {
+          title.Append(RaidEx.Delimeter);
+          title.Bold(mode, builder => builder.Append(poll.Portal.Name.Sanitize(mode)));
+        }
       }
 
       return title.ToString();
@@ -55,12 +60,21 @@ namespace RaidBattlesBot.Model
     public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
       var description = poll.GetTitleBase(mode);
-      if (!String.IsNullOrEmpty(poll.Title))
+      if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
+        {
           description.AppendLine().Append(poll.Title.Sanitize(mode));
+        }
         else
+        {
           description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
+          if (poll.Portal != null)
+          {
+            description.Append(RaidEx.Delimeter);
+            description.Bold(mode, builder => builder.Append(poll.Portal.Name.Sanitize(mode)));
+          }
+        }
       }
       switch (mode)
       {
@@ -143,6 +157,7 @@ namespace RaidBattlesBot.Model
       return polls
         .Include(_ => _.Votes)
         .Include(_ => _.Messages)
+        .Include(_ => _.Portal)
         .Include(_ => _.Raid)
         .ThenInclude(raid => raid.PostEggRaid);
     }

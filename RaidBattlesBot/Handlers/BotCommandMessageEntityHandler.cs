@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,10 +43,8 @@ namespace RaidBattlesBot.Handlers
           };
           return true;
 
-        case var _ when command.StartsWith("/poll"):
-        case var _ when command.StartsWith("/start"):
-          if (!int.TryParse(commandText, out var pollId))
-            return false;
+        case var _ when command.StartsWith("/poll") && int.TryParse(commandText, out var pollId):
+        case var _ when command.StartsWith("/start") && int.TryParse(commandText, out pollId):
           
           var existingPoll = await myContext
             .Set<Poll>()
@@ -74,6 +73,13 @@ namespace RaidBattlesBot.Handlers
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
+        
+        // deep linking to gym
+        case var _ when command.StartsWith("/start") && commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
+          var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите гим", disableNotification: true,
+            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query}")), cancellationToken: cancellationToken);
+          return false;
       }
 
       return null;

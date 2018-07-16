@@ -81,6 +81,8 @@ namespace RaidBattlesBot.Model
         .Include(_ => _.Poll)
         .ThenInclude(_ => _.Messages)
         .Include(_ => _.Poll)
+        .ThenInclude(_ => _.Portal)
+        .Include(_ => _.Poll)
         .ThenInclude(_ => _.Raid)
         .ThenInclude(raid => raid.PostEggRaid);
     }

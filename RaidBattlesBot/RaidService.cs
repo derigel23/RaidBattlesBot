@@ -15,6 +15,7 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot
 {
+  [UsedImplicitly]
   public class RaidService
   {
     private readonly RaidBattlesContext myContext;
@@ -33,8 +34,12 @@ namespace RaidBattlesBot
       myUserInfo = userInfo;
       myMemoryCache = memoryCache;
     }
+    
+    private string this[int pollId] => $"poll:data:{pollId}";
 
-    public async Task<int> GetPollId(InlineQuery data, CancellationToken cancellationToken = default)
+    public Poll GetTemporaryPoll(int pollId) => myMemoryCache.Get<Poll>(this[pollId]);
+
+    public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
     {
       using (var connection = myContext.Database.GetDbConnection())
       {
@@ -45,9 +50,10 @@ namespace RaidBattlesBot
           {
             command.CommandText = "SELECT NEXT VALUE FOR PollId";
             var pollId = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+            poll.Id = pollId;
             using (var entry = myMemoryCache.CreateEntry(this[pollId]))
             {
-              entry.Value = data;
+              entry.Value = poll;
               entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
             }
             return pollId;
@@ -82,24 +88,29 @@ namespace RaidBattlesBot
 
       var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
       var pollIdBase = pollId - votesFormatIndex;
-      var pollData = myMemoryCache.Get<InlineQuery>(this[pollIdBase]);
+      var pollData = myMemoryCache.Get<Poll>(this[pollIdBase]);
       if (pollData == null) return null;
 
       pollMessage.Poll = new Poll
       {
         Id = pollId,
-        Title = pollData.Query,
+        Title = pollData.Title,
         AllowedVotes = VoteEnumEx.AllowedVoteFormats[votesFormatIndex],
-        Owner = pollData.From.Id,
+        Owner = pollData.Owner,
+        Portal = pollData.Portal,
         Votes = new List<Vote>()
       };
-      var pollEntity = myContext.Attach(pollMessage.Poll);
-      pollEntity.State = EntityState.Added;
-
+      myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
+      if (pollData.Portal is Portal portal)
+      {
+        if (await myContext.Set<Portal>().FirstOrDefaultAsync(p => p.Guid == portal.Guid, cancellationToken) == null)
+        {
+          myContext.Set<Portal>().Attach(portal).State = EntityState.Added;
+        }
+      }
+      
       return await AddPollMessage(pollMessage, urlHelper, cancellationToken);
     }
-
-    private string this[int pollId] => $"poll:data:{pollId}";
 
     public async Task<PollMessage> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
@@ -199,7 +210,7 @@ namespace RaidBattlesBot
         }
       }
 
-      var messageEntity = myContext.Attach(message);
+      var messageEntity = myContext.Set<PollMessage>().Attach(message);
       await myContext.SaveChangesAsync(cancellationToken);
 
       // update current raid poll messages if changed

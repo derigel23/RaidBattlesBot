@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Telegram.Bot.Types;
 
@@ -12,11 +13,11 @@ namespace RaidBattlesBot.Handlers
   [MeansImplicitUse]
   public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery, object>
   {
-    public string QueryPrefix { get; set; }
+    public string QueryPattern { get; set; }
 
     public bool ShouldProcess(InlineQuery inlineQuery, object context)
     {
-      return string.IsNullOrEmpty(QueryPrefix) || inlineQuery.Query.StartsWith(QueryPrefix);
+      return string.IsNullOrEmpty(QueryPattern) || Regex.IsMatch(inlineQuery.Query, QueryPattern);
     }
   }
 }

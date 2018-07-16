@@ -25,6 +25,8 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="NodaTime" Version="2.3.0" />
     <PackageReference Include="NodaTime.Testing" Version="2.3.0" />
+    <PackageReference Include="OpenLocationCode" Version="1.0.1" />
+    <PackageReference Include="SimpleBase" Version="1.6.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.3" />
     <PackageReference Include="Telegram.Bot" Version="14.6.0" />
   </ItemGroup>
