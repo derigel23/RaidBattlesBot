@@ -77,7 +77,7 @@ namespace RaidBattlesBot.Handlers
               new InputTextMessageContent((await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString())
               {
                 ParseMode = RaidEx.ParseMode,
-                DisableWebPagePreview = fakePoll.GetRaidId() == null
+                DisableWebPagePreview = fakePoll.DisableWebPreview()
               })
               {
                 Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),

@@ -18,12 +18,14 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly Message myMessage;
     private readonly ITelegramBotClient myTelegramBotClient;
+    private readonly RaidService myRaidService;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService)
     {
       myContext = context;
       myMessage = message;
       myTelegramBotClient = telegramBotClient;
+      myRaidService = raidService;
     }
 
     public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -77,8 +79,15 @@ namespace RaidBattlesBot.Handlers
         // deep linking to gym
         case var _ when command.StartsWith("/start") && commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите гим", disableNotification: true,
-            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query}")), cancellationToken: cancellationToken);
+          var pollTitle = new StringBuilder("Создание голосования");
+          if (int.TryParse(query, out int gymPollId))
+          {
+            pollTitle
+              .AppendLine()
+              .Bold(RaidEx.ParseMode, builder => builder.Append(myRaidService.GetTemporaryPoll(gymPollId)?.Title?.Sanitize(RaidEx.ParseMode)));
+          }
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, pollTitle.ToString(), disableNotification: true, parseMode: RaidEx.ParseMode,
+            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Начать привязку к гиму", GymCallbackQueryHandler.PREFIX + query)), cancellationToken: cancellationToken);
           return false;
       }
 

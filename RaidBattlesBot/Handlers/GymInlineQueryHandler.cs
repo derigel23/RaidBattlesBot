@@ -110,9 +110,9 @@ namespace RaidBattlesBot.Handlers
       if (string.IsNullOrWhiteSpace(searchQuery))
       {
         results.Add(
-          new InlineQueryResultArticle("EnterGymName", "Введите имя гима", new InputTextMessageContent("Введитя имя гима для поиска"))
+          new InlineQueryResultArticle("EnterGymName", "Введите имя гима", new InputTextMessageContent("Введитя имя гима для поиска по имени"))
           {
-            Description = "to refine search results",
+            Description = "для поиска по имени",
             ThumbUrl = default(Portal).GetImage(myUrlHelper).AbsoluteUri
           });
       }
