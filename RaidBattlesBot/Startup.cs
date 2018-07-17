@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Net.Http;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -91,8 +89,7 @@ namespace RaidBattlesBot
         .AddControllersAsServices()
         .AddRazorPagesOptions(options =>
         {
-          options.Conventions.AddPageRoute("/Portal", "~/{guid:minlength(32)}");
-          options.Conventions.AddPageRoute("/Portal", "~/Portal/{handler?}");
+          options.Conventions.AddPageRouteWithName("/Portal", "~/{guid:minlength(32)}", "Portal");
         });
 
       services.AddDbContextPool<RaidBattlesContext>(options =>

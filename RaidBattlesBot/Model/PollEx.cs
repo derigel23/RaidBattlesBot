@@ -72,7 +72,7 @@ namespace RaidBattlesBot.Model
           if (poll.Portal is Portal portal)
           {
             description.Append(RaidEx.Delimeter);
-            description.Link(portal.Name.Sanitize(mode), urlHelper.Page("/Portal", null, new { guid = portal.Guid }, protocol: "https"), mode);//);
+            description.Link(portal.Name.Sanitize(mode), urlHelper.RouteUrl("Portal", new { guid = portal.Guid }, "https"), mode);
           }
         }
       }

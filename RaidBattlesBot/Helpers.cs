@@ -13,6 +13,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +46,25 @@ namespace RaidBattlesBot
 
     public static IHtmlContent Json(this IHtmlHelper helper, object obj) =>
       helper.Raw(JsonConvert.SerializeObject(obj, JsonSerializerSettingsProvider.CreateSerializerSettings()));
+
+    public static PageConventionCollection AddPageRouteWithName(this PageConventionCollection conventions, string pageName, string route, string name = default)
+    {
+      conventions.AddPageRouteModelConvention(pageName, model =>
+      {
+        //foreach (var selector in model.Selectors)
+        //  selector.AttributeRouteModel.SuppressLinkGeneration = true;
+        model.Selectors.Add(new SelectorModel
+        {
+          AttributeRouteModel = new AttributeRouteModel
+          {
+            Template = route,
+            //SuppressLinkGeneration = true,
+            Name = name
+          }
+        });
+      });
+      return conventions;
+    }
 
 
     #endregion

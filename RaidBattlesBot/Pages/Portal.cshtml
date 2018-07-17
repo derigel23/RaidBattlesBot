@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "{handler}"
 
 @using System.Globalization
 @using RaidBattlesBot
@@ -21,13 +21,13 @@
     <meta property="place:location:latitude" content="@portal.Latitude.ToString(CultureInfo.InvariantCulture)"/>
     <meta property="place:location:longitude" content="@portal.Longitude.ToString(CultureInfo.InvariantCulture)"/>
   }
-   else
-   {
-     <meta property="og:title" content="Raid Battles" />
-     <meta property="og:description" content="Бот для организации рейдов в Покемон Го. Вопросы, замечания и предложения @@team_23." />
-     <meta property="og:site_name" content="Raid Battles" />
-     <meta property="og:image" content="@Url.AssetsContent("static_assets/png/raid_tut_raid.png")" />
-   }
+  else
+  {
+    <meta property="og:title" content="Raid Battles" />
+    <meta property="og:description" content="Бот для организации рейдов в Покемон Го. Вопросы, замечания и предложения @@team_23." />
+    <meta property="og:site_name" content="Raid Battles" />
+    <meta property="og:image" content="@Url.AssetsContent("static_assets/png/raid_tut_raid.png")" />
+  }
   <style>
     html, body, map { width: 100%; height: 100%; }
     img.icon {
@@ -87,7 +87,7 @@
         {
 //          searchControlProvider: 'yandex#search'
           //balloonPanelMaxMapArea: Infinity
-        
+
         });
 
       @if (Model.Portal is null)
