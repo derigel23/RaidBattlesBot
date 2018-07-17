@@ -31,7 +31,7 @@ namespace RaidBattlesBot.Handlers
       {
         await myTelegramBotClient.EditMessageReplyMarkupAsync(data.Message.Chat, data.Message.MessageId, markup, cancellationToken);
       }
-      return ( null, false, null);
+      return ("Выберите гим", false, null);
     }
   }
 }
