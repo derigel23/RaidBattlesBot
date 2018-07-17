@@ -88,7 +88,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults,
-        switchPmText: switchPmParameter != null ? "Привязатать голосование к гиму" : null, switchPmParameter: switchPmParameter,
+        switchPmText: switchPmParameter != null ? "Привязать голосование к гиму" : null, switchPmParameter: switchPmParameter,
         cacheTime: 0, cancellationToken: cancellationToken);
 
       await myDb.SaveChangesAsync(cancellationToken);
