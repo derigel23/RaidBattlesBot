@@ -169,7 +169,7 @@ namespace RaidBattlesBot.Model
 
     public static bool DisableWebPreview([CanBeNull] this Poll poll)
     {
-      return GetRaidId(poll) == null && (poll?.Portal?.Guid ?? poll?.PortalId) == null;
+      return GetRaidId(poll) == null;
     }
 
     public static Raid Raid(this Poll poll)
