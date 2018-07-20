@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using SimpleBase;
 
@@ -6,6 +7,7 @@ namespace RaidBattlesBot.Model
 {
   public static class PortalEx
   {
+    [CanBeNull]
     public static Uri GetImage(this Portal portal, IUrlHelper urlHelper, int? thumbnail = null, bool fallbackToDefault = true)
     {
       if (portal?.Image is string image && !string.IsNullOrEmpty(image))

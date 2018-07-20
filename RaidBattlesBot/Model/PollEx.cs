@@ -25,7 +25,12 @@ namespace RaidBattlesBot.Model
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
     {
-      return  poll.Raid().GetThumbUrl(urlHelper);
+      var thumbnail = default(Uri);
+      if (poll.Portal is Portal portal)
+      {
+        thumbnail = portal.GetImage(urlHelper, 64, false);
+      }
+      return thumbnail ?? poll.Raid().GetThumbUrl(urlHelper);
     }
 
     private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode)
@@ -71,7 +76,7 @@ namespace RaidBattlesBot.Model
           description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
           if (poll.Portal is Portal portal)
           {
-            description.Append(RaidEx.Delimeter);
+            description.Append(RaidEx.Delimeter).Append("gym ");
             description.Link(portal.Name.Sanitize(mode), urlHelper.RouteUrl("Portal", new { guid = portal.Guid }, "https"), mode);
           }
         }
@@ -169,7 +174,7 @@ namespace RaidBattlesBot.Model
 
     public static bool DisableWebPreview([CanBeNull] this Poll poll)
     {
-      return GetRaidId(poll) == null && (poll?.Portal?.Guid ?? poll?.PortalId) == null;
+      return GetRaidId(poll) == null;
     }
 
     public static Raid Raid(this Poll poll)
