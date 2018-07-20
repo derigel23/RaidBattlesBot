@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NodaTime;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot
@@ -173,6 +174,12 @@ namespace RaidBattlesBot
       if (exception is AggregateException aggregateException)
       {
         aggregateException.Handle(ex => !(ex is TaskCanceledException));
+      }
+
+      if (exception is ApiRequestException apiRequestException)
+      {
+        properties = properties ?? new Dictionary<string, string>(1);
+        properties["ErrorCode"] = apiRequestException.ErrorCode.ToString();
       }
       
       telemetryClient.TrackException(exception, properties, metrics);
