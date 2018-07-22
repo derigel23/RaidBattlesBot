@@ -31,8 +31,9 @@ namespace RaidBattlesBot.Pages
     {
       Portal = guid is string g ? await myIngressClient.Get(g, cancellationToken: cancellationToken) : null;
 
-      if (Portal != null)
+      if (Portal is Portal portal)
       {
+        myDb.Attach(portal);
         await myDb.SaveChangesAsync(cancellationToken);
       }
 

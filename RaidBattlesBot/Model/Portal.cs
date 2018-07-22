@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace RaidBattlesBot.Model
 {
   [DebuggerDisplay("{Name} ({Guid})")]
-  public class Portal
+  public class Portal : ITrackable
   {
     [JsonProperty(Required = Required.Always)]
     public string Guid { get; set; }
@@ -22,5 +23,6 @@ namespace RaidBattlesBot.Model
       return new[] { Latitude, Longitude };
     }
 
+    public DateTimeOffset? Modified { get; set; }
   }
 }

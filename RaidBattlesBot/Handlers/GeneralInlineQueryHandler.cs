@@ -50,6 +50,7 @@ namespace RaidBattlesBot.Handlers
             var guid = queryPart.Substring(GymInlineQueryHandler.PREFIX.Length);
             var portalGuid = PortalEx.DecodeGuid(guid);
             portal = await myIngressClient.Get(portalGuid, data.Location, cancellationToken);
+            myDb.Attach(portal);
             break;
           default:
             query += (query == null ? default(char?) : ' ') + queryPart;

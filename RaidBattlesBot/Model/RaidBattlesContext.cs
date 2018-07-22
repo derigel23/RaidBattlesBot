@@ -89,6 +89,14 @@ namespace RaidBattlesBot.Model
           case EntityState.Modified:
             entry.Entity.Modified = utcNow;
             break;
+          
+          case EntityState.Unchanged:
+            if (entry.Entity.Modified == null)
+            {
+              entry.State = EntityState.Added;
+              goto case EntityState.Added;
+            }
+            break;
         }
       }
     }
