@@ -66,22 +66,10 @@ namespace RaidBattlesBot.Model
       });
     }
 
-    public override int SaveChanges()
-    {
-      SetLastModifiedDate();
-      return base.SaveChanges();
-    }
-
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
       SetLastModifiedDate();
       return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
-
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
-    {
-      SetLastModifiedDate();
-      return base.SaveChangesAsync(cancellationToken);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
