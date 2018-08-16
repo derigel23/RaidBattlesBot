@@ -27,6 +27,7 @@ namespace RaidBattlesBot.Model
 
     public Task<bool> IsUserAllowed(User user, CancellationToken cancellationToken = default)
     {
+      return IsUserAllowedTrue;
       return myMemoryCache.GetOrCreateAsync($"user:{user.Id}", async entry =>
       {
         entry.SetSlidingExpiration(TimeSpan.FromMinutes(10));

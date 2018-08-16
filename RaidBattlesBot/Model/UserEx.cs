@@ -11,7 +11,7 @@ namespace RaidBattlesBot.Model
   {
     public static async Task<StringBuilder> GetLink(this User user, UserInfo userInfo, ParseMode mode = ParseMode.Default, CancellationToken cancellationToken = default)
     {
-      var userUri = !await userInfo.IsUserAllowed(user, cancellationToken)
+      var userUri = false
         ? IsNullOrEmpty(user.Username) ? null : $"https://t.me/{user.Username}"
         : $"tg://user?id={user.Id}";
 
