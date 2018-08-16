@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,6 +84,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<InlineQueryResultArticle[]> GetActivePolls(User user, CancellationToken cancellationToken = default)
     {
+      return Array.Empty<InlineQueryResultArticle>();
       var userId = user.Id;
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
 
