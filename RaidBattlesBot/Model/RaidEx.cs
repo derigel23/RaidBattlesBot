@@ -56,7 +56,7 @@ namespace RaidBattlesBot.Model
     {
       var pokemonId = raid?.Pokemon;
       if (pokemonId != null)
-        return urlHelper.AssetsContent($"decrypted_assets/pokemon_icon_{pokemonId:D3}_00.png");
+        return urlHelper.AssetsContent($"pokemon_icons/pokemon_icon_{pokemonId:D3}_00.png");
 
       var raidRaidBossLevel = raid?.RaidBossLevel;
       switch (raidRaidBossLevel)

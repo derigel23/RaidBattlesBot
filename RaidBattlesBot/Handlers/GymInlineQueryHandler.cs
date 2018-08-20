@@ -122,7 +122,7 @@ namespace RaidBattlesBot.Handlers
         results.Add(new InlineQueryResultArticle("NothingFound", "Ничего не найдено", new InputTextMessageContent($"Ничего не найдено по запросу `{searchQuery}`") { ParseMode = ParseMode.Markdown })
         {
           Description = $"Запрос {searchQuery}",
-          ThumbUrl = myUrlHelper.AssetsContent(@"static_assets\png\btn_close_normal.png").AbsoluteUri
+          ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").AbsoluteUri
         });
       }
       
