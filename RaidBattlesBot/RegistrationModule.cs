@@ -46,8 +46,7 @@ namespace RaidBattlesBot
       builder.RegisterType<GymHelper>().InstancePerLifetimeScope();
       builder.RegisterType<InfoGymBotHelper>().InstancePerLifetimeScope();
       builder.RegisterType<ChatInfo>().InstancePerLifetimeScope();
-      builder.RegisterType<UserInfo>().InstancePerLifetimeScope();
-
+      
       var assembly = Assembly.GetExecutingAssembly();
 
       builder.Register(c =>

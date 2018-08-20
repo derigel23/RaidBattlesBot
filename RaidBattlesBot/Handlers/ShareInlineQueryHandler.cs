@@ -20,16 +20,14 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
-    private readonly UserInfo myUserInfo;
     private readonly IClock myClock;
     private readonly RaidService myRaidService;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, IClock clock, RaidService raidService)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, IClock clock, RaidService raidService)
     {
       myContext = context;
       myBot = bot;
       myUrlHelper = urlHelper;
-      myUserInfo = userInfo;
       myClock = clock;
       myRaidService = raidService;
     }
@@ -40,7 +38,7 @@ namespace RaidBattlesBot.Handlers
       if (queryParts[0] != "share")
         return null;
 
-      ICollection<InlineQueryResultBase> inlineQueryResults;
+      var inlineQueryResults = Enumerable.Empty<InlineQueryResultBase>();
       if (!int.TryParse(queryParts.ElementAtOrDefault(1) ?? "", out var pollid))
       {
         inlineQueryResults = await GetActivePolls(data.From, cancellationToken);
@@ -49,14 +47,14 @@ namespace RaidBattlesBot.Handlers
       {
         var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollid }, myUrlHelper, cancellationToken))?.Poll;
 
-        inlineQueryResults = new List<InlineQueryResultBase>();
+        var queryResults = new List<InlineQueryResultBase>();
         if (poll != null)
         {
-          inlineQueryResults.Add(await poll.ClonePoll(myUrlHelper, myUserInfo, cancellationToken));
+          queryResults.Add(poll.ClonePoll(myUrlHelper));
 
           if (poll.Raid() is Raid raid)
           {
-            inlineQueryResults.Add(
+            queryResults.Add(
               new InlineQueryResultVenue($"location:{raid.Id}", (float)raid.Lat, (float)raid.Lon, raid.Title, "Запостить локу")
               {
                 ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/ic_map.png").ToString(),
@@ -67,14 +65,14 @@ namespace RaidBattlesBot.Handlers
           
           if (poll.Portal is Portal portal)
           {
-            inlineQueryResults.Add(
+            queryResults.Add(
               new InlineQueryResultVenue($"location:{portal.Guid}", (float)portal.Latitude, (float)portal.Longitude, portal.Name, "Запостить локу")
               {
                 ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/ic_map.png").ToString(),
                 InputMessageContent = new InputVenueMessageContent(portal.Name, portal.Address, (float) portal.Latitude, (float) portal.Longitude)
               });
           }
-
+          inlineQueryResults = queryResults;
         }
       }
 
@@ -82,7 +80,7 @@ namespace RaidBattlesBot.Handlers
       return true;
     }
 
-    public async Task<InlineQueryResultArticle[]> GetActivePolls(User user, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<InlineQueryResultArticle>> GetActivePolls(User user, CancellationToken cancellationToken = default)
     {
       return Array.Empty<InlineQueryResultArticle>();
       var userId = user.Id;
@@ -100,8 +98,7 @@ namespace RaidBattlesBot.Handlers
         .DecompileAsync()
         .ToArrayAsync(cancellationToken);
 
-      return await
-        Task.WhenAll(polls.Select(poll => poll.ClonePoll(myUrlHelper, myUserInfo, cancellationToken)));
+      return polls.Select(poll => poll.ClonePoll(myUrlHelper));
     }
   }
 }

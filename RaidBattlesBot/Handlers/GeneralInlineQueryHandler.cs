@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,17 +19,15 @@ namespace RaidBattlesBot.Handlers
 
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
-    private readonly UserInfo myUserInfo;
     private readonly ShareInlineQueryHandler myShareInlineQueryHandler;
     private readonly RaidService myRaidService;
     private readonly IngressClient myIngressClient;
     private readonly RaidBattlesContext myDb;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, UserInfo userInfo, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db)
+    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
-      myUserInfo = userInfo;
       myShareInlineQueryHandler = shareInlineQueryHandler;
       myRaidService = raidService;
       myIngressClient = ingressClient;
@@ -37,7 +36,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      InlineQueryResultBase[] inlineQueryResults;
+      IEnumerable<InlineQueryResultBase> inlineQueryResults;
 
       string query = null;
       Portal portal = null;
@@ -65,7 +64,7 @@ namespace RaidBattlesBot.Handlers
       {
         var pollId = await myRaidService.GetPollId(new Poll(data) { Title = query, Portal = portal }, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
-        inlineQueryResults = await Task.WhenAll(
+        inlineQueryResults = 
           VoteEnumEx.AllowedVoteFormats
             .Select((_, i) => new Poll
             {
@@ -74,8 +73,8 @@ namespace RaidBattlesBot.Handlers
               AllowedVotes = _,
               Portal = portal
             })
-            .Select(async fakePoll => new InlineQueryResultArticle($"create:{fakePoll.Id}", fakePoll.GetTitle(myUrlHelper),
-              new InputTextMessageContent((await fakePoll.GetMessageText(myUrlHelper, myUserInfo, RaidEx.ParseMode, cancellationToken)).ToString())
+            .Select(fakePoll => new InlineQueryResultArticle($"create:{fakePoll.Id}", fakePoll.GetTitle(myUrlHelper),
+              new InputTextMessageContent(fakePoll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString())
               {
                 ParseMode = RaidEx.ParseMode,
                 DisableWebPagePreview = fakePoll.DisableWebPreview()
@@ -85,7 +84,7 @@ namespace RaidBattlesBot.Handlers
                 HideUrl = true,
                 ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
                 ReplyMarkup = fakePoll.GetReplyMarkup()
-            }));
+            });
       }
 
       await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults,

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
@@ -98,7 +96,7 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static async Task<StringBuilder> GetMessageText(this Poll poll, IUrlHelper urlHelper, UserInfo userInfo, ParseMode mode = ParseMode.Default, CancellationToken cancellationToken = default)
+    public static StringBuilder GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
     {
       var text = poll.GetDescription(urlHelper, mode).AppendLine();
       
@@ -125,13 +123,13 @@ namespace RaidBattlesBot.Model
           {
             text
               .Append(vote.Key?.Description()).Append('\x00A0')
-              .AppendJoin(", ", await Task.WhenAll(votes.Select(v => v.GetUserLinkWithPluses(userInfo, mode, cancellationToken))))
+              .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
               .AppendLine();
           }
           else
           {
             text
-              .AppendJoin(Environment.NewLine, await Task.WhenAll(votes.Select(async v => $"{v.Team?.Description()} {await v.GetUserLinkWithPluses(userInfo, mode, cancellationToken)}")))
+              .AppendJoin(Environment.NewLine, votes.Select(v => $"{v.Team?.Description()} {v.GetUserLinkWithPluses(mode)}"))
               .AppendLine();
           }
         }
@@ -182,10 +180,10 @@ namespace RaidBattlesBot.Model
       return poll.Raid?.PostEggRaid ?? poll.Raid;
     }
 
-    public static async Task<InlineQueryResultArticle> ClonePoll(this Poll poll, IUrlHelper urlHelper, UserInfo userInfo, CancellationToken cancellationToken = default)
+    public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper)
     {
       return new InlineQueryResultArticle($"poll:{poll.Id}", poll.GetTitle(urlHelper),
-        new InputTextMessageContent((await poll.GetMessageText(urlHelper, userInfo, RaidEx.ParseMode, cancellationToken)).ToString())
+        new InputTextMessageContent(poll.GetMessageText(urlHelper, RaidEx.ParseMode).ToString())
         {
           ParseMode = RaidEx.ParseMode,
           DisableWebPagePreview = poll.DisableWebPreview()
