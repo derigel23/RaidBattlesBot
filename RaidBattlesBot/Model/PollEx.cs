@@ -76,7 +76,7 @@ namespace RaidBattlesBot.Model
           description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
           if (poll.Portal is Portal portal)
           {
-            description.Append(RaidEx.Delimeter).Append("gym ");
+            description.Append(" ◊\u00A0");
             description.Link(portal.Name.Sanitize(mode), urlHelper.RouteUrl("Portal", new { guid = portal.Guid }, "https"), mode);
           }
         }
