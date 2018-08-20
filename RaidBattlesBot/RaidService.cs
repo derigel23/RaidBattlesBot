@@ -37,7 +37,7 @@ namespace RaidBattlesBot
     
     private string this[int pollId] => $"poll:data:{pollId}";
 
-    public Poll GetTemporaryPoll(int pollId) => myMemoryCache.Get<Poll>(this[pollId]);
+    [CanBeNull] public Poll GetTemporaryPoll(int pollId) => myMemoryCache.Get<Poll>(this[pollId]);
 
     public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
     {
@@ -88,7 +88,7 @@ namespace RaidBattlesBot
 
       var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
       var pollIdBase = pollId - votesFormatIndex;
-      var pollData = myMemoryCache.Get<Poll>(this[pollIdBase]);
+      var pollData = GetTemporaryPoll(pollIdBase);
       if (pollData == null) return null;
 
       pollMessage.Poll = new Poll

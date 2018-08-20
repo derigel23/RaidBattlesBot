@@ -47,7 +47,7 @@ namespace RaidBattlesBot.Handlers
       string pollQuery = null;
       if (Regex.Match(data.Query, PATTERN) is Match match && match.Success && int.TryParse(match.Groups["pollId"].Value, out var pollId))
       {
-        pollQuery = myRaidService.GetTemporaryPoll(pollId).Title;
+        pollQuery = myRaidService.GetTemporaryPoll(pollId)?.Title;
       }
       string searchQuery = null;
       foreach (var queryPart in data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1))
