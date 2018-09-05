@@ -14,13 +14,11 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.Text)]
   public class TextMessageHandler : IMessageHandler
   {
-    private readonly Message myMessage;
     private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(Message message, IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+    public TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
     {
-      myMessage = message;
       myMessageEntityHandlers = messageEntityHandlers;
       myDb = db;
     }
@@ -49,7 +47,8 @@ namespace RaidBattlesBot.Handlers
       bool? result = default;
       foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
-        result = await HandlerExtentions<bool?>.Handle(handlers, entity, pollMessage, cancellationToken);
+        var entityEx = new MessageEntityEx(message, entity);
+        result = await HandlerExtentions<bool?>.Handle(handlers, entityEx, pollMessage, cancellationToken);
         if (result.HasValue)
           break;
       }

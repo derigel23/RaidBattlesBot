@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Http;
+﻿﻿using Microsoft.ApplicationInsights;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using Telegram.Bot;
@@ -13,6 +11,6 @@ namespace RaidBattlesBot.Handlers
   public class TextLinkMessageEntityHandler : UrlLikeMessageEntityHandler
   {
     public TextLinkMessageEntityHandler(TelemetryClient telemetryClient, Message message, ZonedClock clock, DateTimeZone timeZoneInfo, ITelegramBotClient bot, PokemonInfo pokemons, GymHelper gymHelper)
-      : base(telemetryClient, message, (e, m) => e.Url, clock, timeZoneInfo, pokemons, gymHelper) { }
+      : base(telemetryClient, entity => entity.Url, clock, timeZoneInfo, pokemons, gymHelper) { }
   }
 }

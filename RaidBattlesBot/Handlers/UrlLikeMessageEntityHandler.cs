@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
@@ -8,27 +8,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 using NodaTime;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
-using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
   public abstract class UrlLikeMessageEntityHandler : IMessageEntityHandler
   {
-    private readonly Message myMessage;
-    private readonly Func<MessageEntity, Message, string> myGetUrl;
+    private readonly Func<MessageEntityEx, StringSegment> myGetUrl;
     private readonly ZonedClock myClock;
     private readonly DateTimeZone myTimeZoneInfo;
     private readonly PokemonInfo myPokemons;
     private readonly GymHelper myGymHelper;
     private readonly TelemetryClient myTelemetryClient;
 
-    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, Message message, Func<MessageEntity, Message, string> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
+    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, Func<MessageEntityEx, StringSegment> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
     {
-      myMessage = message;
       myGetUrl = getUrl;
       myClock = clock;
       myTimeZoneInfo = timeZoneInfo;
@@ -37,14 +35,14 @@ namespace RaidBattlesBot.Handlers
       myTelemetryClient = telemetryClient;
     }
 
-    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
-      var url = myGetUrl(entity, myMessage);
-      if (string.IsNullOrEmpty(url) || !url.StartsWith("http"))
+      var url = myGetUrl(entity);
+      if (StringSegment.IsNullOrEmpty(url) || !url.StartsWith("http", StringComparison.Ordinal))
         return false;
       using (var httpClient = new HttpClient())
       {
-        var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url);
+        var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url.ToString());
         if (InfoGymBotHelper.IsAppropriateUrl(poketrackRequest.RequestUri))
         {
           poketrackRequest.Method = HttpMethod.Get;
@@ -77,10 +75,10 @@ namespace RaidBattlesBot.Handlers
 
           var raid = new Raid { Lon = lon, Lat = lat };
 
-          var messageDate = myMessage.GetMessageDate(myTimeZoneInfo);
+          var messageDate = entity.Message.GetMessageDate(myTimeZoneInfo);
           raid.StartTime = messageDate.ToDateTimeOffset();
 
-          var messageText = myMessage.Text;
+          var messageText = entity.Message.Text;
           var lines = messageText.Split(Environment.NewLine.ToCharArray(), 2);
           var firstLine = lines[0].Trim();
           if (InfoGymBotHelper.IsAppropriateUrl(requestUri))
@@ -159,7 +157,7 @@ namespace RaidBattlesBot.Handlers
                 raid.RaidBossLevel = raidBossLevel;
               }
               raid.Name = "Egg";
-              raid.Gym = myMessage.Text.Substring(entity.Offset, entity.Length);
+              raid.Gym = entity.Value.ToString();
               if (messageDate.ParseTimePattern(messageText, ourKuzminkiBotStartTimeDetector, out var kuzminkiBotStartTime))
               {
                 raid.EndTime = kuzminkiBotStartTime;
@@ -181,7 +179,7 @@ namespace RaidBattlesBot.Handlers
                 raid.Move1 = movesMatch.Groups["Move1"].Value;
                 raid.Move2 = movesMatch.Groups["Move2"].Value;
               }
-              raid.Gym = myMessage.Text.Substring(entity.Offset, entity.Length);
+              raid.Gym = entity.Value.ToString();
               if (messageDate.ParseTimePattern(messageText, ourKuzminkiBotEndTimeDetector, out var kuzminkiBotEndTime))
               {
                 raid.EndTime = kuzminkiBotEndTime;
@@ -259,7 +257,7 @@ namespace RaidBattlesBot.Handlers
 
           await raid.SetTitleAndDescription(title, description, myGymHelper, cancellationToken: cancellationToken);
 
-          pollMessage.Poll = new Poll(myMessage)
+          pollMessage.Poll = new Poll(entity.Message)
           {
             Raid = raid,
             Time = raid.GetDefaultPollTime()

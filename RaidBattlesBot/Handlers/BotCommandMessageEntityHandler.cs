@@ -28,7 +28,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
     }
 
-    public async Task<bool?> Handle(MessageEntity entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       var command = myMessage.Text.Substring(entity.Offset, entity.Length);
       var commandText = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
