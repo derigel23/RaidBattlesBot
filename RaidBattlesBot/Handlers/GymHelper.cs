@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -23,14 +22,14 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myDbContext;
     private readonly Gyms myGyms;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IOptions<GeoCoderConfiguration> myGeoCoderOptions;
+    private readonly GeoCoderConfiguration myGeoCoderOptions;
 
     public GymHelper(RaidBattlesContext dbContext, Gyms gyms, TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions)
     {
       myDbContext = dbContext;
       myGyms = gyms;
       myTelemetryClient = telemetryClient;
-      myGeoCoderOptions = geoCoderOptions;
+      myGeoCoderOptions = geoCoderOptions.Value ?? throw new ArgumentNullException(nameof(geoCoderOptions));
     }
 
     public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
@@ -71,41 +70,22 @@ namespace RaidBattlesBot.Handlers
       {
         var geoRequest = InitGeoRequest(new PlacesNearByRequest
         {
-          Location = new Location((double) location.lat, (double) location.lon),
+          Location = new Location((double)location.lat, (double)location.lon),
           Type = "subway_station",
           RankBy = RankBy.Distance,
         });
 
-        var stopwatch = Stopwatch.StartNew();
-        var geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, cancellationToken);
-        switch (geoResponse.Status)
+        var geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, myTelemetryClient, cancellationToken);
+
+        Result foundAddress = null;
+        Action<StringBuilder> postProcessor = null;
+        foreach (var address in geoResponse.Results)
         {
-          case Status.ZERO_RESULTS:
-            geoRequest.Type = "locality";
-            geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, cancellationToken);
-            break;
-        }
-        stopwatch.Stop();
-
-        var uri = geoRequest.GetUri();
-        myTelemetryClient.TrackDependency(nameof(GoogleMaps), uri.Host, nameof(GoogleMaps.PlacesNearBy), uri.ToString(),
-          DateTimeOffset.MinValue, stopwatch.Elapsed, geoResponse.Status.ToString(), geoResponse.Status == Status.OK);
-
-        var address = geoResponse.Results.FirstOrDefault();
-        
-        if (address != null)
-        {
-          raid.NearByPlaceId = address.PlaceId;
-          raid.NearByAddress = address.Name;
-          description
-            .Append(description.Length > 0 ? " ∙ " : "")
-            .Append(address.Name);
-
           if (address.Types.Contains("subway_station"))
           {
             var distanceMatrixRequest = InitGeoRequest(new DistanceMatrixRequest
             {
-              Origins = new[] {$"place_id:{address.PlaceId}"},
+              Origins = new[] { $"place_id:{address.PlaceId}" },
               Destinations = new[] { geoRequest.Location.LocationString },
               Mode = DistanceMatrixTravelModes.walking,
             });
@@ -113,11 +93,30 @@ namespace RaidBattlesBot.Handlers
 
             var distanceElement = distanceMatrixResponse.Rows.FirstOrDefault()?.Elements.FirstOrDefault();
 
-            if (distanceElement != null)
+            if (distanceElement?.Distance.Value <= myGeoCoderOptions.MaxDistanceToMetro)
             {
-              description.Append(distance = $" ∙ {distanceElement.Distance.Text} ∙ {distanceElement.Duration.Text}");
+              foundAddress = address;
+              postProcessor = descr => descr.Append(distance = $" ∙ {distanceElement.Distance.Text} ∙ {distanceElement.Duration.Text}");
+              break;
             }
           }
+        }
+
+        if (foundAddress == null)
+        {
+          geoRequest.Type = "locality";
+          foundAddress = (await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, myTelemetryClient, cancellationToken)).Results.FirstOrDefault();
+        }
+
+        if (foundAddress != null)
+        {
+          raid.NearByPlaceId = foundAddress.PlaceId;
+          raid.NearByAddress = foundAddress.Name;
+          description
+            .Append(description.Length > 0 ? " ∙ " : "")
+            .Append(foundAddress.Name);
+          
+          postProcessor?.Invoke(description);
         }
       }
       catch (Exception ex)
@@ -131,7 +130,7 @@ namespace RaidBattlesBot.Handlers
     private TRequest InitGeoRequest<TRequest>(TRequest request)
       where TRequest : MapsBaseRequest
     {
-      request.ApiKey = myGeoCoderOptions.Value?.GoogleKey;
+      request.ApiKey = myGeoCoderOptions.GoogleKey;
       if (request is ILocalizableRequest loc)
       {
         loc.Language = CultureInfo.CurrentCulture.Name;

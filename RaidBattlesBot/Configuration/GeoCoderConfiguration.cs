@@ -4,5 +4,6 @@
     {
         public string YandexKey { get; set; }
         public string GoogleKey { get; set; }
+        public int MaxDistanceToMetro { get; set; }
     }
 }
