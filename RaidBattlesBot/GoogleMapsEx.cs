@@ -29,7 +29,7 @@ namespace RaidBattlesBot
       return await QueryAsync(engine, request, telemetryClient, (telemetry, response) =>
       {
         telemetry.Name = nameof(GoogleMaps.PlacesNearBy);
-        telemetry.Success = response.Status == Status.OK;
+        telemetry.Success = response.Status == Status.OK || response.Status == Status.ZERO_RESULTS;
         telemetry.ResultCode = response.Status.ToString();
       }, cancellationToken);
     }
