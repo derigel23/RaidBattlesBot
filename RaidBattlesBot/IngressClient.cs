@@ -78,10 +78,10 @@ namespace RaidBattlesBot
     {
       using (var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress.Host, path, parameters.ToString())))
       {
-        var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken).ConfigureAwait(false);
+        var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken);
         op.Telemetry.ResultCode = response.StatusCode.ToString();
         op.Telemetry.Success = response.IsSuccessStatusCode;
-        var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
+        var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
         // extract JSON from JSONP
         var resultObject = JToken.Parse(result.Substring(Math.Min(1, result.Length), Math.Max(result.Length - 2, 0)));
         var portals = (property == null ? resultObject : resultObject[property]).ToObject<Portal[]>();

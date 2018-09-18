@@ -50,7 +50,7 @@ namespace RaidBattlesBot.Handlers
           poketrackRequest.Method = HttpMethod.Get;
         }
 
-        var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         var requestUri = poketrackResponse.RequestMessage.RequestUri;
         var query = QueryHelpers.ParseQuery(requestUri.Query);
 
@@ -87,7 +87,7 @@ namespace RaidBattlesBot.Handlers
           {
             try
             {
-              var poketrackResponseContent = await poketrackResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+              var poketrackResponseContent = await poketrackResponse.Content.ReadAsStringAsync();
               if (ourRaidInfoBotGymDetector.Match(poketrackResponseContent) is var raidInfoBotGymMatch && raidInfoBotGymMatch.Success && raidInfoBotGymMatch.Value.Length > 0)
               {
                 raid.PossibleGym = raidInfoBotGymMatch.Value;

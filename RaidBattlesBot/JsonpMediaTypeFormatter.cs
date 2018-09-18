@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -72,12 +71,12 @@ namespace RaidBattlesBot
           writer.Flush();
           _jsonMediaTypeFormatter.WriteObject(writer, context.Object);
           writer.Write(");");
-          await writer.FlushAsync().ConfigureAwait(false);
+          await writer.FlushAsync();
         }
       }
       else
       {
-        await _jsonMediaTypeFormatter.WriteResponseBodyAsync(context, selectedEncoding).ConfigureAwait(false);
+        await _jsonMediaTypeFormatter.WriteResponseBodyAsync(context, selectedEncoding);
       }
     }
 
