@@ -16,6 +16,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 
 namespace RaidBattlesBot
 {
@@ -79,7 +80,9 @@ namespace RaidBattlesBot
           .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
 
       services.AddMemoryCache();
+      services.AddHttpClient();
       services.AddHttpClient<IngressClient>();
+      services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>();
       services
         .AddMvc(options =>
         {

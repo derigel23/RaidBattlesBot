@@ -24,8 +24,9 @@ namespace RaidBattlesBot.Handlers
     private readonly PokemonInfo myPokemons;
     private readonly GymHelper myGymHelper;
     private readonly TelemetryClient myTelemetryClient;
+    private readonly IHttpClientFactory myHttpClientFactory;
 
-    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, Func<MessageEntityEx, StringSegment> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
+    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpClientFactory httpClientFactory, Func<MessageEntityEx, StringSegment> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
     {
       myGetUrl = getUrl;
       myClock = clock;
@@ -33,6 +34,7 @@ namespace RaidBattlesBot.Handlers
       myPokemons = pokemons;
       myGymHelper = gymHelper;
       myTelemetryClient = telemetryClient;
+      myHttpClientFactory = httpClientFactory;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -40,7 +42,7 @@ namespace RaidBattlesBot.Handlers
       var url = myGetUrl(entity);
       if (StringSegment.IsNullOrEmpty(url) || !url.StartsWith("http", StringComparison.Ordinal))
         return false;
-      using (var httpClient = new HttpClient())
+      using (var httpClient = myHttpClientFactory.CreateClient())
       {
         var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url.ToString());
         if (InfoGymBotHelper.IsAppropriateUrl(poketrackRequest.RequestUri))

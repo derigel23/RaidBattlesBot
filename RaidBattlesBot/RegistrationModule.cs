@@ -4,11 +4,8 @@ using System.Reflection;
 using Autofac;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 using NodaTime;
 using NodaTime.Extensions;
-using NodaTime.Testing;
-using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
@@ -20,13 +17,6 @@ namespace RaidBattlesBot
   {
     protected override void Load(ContainerBuilder builder)
     {
-      builder.Register(c =>
-      {
-        var configuration = c.Resolve<IOptions<BotConfiguration>>().Value;
-        var botClient = new TelegramBotClient(configuration.BotToken);
-        return botClient;
-      }).As<ITelegramBotClient>().InstancePerLifetimeScope();
-
       builder.RegisterInstance(SystemClock.Instance).As<IClock>();
       //builder.RegisterInstance(new FakeClock(SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(5)))).As<IClock>();
       builder.Register(c =>
