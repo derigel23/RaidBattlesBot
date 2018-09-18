@@ -72,12 +72,12 @@ namespace RaidBattlesBot
           writer.Flush();
           _jsonMediaTypeFormatter.WriteObject(writer, context.Object);
           writer.Write(");");
-          await writer.FlushAsync();
+          await writer.FlushAsync().ConfigureAwait(false);
         }
       }
       else
       {
-        await _jsonMediaTypeFormatter.WriteResponseBodyAsync(context, selectedEncoding);
+        await _jsonMediaTypeFormatter.WriteResponseBodyAsync(context, selectedEncoding).ConfigureAwait(false);
       }
     }
 

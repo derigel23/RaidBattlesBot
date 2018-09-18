@@ -80,8 +80,8 @@ namespace RaidBattlesBot
       var success = true;
       try
       {
-        var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken);
-        var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+        var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken).ConfigureAwait(false);
+        var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
         // extract JSON from JSONP
         var resultObject = JToken.Parse(result.Substring(Math.Min(1, result.Length), Math.Max(result.Length - 2, 0)));
         var portals = (property == null ? resultObject : resultObject[property]).ToObject<Portal[]>();
