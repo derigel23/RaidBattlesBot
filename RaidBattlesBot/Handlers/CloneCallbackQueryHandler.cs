@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -16,9 +17,9 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
-    private readonly User myBot;
+    private readonly ITelegramBotClient myBot;
 
-    public CloneCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, User bot)
+    public CloneCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ITelegramBotClient bot)
     {
       myContext = context;
       myRaidService = raidService;
@@ -53,8 +54,9 @@ namespace RaidBattlesBot.Handlers
         Poll = poll
       };
       await myRaidService.AddPollMessage(pollMessage, myUrlHelper, cancellationToken);
-      
-      return (null, false, $"https://t.me/{myBot.Username}?start={pollMessage.GetPollId()}");
+
+      var botUser = await myBot.GetMeAsync(cancellationToken);
+      return (null, false, $"https://t.me/{botUser.Username}?start={pollMessage.GetPollId()}");
     }
   }
 }

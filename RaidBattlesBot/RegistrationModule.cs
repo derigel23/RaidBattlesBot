@@ -39,15 +39,6 @@ namespace RaidBattlesBot
       
       var assembly = Assembly.GetExecutingAssembly();
 
-      builder.Register(c =>
-      {
-        return c.Resolve<IMemoryCache>().GetOrCreate("me", entry =>
-        {
-          entry.SlidingExpiration = TimeSpan.FromMinutes(5);
-          return c.Resolve<ITelegramBotClient>().GetMeAsync().GetAwaiter().GetResult();
-        });
-      });
-
       builder.RegisterType<RaidService>().InstancePerLifetimeScope();
 
       Register<IMessageHandler, MessageTypeAttribute>(builder, assembly);

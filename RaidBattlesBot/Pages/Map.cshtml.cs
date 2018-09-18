@@ -9,26 +9,29 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Pages
 {
   public class MapModel : PageModel
   {
-    public User BotUser { get; }
+    public User BotUser { get; private set; }
     
     private readonly RaidBattlesContext myDb;
     private readonly IClock myClock;
+    private readonly ITelegramBotClient myBot;
 
-    public MapModel(RaidBattlesContext db, IClock clock, User botUser)
+    public MapModel(RaidBattlesContext db, IClock clock, ITelegramBotClient bot)
     {
-      BotUser = botUser;
       myDb = db;
       myClock = clock;
+      myBot = bot;
     }
     
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
+      BotUser = await myBot.GetMeAsync(cancellationToken);
       return Page();
     }
 
