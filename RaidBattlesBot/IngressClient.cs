@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Geolocation;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
@@ -30,6 +31,7 @@ namespace RaidBattlesBot
       myContext = context;
       var configuration = options?.Value ?? throw new ArgumentNullException(nameof(options));
       myHttpClient.BaseAddress = configuration.ServiceUrl;
+      myHttpClient.Timeout = configuration.Timeout;
       myDefaultLocation = configuration.DefaultLocation ?? new Location();
     }
 
@@ -75,27 +77,16 @@ namespace RaidBattlesBot
 
     private async Task<Portal[]> Execute(string path, QueryBuilder parameters, CancellationToken cancellationToken = default, string property = default)
     {
-      var startTime = DateTimeOffset.UtcNow;
-      var timer = System.Diagnostics.Stopwatch.StartNew();
-      var success = true;
-      try
+      using (var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress.Host, path, parameters.ToString())))
       {
         var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken).ConfigureAwait(false);
+        op.Telemetry.ResultCode = response.StatusCode.ToString();
+        op.Telemetry.Success = response.IsSuccessStatusCode;
         var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
         // extract JSON from JSONP
         var resultObject = JToken.Parse(result.Substring(Math.Min(1, result.Length), Math.Max(result.Length - 2, 0)));
         var portals = (property == null ? resultObject : resultObject[property]).ToObject<Portal[]>();
         return portals ?? new Portal[0];
-      }
-      catch (Exception)
-      {
-        success = false;
-        throw;
-      }
-      finally
-      {
-        timer.Stop();
-        myTelemetryClient.TrackDependency("Ingress", path, parameters.ToString(), startTime, timer.Elapsed, success);
       }
     }
   }
