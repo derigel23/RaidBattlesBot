@@ -8,7 +8,6 @@ using Geolocation;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using RaidBattlesBot.Configuration;

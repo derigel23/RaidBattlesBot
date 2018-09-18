@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using RaidBattlesBot.Handlers;
@@ -86,8 +87,16 @@ namespace RaidBattlesBot.Controllers
             var callbackQuery = update.CallbackQuery;
             HttpContext.Items["uid"] = callbackQuery.From?.Username;
             HttpContext.Items["data"] = callbackQuery.Data;
-            (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
-            await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken);
+            try
+            {
+              (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
+              await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+              await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, "Operation timed out. Please, try again.", true, cancellationToken: cancellationToken);
+              throw;
+            }
             return Ok();
 
           case UpdateType.InlineQuery:
@@ -151,6 +160,11 @@ namespace RaidBattlesBot.Controllers
         return Ok() /* TODO: not handled */;
 
       }
+      catch (OperationCanceledException operationCanceledException) when (!cancellationToken.IsCancellationRequested)
+      {
+        myTelemetryClient.TrackException(new ExceptionTelemetry(operationCanceledException) { SeverityLevel = SeverityLevel.Warning });
+        return Ok();
+      }
       catch (Exception ex)
       {
         myTelemetryClient.TrackExceptionEx(ex, pollMessage.GetTrackingProperties());
@@ -158,11 +172,8 @@ namespace RaidBattlesBot.Controllers
       }
       finally
       {
-        var eventName = update?.Type.ToString();
-        if (eventName != null)
-        {
-          myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
-        }
+        var eventName = update.Type.ToString();
+        myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
       }
     }
   }
