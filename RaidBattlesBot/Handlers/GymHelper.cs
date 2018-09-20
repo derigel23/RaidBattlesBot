@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -68,12 +67,13 @@ namespace RaidBattlesBot.Handlers
 
       try
       {
-        var geoRequest = InitGeoRequest(new PlacesNearByRequest
+        var geoRequest = new PlacesNearByRequest
         {
           Location = new Location((double)location.lat, (double)location.lon),
           Type = "subway_station",
           RankBy = RankBy.Distance,
-        });
+          ApiKey = myGeoCoderOptions.GoogleKey
+        };
 
         var geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, myTelemetryClient, cancellationToken);
 
@@ -83,13 +83,14 @@ namespace RaidBattlesBot.Handlers
         {
           if (address.Types.Contains("subway_station"))
           {
-            var distanceMatrixRequest = InitGeoRequest(new DistanceMatrixRequest
+            var distanceMatrixRequest = new DistanceMatrixRequest
             {
               Origins = new[] { $"place_id:{address.PlaceId}" },
               Destinations = new[] { geoRequest.Location.LocationString },
               Mode = DistanceMatrixTravelModes.walking,
-            });
-            var distanceMatrixResponse = await GoogleMaps.DistanceMatrix.QueryAsync(distanceMatrixRequest, cancellationToken);
+              ApiKey = myGeoCoderOptions.GoogleKey
+            };
+            var distanceMatrixResponse = await GoogleMaps.DistanceMatrix.QueryAsync(distanceMatrixRequest, myTelemetryClient, cancellationToken);
 
             var distanceElement = distanceMatrixResponse.Rows.FirstOrDefault()?.Elements.FirstOrDefault();
 
@@ -125,17 +126,6 @@ namespace RaidBattlesBot.Handlers
       }
 
       return (location, gym, distance);
-    }
-
-    private TRequest InitGeoRequest<TRequest>(TRequest request)
-      where TRequest : MapsBaseRequest
-    {
-      request.ApiKey = myGeoCoderOptions.GoogleKey;
-      if (request is ILocalizableRequest loc)
-      {
-        loc.Language = CultureInfo.CurrentCulture.Name;
-      }
-      return request;
     }
   }
 }
