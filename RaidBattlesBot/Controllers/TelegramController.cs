@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Controllers
 
       PollMessage pollMessage = null;
 
-      var operation = myTelemetryClient.StartOperation<RequestTelemetry>(update?.Type.ToString(), update?.Id.ToString(), myTelemetryClient.Context.Operation.Id);
+      var operation = myTelemetryClient.StartOperation<DependencyTelemetry>(update?.Type.ToString(), update?.Id.ToString());
       try
       {
         if (update == null)
