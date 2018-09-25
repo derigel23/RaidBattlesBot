@@ -52,21 +52,22 @@ namespace RaidBattlesBot.Controllers
 
       PollMessage pollMessage = null;
 
+      var operation = myTelemetryClient.StartOperation<RequestTelemetry>(update?.Type.ToString(), update?.Id.ToString());
       try
       {
         if (update == null)
         {
           foreach (var errorEntry in ModelState)
           {
-            myTelemetryClient.Context.Properties[$"ModelState.{errorEntry.Key}"] = errorEntry.Value.AttemptedValue;
+            operation.Telemetry.Properties[$"ModelState.{errorEntry.Key}"] = errorEntry.Value.AttemptedValue;
             var errors = errorEntry.Value.Errors;
             for (var i = 0; i < errors.Count; i++)
             {
-              myTelemetryClient.Context.Properties[$"ModelState.{errorEntry.Key}.{i}"] = errors[i].ErrorMessage;
+              operation.Telemetry.Properties[$"ModelState.{errorEntry.Key}.{i}"] = errors[i].ErrorMessage;
               if (errors[i].Exception is Exception exception)
               {
                 myTelemetryClient.TrackException(exception, new Dictionary<string, string> { { errorEntry.Key, errorEntry.Value.AttemptedValue } });
-              };
+              }
             }
           }
           throw new ArgumentNullException(nameof(update));
@@ -85,8 +86,8 @@ namespace RaidBattlesBot.Controllers
 
           case UpdateType.CallbackQuery:
             var callbackQuery = update.CallbackQuery;
-            HttpContext.Items["uid"] = callbackQuery.From?.Username;
-            HttpContext.Items["data"] = callbackQuery.Data;
+            operation.Telemetry.Properties["uid"] = callbackQuery.From?.Username;
+            operation.Telemetry.Properties["data"] = callbackQuery.Data;
             try
             {
               (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
@@ -101,29 +102,34 @@ namespace RaidBattlesBot.Controllers
 
           case UpdateType.InlineQuery:
             var inlineQuery = update.InlineQuery;
-            HttpContext.Items["uid"] = inlineQuery.From?.Username;
-            HttpContext.Items["query"] = inlineQuery.Query;
+            operation.Telemetry.Properties["uid"] = inlineQuery.From?.Username;
+            operation.Telemetry.Properties["query"] = inlineQuery.Query;
             return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken));
 
           case UpdateType.ChosenInlineResult:
             var chosenInlineResult = update.ChosenInlineResult;
-            HttpContext.Items["uid"] = chosenInlineResult.From?.Username;
-            HttpContext.Items["query"] = chosenInlineResult.Query;
-            HttpContext.Items["result"] = chosenInlineResult.ResultId;
+            operation.Telemetry.Properties["uid"] = chosenInlineResult.From?.Username;
+            operation.Telemetry.Properties["query"] = chosenInlineResult.Query;
+            operation.Telemetry.Properties["result"] = chosenInlineResult.ResultId;
             return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), chosenInlineResult, new object(), cancellationToken));
         }
 
         if (message == null)
           return Ok();
 
-        myTelemetryClient.Context.User.AccountId = (message.From?.Id ?? message.ForwardFrom?.Id)?.ToString();
-        myTelemetryClient.Context.Properties["uid"] = myTelemetryClient.Context.User.AuthenticatedUserId =
-          message.From?.Username ?? message.ForwardFrom?.Username;
-        myTelemetryClient.Context.Properties["messageType"] = message.Type.ToString();
-        myTelemetryClient.Context.Properties["chat"] = message.Chat.Username;
+        operation.Telemetry.Context.User.AccountId = (message.From?.Id ?? message.ForwardFrom?.Id)?.ToString();
+        operation.Telemetry.Context.User.AuthenticatedUserId = message.From?.Username ?? message.ForwardFrom?.Username;
+        operation.Telemetry.Properties["uid"] = message.From?.Username ?? message.ForwardFrom?.Username;
+        operation.Telemetry.Properties["messageType"] = message.Type.ToString();
+        operation.Telemetry.Properties["chat"] = message.Chat.Username;
 
         pollMessage = new PollMessage(message);
-        if ((await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken)) is bool success)
+        foreach (var property in pollMessage.GetTrackingProperties())
+        {
+          operation.Telemetry.Properties.Add(property);
+        }
+        operation.Telemetry.Success = await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, pollMessage, cancellationToken);
+        if (operation.Telemetry.Success is bool success)
         {
           if (success)
           {
@@ -172,8 +178,7 @@ namespace RaidBattlesBot.Controllers
       }
       finally
       {
-        var eventName = update.Type.ToString();
-        myTelemetryClient.TrackEvent(eventName, pollMessage.GetTrackingProperties());
+        operation.Dispose();
       }
     }
   }
