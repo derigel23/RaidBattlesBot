@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Controllers
 
       PollMessage pollMessage = null;
 
-      var operation = myTelemetryClient.StartOperation<DependencyTelemetry>(update?.Type.ToString(), update?.Id.ToString());
+      var operation = myTelemetryClient.StartOperation(new DependencyTelemetry(myTelegramBotClient.GetType().Namespace, Request.Host.ToString(), update?.Type.ToString(), update?.Id.ToString()));
       try
       {
         if (update == null)
