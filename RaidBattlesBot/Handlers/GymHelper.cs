@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GoogleMapsApi;
 using GoogleMapsApi.Entities.Common;
 using GoogleMapsApi.Entities.DistanceMatrix.Request;
+using GoogleMapsApi.Entities.Geocoding.Request;
 using GoogleMapsApi.Entities.PlacesNearBy.Request;
 using GoogleMapsApi.Entities.PlacesNearBy.Response;
 using Microsoft.ApplicationInsights;
@@ -33,7 +34,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
-      var  location = (lat: raid.Lat, lon: raid.Lon);
+      var location = (lat: raid.Lat, lon: raid.Lon);
       string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym;
       if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision, rounding) && (foundGym.name is var foundGymName) && (foundGymName != gym))
@@ -67,9 +68,10 @@ namespace RaidBattlesBot.Handlers
 
       try
       {
+        var destination = new Location((double)location.lat, (double)location.lon);
         var geoRequest = new PlacesNearByRequest
         {
-          Location = new Location((double)location.lat, (double)location.lon),
+          Location = destination,
           Type = "subway_station",
           RankBy = RankBy.Distance,
           ApiKey = myGeoCoderOptions.GoogleKey
@@ -85,8 +87,8 @@ namespace RaidBattlesBot.Handlers
           {
             var distanceMatrixRequest = new DistanceMatrixRequest
             {
-              Origins = new[] { $"place_id:{address.PlaceId}" },
-              Destinations = new[] { geoRequest.Location.LocationString },
+              Origins = new[] {$"place_id:{address.PlaceId}"},
+              Destinations = new[] {destination.LocationString},
               Mode = DistanceMatrixTravelModes.walking,
               ApiKey = myGeoCoderOptions.GoogleKey
             };
@@ -103,19 +105,34 @@ namespace RaidBattlesBot.Handlers
           }
         }
 
+        string placeId;
+        string name;
         if (foundAddress == null)
         {
-          geoRequest.Type = "locality";
-          foundAddress = (await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, myTelemetryClient, cancellationToken)).Results.FirstOrDefault();
+          var geoCodingRequest = new GeocodingRequest
+          {
+            Location = destination,
+            ApiKey = myGeoCoderOptions.GoogleKey
+          };
+          var geoCodingResults = (await GoogleMaps.Geocode.QueryAsync(geoCodingRequest, myTelemetryClient, cancellationToken)).Results;
+          var result = geoCodingResults.FirstOrDefault(_ => _.Types.Contains("locality"));
+          placeId = result?.PlaceId;
+          name = result?.FormattedAddress;
+        }
+        else
+        {
+          placeId = foundAddress.PlaceId;
+          name = foundAddress.Name;
         }
 
-        if (foundAddress != null)
+        raid.NearByPlaceId = placeId;
+        raid.NearByAddress = name;
+
+        if (!string.IsNullOrEmpty(name))
         {
-          raid.NearByPlaceId = foundAddress.PlaceId;
-          raid.NearByAddress = foundAddress.Name;
           description
             .Append(description.Length > 0 ? " ∙ " : "")
-            .Append(foundAddress.Name);
+            .Append(name);
           
           postProcessor?.Invoke(description);
         }
