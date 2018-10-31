@@ -76,7 +76,7 @@ namespace RaidBattlesBot
 
       if (poll != null)
       {
-        var existingMessage = poll.Messages.SingleOrDefault(_ => _.InlineMesssageId == pollMessage.InlineMesssageId && _.ChatId == pollMessage.ChatId && _.MesssageId == pollMessage.MesssageId);
+        var existingMessage = poll.Messages.FirstOrDefault(_ => _.InlineMesssageId == pollMessage.InlineMesssageId && _.ChatId == pollMessage.ChatId && _.MesssageId == pollMessage.MesssageId);
         if (existingMessage != null)
           return existingMessage;
 
