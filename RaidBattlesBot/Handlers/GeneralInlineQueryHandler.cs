@@ -40,6 +40,7 @@ namespace RaidBattlesBot.Handlers
 
       string query = null;
       Portal portal = null;
+      bool exRaidGym = false;
       string switchPmParameter = null;
       foreach (var queryPart in data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries))
       {
@@ -47,6 +48,11 @@ namespace RaidBattlesBot.Handlers
         {
           case string _ when queryPart.StartsWith(GymInlineQueryHandler.PREFIX):
             var guid = queryPart.Substring(GymInlineQueryHandler.PREFIX.Length);
+            if (guid.EndsWith('+'))
+            {
+              guid = guid.Substring(0, guid.Length - 1);
+              exRaidGym = true;
+            }
             var portalGuid = PortalEx.DecodeGuid(guid);
             portal = await myIngressClient.Get(portalGuid, data.Location, cancellationToken);
             myDb.Attach(portal);
@@ -60,6 +66,18 @@ namespace RaidBattlesBot.Handlers
       {
         inlineQueryResults = await myShareInlineQueryHandler.GetActivePolls(data.From, cancellationToken);
       }
+      else if (string.IsNullOrWhiteSpace(query))
+      {
+        inlineQueryResults = new[]
+        {
+          new InlineQueryResultArticle($"EnterPollTopic", "Введите тему",
+            new InputTextMessageContent("Введите тему для создания голосования"))
+          {
+            Description = "для создания голосования",
+            ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/POI_Submission_Illustration_02.png").ToString()
+          }
+        };
+      }
       else
       {
         var pollId = await myRaidService.GetPollId(new Poll(data) { Title = query, Portal = portal }, cancellationToken);
@@ -68,10 +86,11 @@ namespace RaidBattlesBot.Handlers
           VoteEnumEx.AllowedVoteFormats
             .Select((_, i) => new Poll
             {
-              Id = pollId + i,
+              Id = exRaidGym ? -pollId - i : pollId + i,
               Title = query,
               AllowedVotes = _,
-              Portal = portal
+              Portal = portal,
+              ExRaidGym = exRaidGym
             })
             .Select(fakePoll => new InlineQueryResultArticle($"create:{fakePoll.Id}", fakePoll.GetTitle(myUrlHelper),
               new InputTextMessageContent(fakePoll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString())

@@ -36,7 +36,7 @@ namespace RaidBattlesBot.Model
     public DateTimeOffset? Modified { get; set; }
     public bool Cancelled { get; set; }
     public VoteEnum? AllowedVotes { get; set; }
-
+    public bool ExRaidGym { get; set; }
     private static readonly TimeSpan LiveTime = TimeSpan.FromHours(1);
 
     [Computed, NotMapped]

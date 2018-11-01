@@ -67,7 +67,13 @@ namespace RaidBattlesBot
 
     public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
+      bool exRaidGym = false;
       var pollId = pollMessage.PollId;
+      if (pollId < 0)
+      {
+        pollId = pollMessage.PollId = -pollId;
+        exRaidGym = true;
+      }
       var poll = await myContext
         .Set<Poll>()
         .Where(_ => _.Id == pollId)
@@ -96,6 +102,7 @@ namespace RaidBattlesBot
         AllowedVotes = VoteEnumEx.AllowedVoteFormats[votesFormatIndex],
         Owner = pollData.Owner,
         Portal = pollData.Portal,
+        ExRaidGym = exRaidGym,
         Votes = new List<Vote>()
       };
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;

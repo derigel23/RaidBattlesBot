@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
+using RaidBattlesBot.Migrations;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -86,24 +87,31 @@ namespace RaidBattlesBot.Handlers
       {
         var portal = portals[i];
         var title = portal.Name is string name && !string.IsNullOrWhiteSpace(name) ? name : portal.Guid;
-        var replyContent = new InputTextMessageContent($"*{portal.Name}*\n{portal.Address}[\u200B]({portal.Image})[\u200B]()")
-        {
-          ParseMode = ParseMode.Markdown
-        };
         if (portal.EncodeGuid() is string portalGuid)
         {
-          var replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {pollQuery}"));
-          const int thumbnailSize = 64;
-          var result = new InlineQueryResultArticle($"portal:{portal.Guid}", title, replyContent)
+          InlineQueryResultArticle Init(InlineQueryResultArticle article, InlineKeyboardButton createButton)
           {
-            Description = portal.Address,
-            ReplyMarkup = replyMarkup,
-            ThumbUrl = portal.GetImage(myUrlHelper, thumbnailSize).AbsoluteUri,
-            ThumbHeight = thumbnailSize,
-            ThumbWidth = thumbnailSize
-          };
-  
-          results.Add(result);
+            const int thumbnailSize = 64;
+            article.Description = portal.Address;
+            article.ReplyMarkup = new InlineKeyboardMarkup(createButton);
+            article.ThumbUrl = portal.GetImage(myUrlHelper, thumbnailSize).AbsoluteUri;
+            article.ThumbHeight = thumbnailSize;
+            article.ThumbWidth = thumbnailSize;
+            return article;
+          }
+
+          results.Add(Init(
+            new InlineQueryResultArticle($"portal:{portal.Guid}", title,
+              new InputTextMessageContent($"*{portal.Name}*\n{portal.Address}[\u200B]({portal.Image})[\u200B]()") { ParseMode = ParseMode.Markdown }),
+            InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {pollQuery}")));
+
+          if (i == 0)
+          {
+            results.Add(Init(
+              new InlineQueryResultArticle($"portal:{portal.Guid}+", $"☆ {title} (EX Raid Gym)",
+                new InputTextMessageContent($"☆ *{portal.Name}* (EX Raid Gym)\n{portal.Address}[\u200B]({portal.Image})[\u200B]()") { ParseMode = ParseMode.Markdown }),
+              InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {pollQuery}")));
+          }
         }
       }
       

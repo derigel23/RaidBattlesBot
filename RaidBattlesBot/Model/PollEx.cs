@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Model
         title.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode) ?? $"Poll{poll.Id}"));
         if (poll.Portal != null)
         {
-          title.Append(RaidEx.Delimeter);
+          title.Append(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
           title.Bold(mode, builder => builder.Append(poll.Portal.Name.Sanitize(mode)));
         }
       }
@@ -74,8 +74,12 @@ namespace RaidBattlesBot.Model
           description.Bold(mode, builder => builder.Append(poll.Title.Sanitize(mode)));
           if (poll.Portal is Portal portal)
           {
-            description.Append(" ◊\u00A0");
+            description.Append(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
             description.Link(portal.Name.Sanitize(mode), urlHelper.RouteUrl("Portal", new { guid = portal.Guid }, "https"), mode);
+            if (poll.ExRaidGym)
+            {
+              description.Append(" (EX Raid Gym)");
+            }
           }
         }
       }
