@@ -1,5 +1,4 @@
 ﻿using Autofac.Extensions.DependencyInjection;
-using CsvHelper;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;

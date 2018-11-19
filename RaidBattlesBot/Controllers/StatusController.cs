@@ -1,11 +1,6 @@
-﻿using System.Globalization;
-using System.IO;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
-using RaidBattlesBot.Configuration;
 using Telegram.Bot;
 
 namespace RaidBattlesBot.Controllers
@@ -14,13 +9,11 @@ namespace RaidBattlesBot.Controllers
   {
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
-    private readonly Gyms myGyms;
 
-    public StatusController(ITelegramBotClient bot, IUrlHelper urlHelper, Gyms gyms)
+    public StatusController(ITelegramBotClient bot, IUrlHelper urlHelper)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
-      myGyms = gyms;
     }
 
     [HttpGet("/status")]
@@ -47,25 +40,6 @@ namespace RaidBattlesBot.Controllers
       await myBot.SetWebhookAsync("", cancellationToken: cancellationToken);
 
       return RedirectToAction("Status");
-    }
-    
-    [HttpGet("/gyms")]
-    public async Task<IActionResult> Gyms(CancellationToken cancellationToken)
-    {
-      using (var stream = new MemoryStream())
-      using (var writer = new StreamWriter(stream, Encoding.UTF8))
-      using (var csvWriter = new CsvWriter(writer))
-      {
-        foreach (var pair in myGyms.GymInfo)
-        {
-          csvWriter.WriteField(pair.gym, true);
-          csvWriter.WriteField(pair.location.lat.ToString(CultureInfo.InvariantCulture), false);
-          csvWriter.WriteField(pair.location.lon.ToString(CultureInfo.InvariantCulture), false);
-          csvWriter.NextRecord();
-        }
-
-        return new FileContentResult(stream.ToArray(), "text/csv") { FileDownloadName = "gyms.csv"};
-      }
     }
   }
 }

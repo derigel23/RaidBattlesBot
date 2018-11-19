@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using RaidBattlesBot.Configuration;
+using RaidBattlesBot.Handlers;
 
 namespace RaidBattlesBot.Model
 {
@@ -18,7 +18,7 @@ namespace RaidBattlesBot.Model
 
       if (precision is int precisionValue)
       {
-        var precisionRounding = rounding ?? Gyms.LowerDecimalPrecisionRounding;
+        var precisionRounding = rounding ?? GymHelper.LowerDecimalPrecisionRounding;
         (lat, lon) = LowerPrecision(lat, lon, precisionValue, precisionRounding);
         possibleEncounters = possibleEncounters
           .Where(_ => decimal.Round(_.Lon.Value, precisionValue, precisionRounding) == lon)

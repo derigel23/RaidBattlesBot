@@ -56,14 +56,6 @@ namespace RaidBattlesBot
         return new PokemonInfo(namesBuilder.Build(), raidsBuilder.Build(), provider.GetRequiredService<ILoggerFactory>());
       });
 
-      services.AddSingleton(provider =>
-      {
-        using (var gymStream = provider.GetRequiredService<IHostingEnvironment>().WebRootFileProvider.GetFileInfo("gyms.csv").CreateReadStream())
-        {
-          return new Gyms(gymStream);
-        }
-      });
-
       var culture = myConfiguration["Culture"];
       if (!string.IsNullOrEmpty(culture))
       {

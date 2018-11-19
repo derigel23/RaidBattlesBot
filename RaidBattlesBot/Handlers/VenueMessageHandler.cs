@@ -91,7 +91,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       var gymInfo = await raid
-        .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, Gyms.LowerDecimalPrecision, Gyms.LowerDecimalPrecisionRounding, cancellationToken);
+        .SetTitleAndDescription(new StringBuilder(), new StringBuilder(), myGymHelper, GymHelper.LowerDecimalPrecision, GymHelper.LowerDecimalPrecisionRounding, cancellationToken);
       raid.Lat = gymInfo.location.lat;
       raid.Lon = gymInfo.location.lon;
 

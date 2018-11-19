@@ -20,31 +20,24 @@ namespace RaidBattlesBot.Handlers
   public class GymHelper
   {
     private readonly RaidBattlesContext myDbContext;
-    private readonly Gyms myGyms;
     private readonly TelemetryClient myTelemetryClient;
     private readonly GeoCoderConfiguration myGeoCoderOptions;
 
-    public GymHelper(RaidBattlesContext dbContext, Gyms gyms, TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions)
+    public GymHelper(RaidBattlesContext dbContext, TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions)
     {
       myDbContext = dbContext;
-      myGyms = gyms;
       myTelemetryClient = telemetryClient;
       myGeoCoderOptions = geoCoderOptions.Value ?? throw new ArgumentNullException(nameof(geoCoderOptions));
     }
+
+    public const int LowerDecimalPrecision = 4;
+    public const MidpointRounding LowerDecimalPrecisionRounding = default;
 
     public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
       var location = (lat: raid.Lat, lon: raid.Lon);
       string distance = default;
       var gym = raid.Gym ?? raid.PossibleGym;
-      if (myGyms.TryGet((decimal)raid.Lat, (decimal)raid.Lon, out var foundGym, precision, rounding) && (foundGym.name is var foundGymName) && (foundGymName != gym))
-      {
-        if ((gym == null) || foundGymName.StartsWith(gym))
-        {
-          gym = raid.PossibleGym = foundGymName;
-        }
-        location = foundGym.location;
-      }
       if (gym == null)
       {
         raid.PossibleGym = await myDbContext.Set<Raid>()
