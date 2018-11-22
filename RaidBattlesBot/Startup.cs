@@ -84,7 +84,7 @@ namespace RaidBattlesBot
         .AddControllersAsServices()
         .AddRazorPagesOptions(options =>
         {
-          options.Conventions.AddPageRouteWithName("/Portal", "~/{guid:minlength(32)}", "Portal");
+          options.Conventions.AddPageRouteWithName("/Portal", "~/{guid:minlength(32)?}", "Portal");
         });
 
       services.AddDbContextPool<RaidBattlesContext>(options =>

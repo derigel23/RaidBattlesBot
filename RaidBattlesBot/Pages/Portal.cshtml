@@ -109,9 +109,7 @@
       );
 
       var descriptionTemplate = ymaps.templateLayoutFactory.createClass(
-        "{% if properties.quest.title %}<div class='quest'><img src='{{ properties.quest.image }}' alt='{{ properties.quest.title }}' class='icon' /><h3>{{ properties.quest.description }}</h3>{{ properties.quest.title }}</div>{% endif %}" +
-        "<div class='portal'><img src='{% if properties.portal.image %}{{ properties.portal.image }}=s64-c{% else %}@(default(Portal).GetImage(Url).ForceHttps()){% endif %}' alt='{{ properties.portal.name }}' class='icon' /><h3>{{ properties.portal.name }}</h3>{{ properties.portal.address }}</div>" +
-        "{% if properties.username %}<div class='user'>Reported by <a href='https://t.me/{{ properties.username }}'>{{ properties.user|default:properties.username }}</a></div>{% endif %}"
+        "<div class='portal' id='{{ properties.portal.guid }}'><img src='{% if properties.portal.image %}{{ properties.portal.image }}=s64-c{% else %}@(default(Portal).GetImage(Url).ForceHttps()){% endif %}' alt='{{ properties.portal.name }}' class='icon' /><h3>{{ properties.portal.name }}</h3>{{ properties.portal.address }}</div>"
       );
 
       var myIcon = ymaps.templateLayoutFactory.createClass('<div class="my_icon">' +
