@@ -36,11 +36,11 @@ namespace RaidBattlesBot.Handlers
 
     public static async Task<TResult> Handle<THandler, TData, TContext, TMetadata>(IEnumerable<Meta<Func<THandler>, TMetadata>> handlers, TData data, TContext context = default, CancellationToken cancellationToken = default)
       where THandler : IHandler<TData, TContext, TResult>
-      where TMetadata : Attribute, IHandlerAttribute<TData, TContext>
+      where TMetadata : Attribute, IHandlerAttribute<TData>
     {
       foreach (var h in handlers)
       {
-        if (!h.Metadata.ShouldProcess(data, context))
+        if (!h.Metadata.ShouldProcess(data))
           continue;
         var result = await h.Value().Handle(data, context, cancellationToken);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))

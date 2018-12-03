@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
 

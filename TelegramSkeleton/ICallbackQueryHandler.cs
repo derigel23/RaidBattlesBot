@@ -10,11 +10,11 @@ namespace RaidBattlesBot.Handlers
   }
 
   [MeansImplicitUse]
-  public class CallbackQueryHandlerAttribute : Attribute, IHandlerAttribute<CallbackQuery, object>
+  public class CallbackQueryHandlerAttribute : Attribute, IHandlerAttribute<CallbackQuery>
   {
     public string DataPrefix { get; set; }
 
-    public bool ShouldProcess(CallbackQuery callbackQuery, object context)
+    public bool ShouldProcess(CallbackQuery callbackQuery)
     {
       return callbackQuery.Data.StartsWith(DataPrefix);
     }

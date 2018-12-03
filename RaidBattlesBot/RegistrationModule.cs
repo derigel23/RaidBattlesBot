@@ -8,6 +8,7 @@ using NodaTime;
 using NodaTime.Extensions;
 using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Module = Autofac.Module;
 
@@ -36,34 +37,34 @@ namespace RaidBattlesBot
       builder.RegisterType<GymHelper>().InstancePerLifetimeScope();
       builder.RegisterType<InfoGymBotHelper>().InstancePerLifetimeScope();
       builder.RegisterType<ChatInfo>().InstancePerLifetimeScope();
-      
-      var assembly = Assembly.GetExecutingAssembly();
-
       builder.RegisterType<RaidService>().InstancePerLifetimeScope();
 
-      Register<IMessageHandler, MessageTypeAttribute>(builder, assembly);
-      Register<IMessageEntityHandler, MessageEntityTypeAttribute>(builder, assembly);
-      Register<ICallbackQueryHandler, CallbackQueryHandlerAttribute>(builder, assembly);
-      Register<IInlineQueryHandler, InlineQueryHandlerAttribute>(builder, assembly);
+      builder.RegisterTelegramSkeleton();
+//      var assembly = Assembly.GetExecutingAssembly();
 
-      builder
-        .RegisterAssemblyTypes(assembly)
-        //.Where(t => typeof(IHandler<>).IsAssignableFrom(t))
-        .Where(t => !(new[] { typeof(IMessageHandler), typeof(IMessageEntityHandler), typeof(ICallbackQueryHandler), typeof(IInlineQueryHandler) }.Any(_ => _.IsAssignableFrom(t))))
-        .AsClosedTypesOf(typeof(IHandler<,,>))
-        .AsSelf()
-        .InstancePerLifetimeScope();
+//      Register<IMessageHandler, MessageTypeAttribute>(builder, assembly);
+//      Register<IMessageEntityHandler, MessageEntityTypeAttribute>(builder, assembly);
+//      Register<ICallbackQueryHandler, CallbackQueryHandlerAttribute>(builder, assembly);
+//      Register<IInlineQueryHandler, InlineQueryHandlerAttribute>(builder, assembly);
+
+//      builder
+//        .RegisterAssemblyTypes(assembly)
+//        //.Where(t => typeof(IHandler<>).IsAssignableFrom(t))
+//        .Where(t => !(new[] { typeof(IMessageHandler), typeof(IMessageEntityHandler), typeof(ICallbackQueryHandler), typeof(IInlineQueryHandler) }.Any(_ => _.IsAssignableFrom(t))))
+//        .AsClosedTypesOf(typeof(IHandler<,,>))
+//        .AsSelf()
+//        .InstancePerLifetimeScope();
     }
 
-    private static void Register<TInterface, TAttribute>(ContainerBuilder builder, Assembly assembly)
-    {
-      builder
-        .RegisterAssemblyTypes(assembly)
-        .Where(t => t.IsAssignableTo<TInterface>())
-        .As<TInterface>()
-        .AsSelf()
-        .WithMetadataFrom<TAttribute>()
-        .InstancePerLifetimeScope();
-    }
+//    private static void Register<TInterface, TAttribute>(ContainerBuilder builder, Assembly assembly)
+//    {
+//      builder
+//        .RegisterAssemblyTypes(assembly)
+//        .AssignableTo<TInterface>()
+//        .AsImplementedInterfaces()
+//        .AsSelf()
+//        .WithMetadataFrom<TAttribute>()
+//        .InstancePerLifetimeScope();
+//    }
   }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -14,10 +15,10 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.Text)]
   public class TextMessageHandler : IMessageHandler
   {
-    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IGenericMessageEntityHandler<PollMessage>>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+    public TextMessageHandler(IEnumerable<Meta<Func<Message, IGenericMessageEntityHandler<PollMessage>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
     {
       myMessageEntityHandlers = messageEntityHandlers;
       myDb = db;

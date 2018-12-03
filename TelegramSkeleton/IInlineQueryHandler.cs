@@ -11,11 +11,11 @@ namespace RaidBattlesBot.Handlers
   }
 
   [MeansImplicitUse]
-  public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery, object>
+  public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery>
   {
     public string QueryPattern { get; set; }
 
-    public bool ShouldProcess(InlineQuery inlineQuery, object context)
+    public bool ShouldProcess(InlineQuery inlineQuery)
     {
       return string.IsNullOrEmpty(QueryPattern) || Regex.IsMatch(inlineQuery.Query, QueryPattern);
     }

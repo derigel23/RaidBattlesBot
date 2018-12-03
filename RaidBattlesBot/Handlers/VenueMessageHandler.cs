@@ -7,6 +7,7 @@ using NodaTime;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 

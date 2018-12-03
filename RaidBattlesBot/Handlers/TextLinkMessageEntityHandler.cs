@@ -2,7 +2,8 @@
  using Microsoft.ApplicationInsights;
 using NodaTime;
 using RaidBattlesBot.Configuration;
-using Telegram.Bot;
+ using Team23.TelegramSkeleton;
+ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
