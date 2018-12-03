@@ -1,6 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using RaidBattlesBot.Handlers;
 using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton

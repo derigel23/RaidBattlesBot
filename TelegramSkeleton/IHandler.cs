@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace RaidBattlesBot.Handlers
+namespace Team23.TelegramSkeleton
 {
   public interface IHandler<in TData, in TContext, TResult>
   {

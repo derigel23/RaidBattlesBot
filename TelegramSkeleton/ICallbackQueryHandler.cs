@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using Telegram.Bot.Types;
 
-namespace RaidBattlesBot.Handlers
+namespace Team23.TelegramSkeleton
 {
   public interface ICallbackQueryHandler : IHandler<CallbackQuery, object, (string text, bool showAlert, string url)>
   {

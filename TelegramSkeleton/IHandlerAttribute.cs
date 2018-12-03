@@ -1,4 +1,4 @@
-﻿namespace RaidBattlesBot.Handlers
+﻿namespace Team23.TelegramSkeleton
 {
   public interface IHandlerAttribute<in TData>
   {

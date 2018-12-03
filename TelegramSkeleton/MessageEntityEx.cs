@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Primitives;
 using Telegram.Bot.Types;
 
-namespace RaidBattlesBot.Handlers
+namespace Team23.TelegramSkeleton
 {
   public class MessageEntityEx : MessageEntity
   {

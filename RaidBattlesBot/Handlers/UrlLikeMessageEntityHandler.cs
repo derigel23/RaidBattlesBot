@@ -13,8 +13,9 @@ using NodaTime;
 using PokeTrackDecoder.Handlers;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+ using Team23.TelegramSkeleton;
 
-namespace RaidBattlesBot.Handlers
+ namespace RaidBattlesBot.Handlers
 {
   public abstract class UrlLikeMessageEntityHandler : IMessageEntityHandler
   {

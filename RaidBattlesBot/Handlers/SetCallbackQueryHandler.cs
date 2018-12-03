@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 

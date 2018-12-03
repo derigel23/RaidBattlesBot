@@ -8,6 +8,7 @@ using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Migrations;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 
-namespace RaidBattlesBot.Handlers
+namespace Team23.TelegramSkeleton
 {
   public static class HandlerExtentions
   {

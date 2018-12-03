@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Telegram.Bot.Types;
 
-namespace RaidBattlesBot.Handlers
+namespace Team23.TelegramSkeleton
 {
   public interface IInlineQueryHandler : IHandler<InlineQuery, object, bool?>
   {
