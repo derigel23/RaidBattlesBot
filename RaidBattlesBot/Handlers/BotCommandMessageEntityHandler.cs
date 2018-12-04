@@ -13,8 +13,8 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [Team23.TelegramSkeleton.MessageEntityType(EntityType = MessageEntityType.BotCommand)]
-  public class BotCommandMessageEntityHandler : IMessageEntityHandler
+  [MessageEntityType(EntityType = MessageEntityType.BotCommand)]
+  public class BotCommandMessageEntityHandler : IMessageEntityHandler<PollMessage>
   {
     private readonly RaidBattlesContext myContext;
     private readonly Message myMessage;

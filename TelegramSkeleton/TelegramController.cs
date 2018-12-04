@@ -17,14 +17,14 @@ namespace Team23.TelegramSkeleton
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly IEnumerable<Meta<Func<Message, IGenericMessageHandler<TContext>>, MessageTypeAttribute>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TContext>>, MessageTypeAttribute>> myMessageHandlers;
     private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     protected TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, 
-      IEnumerable<Meta<Func<Message, IGenericMessageHandler<TContext>>,MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<TContext>>,MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)

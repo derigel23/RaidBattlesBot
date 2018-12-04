@@ -8,7 +8,7 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Handlers
 {
   [MessageType(MessageType = MessageType.Sticker)]
-  public class StickerMessageHandler : IMessageHandler
+  public class StickerMessageHandler : IMessageHandler<PollMessage>
   {
     public async Task<bool?> Handle(Message data, PollMessage pollMessage = default, CancellationToken cancellationToken = default)
     {

@@ -5,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  public interface IGenericMessageHandler<in TContext> : IHandler<Message, TContext, bool?>
+  public interface IMessageHandler<in TContext> : IHandler<Message, TContext, bool?>
   {
   }
 

@@ -21,7 +21,7 @@ namespace RaidBattlesBot.Controllers
 
     public TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, RaidService raidService, IMemoryCache cache, 
-      IEnumerable<Meta<Func<Message, IGenericMessageHandler<PollMessage>>,MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage>>,MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)

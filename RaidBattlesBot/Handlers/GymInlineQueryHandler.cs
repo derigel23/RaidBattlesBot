@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
-using RaidBattlesBot.Migrations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;

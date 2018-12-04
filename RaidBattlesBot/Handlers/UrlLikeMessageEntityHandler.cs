@@ -17,7 +17,7 @@ using RaidBattlesBot.Model;
 
  namespace RaidBattlesBot.Handlers
 {
-  public abstract class UrlLikeMessageEntityHandler : IMessageEntityHandler
+  public abstract class UrlLikeMessageEntityHandler : IMessageEntityHandler<PollMessage>
   {
     private readonly Func<MessageEntityEx, StringSegment> myGetUrl;
     private readonly ZonedClock myClock;
