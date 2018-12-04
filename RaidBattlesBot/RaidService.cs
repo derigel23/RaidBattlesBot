@@ -252,6 +252,8 @@ namespace RaidBattlesBot
         //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
       }
 
+      await myContext.SaveChangesAsync(cancellationToken);
+
       return message;
     }
 
