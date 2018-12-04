@@ -13,18 +13,17 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Handlers
 {
   [MessageType(MessageType = MessageType.Text)]
-  public class TextMessageHandler : IMessageHandler<PollMessage>
+  public class TextMessageHandler : TextMessageHandler<PollMessage>
   {
-    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage>>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
     private readonly RaidBattlesContext myDb;
 
     public TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+      : base(messageEntityHandlers)
     {
-      myMessageEntityHandlers = messageEntityHandlers;
       myDb = db;
     }
 
-    public async Task<bool?> Handle(Message message, PollMessage pollMessage, CancellationToken cancellationToken = default)
+    public override async Task<bool?> Handle(Message message, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrEmpty(message.Text))
         return false;
@@ -43,18 +42,8 @@ namespace RaidBattlesBot.Handlers
           return true;
         }
       }
-      
-      var handlers = myMessageEntityHandlers.Bind(message).ToList();
-      bool? result = default;
-      foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
-      {
-        var entityEx = new MessageEntityEx(message, entity);
-        result = await HandlerExtentions<bool?>.Handle(handlers, entityEx, pollMessage, cancellationToken);
-        if (result.HasValue)
-          break;
-      }
 
-      return result;
+      return await base.Handle(message, pollMessage, cancellationToken);
     }
   }
 }
