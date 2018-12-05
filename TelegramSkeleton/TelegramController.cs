@@ -13,19 +13,21 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class TelegramController<TMessageContext, TCallbackContext> : Controller
+  public abstract class TelegramController<TMessageContext, TMessageMetadata, TCallbackContext, TCallbackMetadata> : Controller
+    where TMessageMetadata : Attribute, IHandlerAttribute<Message, TMessageContext>
+    where TCallbackMetadata : Attribute, IHandlerAttribute<CallbackQuery, TCallbackContext>
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, MessageTypeAttribute>> myMessageHandlers;
-    private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, TMessageMetadata>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, TCallbackMetadata>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     protected TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, 
-      IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>,MessageTypeAttribute>> messageHandlers,
-      IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, TMessageMetadata>> messageHandlers,
+      IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, TCallbackMetadata>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
     {

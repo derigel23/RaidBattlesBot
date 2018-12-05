@@ -11,11 +11,11 @@ namespace Team23.TelegramSkeleton
   }
 
   [MeansImplicitUse]
-  public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery>
+  public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery, object>
   {
     public string QueryPattern { get; set; }
 
-    public bool ShouldProcess(InlineQuery inlineQuery)
+    public bool ShouldProcess(InlineQuery inlineQuery, object context)
     {
       return string.IsNullOrEmpty(QueryPattern) || Regex.IsMatch(inlineQuery.Query, QueryPattern);
     }

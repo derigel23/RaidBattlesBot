@@ -23,7 +23,7 @@ namespace Team23.TelegramSkeleton
           var metadata = new Dictionary<string, object>();
           foreach (var handlerAttribute in CustomAttributeExtensions.GetCustomAttributes(t.GetTypeInfo(), true))
           {
-            if (!handlerAttribute.GetType().InheritsOrImplements(typeof(IHandlerAttribute<>))) continue;
+            if (!handlerAttribute.GetType().InheritsOrImplements(typeof(IHandlerAttribute<,>))) continue;
             foreach (var propertyInfo in handlerAttribute.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
               metadata.Add(propertyInfo.Name, propertyInfo.GetValue(handlerAttribute));

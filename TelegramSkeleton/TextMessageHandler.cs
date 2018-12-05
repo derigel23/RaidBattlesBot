@@ -5,16 +5,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  [MessageType(MessageType = MessageType.Text)]
-  public class TextMessageHandler<TContext> : IMessageHandler<TContext>
+  public abstract class TextMessageHandler<TContext, TMetadata> : IMessageHandler<TContext>
+    where TMetadata : Attribute, IHandlerAttribute<MessageEntityEx, TContext>
   {
-    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, MessageEntityTypeAttribute>> myMessageEntityHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, TMetadata>> myMessageEntityHandlers;
 
-    public TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, MessageEntityTypeAttribute>> messageEntityHandlers)
+    protected TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, TMetadata>> messageEntityHandlers)
     {
       myMessageEntityHandlers = messageEntityHandlers;
     }

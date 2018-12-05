@@ -36,11 +36,11 @@ namespace Team23.TelegramSkeleton
 
     public static async Task<TResult> Handle<THandler, TData, TContext, TMetadata>(IEnumerable<Meta<Func<THandler>, TMetadata>> handlers, TData data, TContext context = default, CancellationToken cancellationToken = default)
       where THandler : IHandler<TData, TContext, TResult>
-      where TMetadata : Attribute, IHandlerAttribute<TData>
+      where TMetadata : Attribute, IHandlerAttribute<TData, TContext>
     {
       foreach (var h in handlers)
       {
-        if (!h.Metadata.ShouldProcess(data))
+        if (!h.Metadata.ShouldProcess(data, context))
           continue;
         var result = await h.Value().Handle(data, context, cancellationToken);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))

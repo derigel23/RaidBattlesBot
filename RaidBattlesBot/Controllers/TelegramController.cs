@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Caching.Memory;
+using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -13,14 +14,14 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Controllers
 {
-  public class TelegramController : TelegramController<PollMessage, object>
+  public class TelegramController : TelegramController<PollMessage, MessageTypeAttribute, object, CallbackQueryHandlerAttribute>
   {
     private readonly RaidService myRaidService;
     private readonly IMemoryCache myCache;
 
     public TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, RaidService raidService, IMemoryCache cache, 
-      IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage>>,MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage>>, MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler<object>>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
@@ -30,7 +31,7 @@ namespace RaidBattlesBot.Controllers
       myCache = cache;
     }
 
-    protected override async Task<bool?> ProcessMessage(Func<Message, PollMessage, IDictionary<string, string>, CancellationToken, Task<bool?>> processor, Message message, CancellationToken cancellationToken)
+    protected override async Task<bool?> ProcessMessage(Func<Message, PollMessage, IDictionary<string, string>, CancellationToken, Task<bool?>> processor, Message message, CancellationToken cancellationToken = default)
     {
       var pollMessage = new PollMessage(message);
 
