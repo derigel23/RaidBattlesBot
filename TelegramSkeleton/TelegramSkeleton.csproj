@@ -8,7 +8,7 @@
         <Authors>Team23</Authors>
         <LangVersion>latest</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>1.0.2</PackageVersion>
+        <PackageVersion>1.0.3</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,6 +16,7 @@
       <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
       <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.4.1" />
       <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />
+      <PackageReference Include="NodaTime" Version="2.4.0" />
       <PackageReference Include="Telegram.Bot" Version="14.10.0" />
     </ItemGroup>
 

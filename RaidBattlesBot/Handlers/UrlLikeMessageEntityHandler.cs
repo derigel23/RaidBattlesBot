@@ -10,8 +10,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using NodaTime;
-using PokeTrackDecoder.Handlers;
-using RaidBattlesBot.Configuration;
+ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
  using Team23.TelegramSkeleton;
 

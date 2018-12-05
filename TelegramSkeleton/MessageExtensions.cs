@@ -1,7 +1,7 @@
 ﻿using NodaTime;
 using Telegram.Bot.Types;
 
-namespace PokeTrackDecoder.Handlers
+namespace Team23.TelegramSkeleton
 {
   public static class MessageExtensions
   {
