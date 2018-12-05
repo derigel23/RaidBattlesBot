@@ -24,8 +24,8 @@ namespace Team23.TelegramSkeleton
     protected virtual async Task<dynamic> GetStatusData(CancellationToken cancellationToken)
     {
       dynamic result = new ExpandoObject();
-      result.webhookInfo = await myBot.GetWebhookInfoAsync(cancellationToken);
       result.botInfo = await myBot.GetMeAsync(cancellationToken);
+      result.webhookInfo = await myBot.GetWebhookInfoAsync(cancellationToken);
       return result;
     }
     
