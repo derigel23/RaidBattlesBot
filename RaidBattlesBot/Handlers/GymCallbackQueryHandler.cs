@@ -8,7 +8,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace RaidBattlesBot.Handlers
 {
   [CallbackQueryHandler(DataPrefix = PREFIX)]
-  public class GymCallbackQueryHandler : ICallbackQueryHandler
+  public class GymCallbackQueryHandler : ICallbackQueryHandler<object>
   {
     private readonly ITelegramBotClient myTelegramBotClient;
     public const string PREFIX = "gym";

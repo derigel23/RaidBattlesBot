@@ -13,19 +13,19 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class TelegramController<TContext> : Controller
+  public abstract class TelegramController<TMessageContext, TCallbackContext> : Controller
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TContext>>, MessageTypeAttribute>> myMessageHandlers;
-    private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, MessageTypeAttribute>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, CallbackQueryHandlerAttribute>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     protected TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, 
-      IEnumerable<Meta<Func<Message, IMessageHandler<TContext>>,MessageTypeAttribute>> messageHandlers,
-      IEnumerable<Meta<Func<Update, ICallbackQueryHandler>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>,MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
     {
@@ -81,7 +81,7 @@ namespace Team23.TelegramSkeleton
             operation.Telemetry.Properties["data"] = callbackQuery.Data;
             try
             {
-              (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, new object(), cancellationToken);
+              (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, GetCallbackContext(callbackQuery), cancellationToken);
               await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -143,7 +143,9 @@ namespace Team23.TelegramSkeleton
       }
     }
 
-    protected virtual Task<bool?> ProcessMessage(Func<Message, TContext, IDictionary<string, string>, CancellationToken, Task<bool?>> processor,
+    protected virtual TCallbackContext GetCallbackContext(CallbackQuery callbackQuery) => default;
+    
+    protected virtual Task<bool?> ProcessMessage(Func<Message, TMessageContext, IDictionary<string, string>, CancellationToken, Task<bool?>> processor,
                                                   Message message,  CancellationToken cancellationToken = default)
     {
       return processor(message, default, new Dictionary<string, string>(0), cancellationToken);
