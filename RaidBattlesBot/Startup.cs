@@ -80,7 +80,7 @@ namespace RaidBattlesBot
         {
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
         })
-        .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+        .SetCompatibilityVersion(CompatibilityVersion.Latest)
         .AddControllersAsServices()
         .AddRazorPagesOptions(options =>
         {
