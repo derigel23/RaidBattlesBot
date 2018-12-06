@@ -149,12 +149,14 @@ namespace Team23.TelegramSkeleton
       }
     }
 
+    protected virtual TMessageContext GetMessageContext(Message message) => default;
+
     protected virtual TCallbackContext GetCallbackContext(CallbackQuery callbackQuery) => default;
     
     protected virtual Task<TMessageResult> ProcessMessage(Func<Message, TMessageContext, IDictionary<string, string>, CancellationToken, Task<TMessageResult>> processor,
                                                   Message message,  CancellationToken cancellationToken = default)
     {
-      return processor(message, default, new Dictionary<string, string>(0), cancellationToken);
+      return processor(message, GetMessageContext(message), new Dictionary<string, string>(0), cancellationToken);
     }
   }
 }
