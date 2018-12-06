@@ -6,6 +6,8 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
+  public interface IMessageEntityHandler : IMessageEntityHandler<PollMessage, bool?> { }
+  
   [MeansImplicitUse]
   public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntityEx, PollMessage>
   {

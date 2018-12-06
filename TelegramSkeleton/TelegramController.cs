@@ -13,20 +13,20 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class TelegramController<TMessageContext, TMessageMetadata, TCallbackContext, TCallbackMetadata> : Controller
+  public abstract class TelegramController<TMessageContext, TMessageResult, TMessageMetadata, TCallbackContext, TCallbackMetadata> : Controller
     where TMessageMetadata : Attribute, IHandlerAttribute<Message, TMessageContext>
     where TCallbackMetadata : Attribute, IHandlerAttribute<CallbackQuery, TCallbackContext>
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myTelegramBotClient;
-    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, TMessageMetadata>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext, TMessageResult>>, TMessageMetadata>> myMessageHandlers;
     private readonly IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, TCallbackMetadata>> myCallbackQueryHandlers;
     private readonly IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
     private readonly IEnumerable<Func<Update, IChosenInlineResultHandler>> myChosenInlineResultHandlers;
 
     protected TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, 
-      IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext>>, TMessageMetadata>> messageHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext, TMessageResult>>, TMessageMetadata>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler<TCallbackContext>>, TCallbackMetadata>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
@@ -116,26 +116,30 @@ namespace Team23.TelegramSkeleton
         operation.Telemetry.Properties["messageType"] = message.Type.ToString();
         operation.Telemetry.Properties["chat"] = message.Chat.Username;
 
-        operation.Telemetry.Success = await ProcessMessage(async (msg, context, properties, ct) =>
+        await ProcessMessage(async (msg, context, properties, ct) =>
         {
           foreach (var property in properties)
           {
             operation.Telemetry.Properties.Add(property);
           }
 
-          return operation.Telemetry.Success = await HandlerExtentions<bool?>.Handle(myMessageHandlers.Bind(message), message, context, ct);
+          return await HandlerExtentions<TMessageResult>.Handle(myMessageHandlers.Bind(message), message, context, ct);
+          //return operation.Telemetry.Success = ;
         }, message, cancellationToken);
-        
+
+        operation.Telemetry.Success = true;
         return Ok() /* TODO: not handled */;
 
       }
       catch (OperationCanceledException operationCanceledException) when (!cancellationToken.IsCancellationRequested)
       {
+        operation.Telemetry.Success = false;
         myTelemetryClient.TrackException(new ExceptionTelemetry(operationCanceledException) { SeverityLevel = SeverityLevel.Warning });
         return Ok();
       }
       catch (Exception ex)
       {
+        operation.Telemetry.Success = false;
         myTelemetryClient.TrackException(ex);
         return Ok();
       }
@@ -147,7 +151,7 @@ namespace Team23.TelegramSkeleton
 
     protected virtual TCallbackContext GetCallbackContext(CallbackQuery callbackQuery) => default;
     
-    protected virtual Task<bool?> ProcessMessage(Func<Message, TMessageContext, IDictionary<string, string>, CancellationToken, Task<bool?>> processor,
+    protected virtual Task<TMessageResult> ProcessMessage(Func<Message, TMessageContext, IDictionary<string, string>, CancellationToken, Task<TMessageResult>> processor,
                                                   Message message,  CancellationToken cancellationToken = default)
     {
       return processor(message, default, new Dictionary<string, string>(0), cancellationToken);

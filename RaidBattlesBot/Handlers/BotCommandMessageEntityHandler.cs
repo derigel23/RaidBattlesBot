@@ -14,7 +14,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace RaidBattlesBot.Handlers
 {
   [MessageEntityType(EntityType = MessageEntityType.BotCommand)]
-  public class BotCommandMessageEntityHandler : IMessageEntityHandler<PollMessage>
+  public class BotCommandMessageEntityHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly Message myMessage;

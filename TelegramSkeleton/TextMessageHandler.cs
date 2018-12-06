@@ -8,25 +8,25 @@ using Telegram.Bot.Types;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class TextMessageHandler<TContext, TMetadata> : IMessageHandler<TContext>
+  public abstract class TextMessageHandler<TContext, TResult, TMetadata> : IMessageHandler<TContext, TResult>
     where TMetadata : Attribute, IHandlerAttribute<MessageEntityEx, TContext>
   {
-    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, TMetadata>> myMessageEntityHandlers;
+    private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext, TResult>>, TMetadata>> myMessageEntityHandlers;
 
-    protected TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext>>, TMetadata>> messageEntityHandlers)
+    protected TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext, TResult>>, TMetadata>> messageEntityHandlers)
     {
       myMessageEntityHandlers = messageEntityHandlers;
     }
 
-    public virtual async Task<bool?> Handle(Message message, TContext context, CancellationToken cancellationToken = default)
+    public virtual async Task<TResult> Handle(Message message, TContext context, CancellationToken cancellationToken = default)
     {
       var handlers = myMessageEntityHandlers.Bind(message).ToList();
-      bool? result = default;
+      TResult result = default;
       foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
         var entityEx = new MessageEntityEx(message, entity);
-        result = await HandlerExtentions<bool?>.Handle(handlers, entityEx, context, cancellationToken);
-        if (result.HasValue)
+        result = await HandlerExtentions<TResult>.Handle(handlers, entityEx, context, cancellationToken);
+        if (!EqualityComparer<TResult>.Default.Equals(result, default))
           break;
       }
 

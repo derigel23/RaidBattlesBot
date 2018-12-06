@@ -14,14 +14,14 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Controllers
 {
-  public class TelegramController : TelegramController<PollMessage, MessageTypeAttribute, object, CallbackQueryHandlerAttribute>
+  public class TelegramController : TelegramController<PollMessage, bool?, MessageTypeAttribute, object, CallbackQueryHandlerAttribute>
   {
     private readonly RaidService myRaidService;
     private readonly IMemoryCache myCache;
 
     public TelegramController(TelemetryClient telemetryClient,
       ITelegramBotClient telegramBotClient, RaidService raidService, IMemoryCache cache, 
-      IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage>>, MessageTypeAttribute>> messageHandlers,
+      IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage, bool?>>, MessageTypeAttribute>> messageHandlers,
       IEnumerable<Meta<Func<Update, ICallbackQueryHandler<object>>, CallbackQueryHandlerAttribute>> callbackQueryHandlers,
       IEnumerable<Meta<Func<Update, IInlineQueryHandler>, InlineQueryHandlerAttribute>> inlineQueryHandlers,
       IEnumerable<Func<Update, IChosenInlineResultHandler>> chosenInlineResultHandlers)
