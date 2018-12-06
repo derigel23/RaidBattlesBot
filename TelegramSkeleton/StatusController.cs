@@ -26,6 +26,7 @@ namespace Team23.TelegramSkeleton
       dynamic result = new ExpandoObject();
       result.botInfo = await myBot.GetMeAsync(cancellationToken);
       result.webhookInfo = await myBot.GetWebhookInfoAsync(cancellationToken);
+      result.is64BitProcess = System.Environment.Is64BitProcess;
       return result;
     }
     
