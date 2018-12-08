@@ -111,7 +111,7 @@ namespace RaidBattlesBot.Handlers
         switchPmText: switchPmParameter != null ? "Привязать голосование к гиму" : null, switchPmParameter: switchPmParameter,
         cacheTime: 0, cancellationToken: cancellationToken);
 
-      await myDb.SaveChangesAsync(cancellationToken);
+      myDb.SaveChanges();
       return true;
     }
   }

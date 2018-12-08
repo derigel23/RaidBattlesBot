@@ -69,7 +69,7 @@ namespace RaidBattlesBot.Handlers
       vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is VoteEnum voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
 
-      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
+      var changed = myContext.SaveChanges() > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);

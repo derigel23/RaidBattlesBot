@@ -51,7 +51,7 @@ namespace RaidBattlesBot.Handlers
       if (poll.Time > poll.Raid?.RaidBossEndTime)
         return ($"В {poll.Time:t} рейд уже закончится", true, null);
 
-      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
+      var changed = myContext.SaveChanges() > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);

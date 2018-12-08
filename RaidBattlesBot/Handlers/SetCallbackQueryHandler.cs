@@ -42,7 +42,7 @@ namespace RaidBattlesBot.Handlers
       var settings = await polls.FirstOrDefaultAsync(_ => _.Chat == chatId, cancellationToken);
       settings = settings ?? polls.Add(new Settings { Chat = chatId }).Entity;
       settings.DefaultAllowedVotes = allowedVotes;
-      await myContext.SaveChangesAsync(cancellationToken);
+      myContext.SaveChanges();
 
       await myTelegramBotClient.EditMessageTextAsync(data.Message.Chat, data.Message.MessageId, $"Формат голосования по умолчанию {allowedVotes.Format(new StringBuilder())}",
         replyMarkup: null, cancellationToken: cancellationToken);

@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
         return ("Вы не можете возобновить голосование", true, null);
 
       poll.Cancelled = false;
-      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
+      var changed = myContext.SaveChanges() > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);

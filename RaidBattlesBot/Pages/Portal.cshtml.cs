@@ -34,7 +34,7 @@ namespace RaidBattlesBot.Pages
       if (Portal is Portal portal)
       {
         myDb.Attach(portal);
-        await myDb.SaveChangesAsync(cancellationToken);
+        myDb.SaveChanges();
       }
 
       return Page();

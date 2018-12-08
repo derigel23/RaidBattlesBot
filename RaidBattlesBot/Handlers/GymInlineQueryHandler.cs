@@ -136,7 +136,7 @@ namespace RaidBattlesBot.Handlers
       
       await myBot.AnswerInlineQueryAsync(data.Id, results, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
 
-      await myDb.SaveChangesAsync(cancellationToken);
+      myDb.SaveChanges();
 
       return true;
     }
