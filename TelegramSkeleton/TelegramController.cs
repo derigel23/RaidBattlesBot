@@ -83,7 +83,7 @@ namespace Team23.TelegramSkeleton
             operation.Telemetry.Properties["data"] = callbackQuery.Data;
             try
             {
-              (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, GetCallbackContext(callbackQuery), cancellationToken);
+              (var text, var showAlert, string url) = await HandlerExtentions<(string, bool, string)>.Handle(myCallbackQueryHandlers.Bind(update), callbackQuery, GetCallbackContext(callbackQuery), cancellationToken).ConfigureAwait(false);
               await myTelegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id, text, showAlert, url, cancellationToken: cancellationToken);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -97,14 +97,14 @@ namespace Team23.TelegramSkeleton
             var inlineQuery = update.InlineQuery;
             operation.Telemetry.Properties["uid"] = inlineQuery.From?.Username;
             operation.Telemetry.Properties["query"] = inlineQuery.Query;
-            return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken));
+            return Return(await HandlerExtentions<bool?>.Handle(myInlineQueryHandlers.Bind(update), inlineQuery, new object(), cancellationToken).ConfigureAwait(false));
 
           case UpdateType.ChosenInlineResult:
             var chosenInlineResult = update.ChosenInlineResult;
             operation.Telemetry.Properties["uid"] = chosenInlineResult.From?.Username;
             operation.Telemetry.Properties["query"] = chosenInlineResult.Query;
             operation.Telemetry.Properties["result"] = chosenInlineResult.ResultId;
-            return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), chosenInlineResult, new object(), cancellationToken));
+            return Return(await HandlerExtentions<bool?>.Handle(myChosenInlineResultHandlers.Bind(update), chosenInlineResult, new object(), cancellationToken).ConfigureAwait(false));
         }
 
         if (message == null)
@@ -123,7 +123,7 @@ namespace Team23.TelegramSkeleton
             operation.Telemetry.Properties.Add(property);
           }
 
-          return await HandlerExtentions<TMessageResult>.Handle(myMessageHandlers.Bind(message), message, context, ct);
+          return await HandlerExtentions<TMessageResult>.Handle(myMessageHandlers.Bind(message), message, context, ct).ConfigureAwait(false);
           //return operation.Telemetry.Success = ;
         }, message, cancellationToken);
 

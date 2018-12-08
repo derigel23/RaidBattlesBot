@@ -18,7 +18,7 @@ namespace Team23.TelegramSkeleton
     [HttpGet("/status")]
     public async Task<IActionResult> Status(CancellationToken cancellationToken)
     {
-      return Json(await GetStatusData(cancellationToken));
+      return Json(await GetStatusData(cancellationToken).ConfigureAwait(false));
     }
 
     protected virtual async Task<dynamic> GetStatusData(CancellationToken cancellationToken)
@@ -44,6 +44,8 @@ namespace Team23.TelegramSkeleton
     public async Task<IActionResult> Clear(CancellationToken cancellationToken)
     {
       await myBot.SetWebhookAsync("", cancellationToken: cancellationToken);
+
+      await myBot.GetUpdatesAsync(-1, 1, cancellationToken: cancellationToken);
 
       return RedirectToAction("Status");
     }

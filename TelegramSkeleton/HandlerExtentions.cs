@@ -26,7 +26,7 @@ namespace Team23.TelegramSkeleton
     {
       foreach (var handler in handlers)
       {
-        var result = await handler.Handle(data, context, cancellationToken);
+        var result = await handler.Handle(data, context, cancellationToken).ConfigureAwait(false);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
           return result;
       }
@@ -42,7 +42,7 @@ namespace Team23.TelegramSkeleton
       {
         if (!h.Metadata.ShouldProcess(data, context))
           continue;
-        var result = await h.Value().Handle(data, context, cancellationToken);
+        var result = await h.Value().Handle(data, context, cancellationToken).ConfigureAwait(false);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
           return result;
       }

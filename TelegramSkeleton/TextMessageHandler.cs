@@ -25,7 +25,7 @@ namespace Team23.TelegramSkeleton
       foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
         var entityEx = new MessageEntityEx(message, entity);
-        result = await HandlerExtentions<TResult>.Handle(handlers, entityEx, context, cancellationToken);
+        result = await HandlerExtentions<TResult>.Handle(handlers, entityEx, context, cancellationToken).ConfigureAwait(false);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
           break;
       }
