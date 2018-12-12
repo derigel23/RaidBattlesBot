@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Controllers
 
             // polls without raids
             case null:
-              await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken);
+              await myRaidService.AddPollMessage(pollMessage, Url, cancellationToken, withLog: true);
               break;
           }
         }

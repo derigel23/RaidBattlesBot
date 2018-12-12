@@ -9,6 +9,8 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -23,14 +25,16 @@ namespace RaidBattlesBot
     private readonly TelemetryClient myTelemetryClient;
     private readonly ChatInfo myChatInfo;
     private readonly IMemoryCache myMemoryCache;
+    private readonly long? myLogChat;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, IMemoryCache memoryCache)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, IMemoryCache memoryCache, IOptions<BotConfiguration> botOptions)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
       myChatInfo = chatInfo;
       myMemoryCache = memoryCache;
+      myLogChat = botOptions.Value?.LogChatId is long chatId && chatId != default ? chatId : default(long?);
     }
     
     private string this[int pollId] => $"poll:data:{pollId}";
@@ -114,10 +118,10 @@ namespace RaidBattlesBot
         }
       }
       
-      return await AddPollMessage(pollMessage, urlHelper, cancellationToken);
+      return await AddPollMessage(pollMessage, urlHelper, cancellationToken, withLog: true);
     }
 
-    public async Task<PollMessage> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<PollMessage> AddPollMessage([CanBeNull] PollMessage message, IUrlHelper urlHelper, CancellationToken cancellationToken = default, bool withLog = false)
     {
       if (message?.Poll == null)
         return message;
@@ -253,6 +257,12 @@ namespace RaidBattlesBot
       }
 
       myContext.SaveChanges();
+
+      // log message
+      if (withLog && myLogChat != null)
+      {
+        await AddPollMessage(new PollMessage { ChatId = myLogChat, Poll = message.Poll } , urlHelper, cancellationToken);
+      }
 
       return message;
     }
