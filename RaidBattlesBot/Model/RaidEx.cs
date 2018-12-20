@@ -16,38 +16,37 @@ namespace RaidBattlesBot.Model
   public static class RaidEx
   {
     public const string Delimeter = " ∙ ";
-    public const ParseMode ParseMode = Telegram.Bot.Types.Enums.ParseMode.Html;
     
-    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = ParseMode.Default)
+    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = Helpers.DefaultParseMode)
     {
       var description = new StringBuilder();
 
-      description.Bold(mode, builder =>
+      description.Bold((builder, m) =>
       {
         if (raid.RaidBossLevel is int raidBossLevel)
         {
-          builder.Append($@"[R{raidBossLevel}] ");
+          builder.Sanitize($@"[R{raidBossLevel}] ", m);
         }
 
-        builder.Append(raid.Name.Sanitize(mode));
-      });
+        builder.Sanitize(raid.Name, m);
+      }, mode);
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
       {
         description
-          .Append(Delimeter)
-          .Bold(mode, builder => builder.Append((raid.Gym ?? raid.PossibleGym).Sanitize(mode)));
+          .Sanitize(Delimeter, mode)
+          .Bold((builder, m) => builder.Sanitize(raid.Gym ?? raid.PossibleGym, m), mode);
       }
       else if (raid.NearByAddress != null)
       {
         description
-          .Append(Delimeter)
-          .Bold(mode, builder => builder.Append(raid.NearByAddress.Sanitize(mode)));
+          .Sanitize(Delimeter, mode)
+          .Bold((builder, m) => builder.Sanitize(raid.NearByAddress, m), mode);
       }
 
       if (description.Length == 0)
         description
-          .Bold(mode, builder => builder.Append(raid.Title.Sanitize(mode)));
+          .Bold((builder, m) => builder.Sanitize(raid.Title, m), mode);
       
       return description;
     }

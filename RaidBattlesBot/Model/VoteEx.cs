@@ -6,16 +6,16 @@ namespace RaidBattlesBot.Model
 {
   public static class VoteEx
   {
-    public static string GetUserLinkWithPluses(this Vote vote, ParseMode mode = ParseMode.Default)
+    public static string GetUserLinkWithPluses(this Vote vote, ParseMode mode = Helpers.DefaultParseMode)
     {
       var result = vote.User.GetLink(mode);
 
       if (vote.Team.GetPlusVotesCount() is var plusCount && plusCount > 0)
       {
         result
-          .Append('⁺')
-          .Append(
-            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)));
+          .Sanitize("⁺", mode)
+          .Sanitize(
+            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)), mode);
       }
 
       return result.ToString();

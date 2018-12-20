@@ -94,11 +94,7 @@ namespace RaidBattlesBot.Handlers
               ExRaidGym = exRaidGym
             })
             .Select(fakePoll => new InlineQueryResultArticle($"create:{fakePoll.Id}", fakePoll.GetTitle(myUrlHelper),
-              new InputTextMessageContent(fakePoll.GetMessageText(myUrlHelper, RaidEx.ParseMode).ToString())
-              {
-                ParseMode = RaidEx.ParseMode,
-                DisableWebPagePreview = fakePoll.DisableWebPreview()
-              })
+              fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {
                 Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
                 HideUrl = true,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -100,16 +101,26 @@ namespace RaidBattlesBot.Handlers
             return article;
           }
 
+          var portalContent = new StringBuilder()
+            .Bold((builder, mode) => builder.Sanitize(portal.Name)).NewLine()
+            .Sanitize(portal.Address)
+            .Link("\u200B", portal.Image)
+            .ToTextMessageContent();
           results.Add(Init(
-            new InlineQueryResultArticle($"portal:{portal.Guid}", title,
-              new InputTextMessageContent($"*{portal.Name}*\n{portal.Address}[\u200B]({portal.Image})[\u200B]()") { ParseMode = ParseMode.Markdown }),
+            new InlineQueryResultArticle($"portal:{portal.Guid}", title, portalContent),
             InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {pollQuery}")));
 
           if (i == 0)
           {
+            var exRaidPortalContent = new StringBuilder()
+              .Sanitize("☆ ")
+              .Bold((builder, mode) => builder.Sanitize(portal.Name))
+              .Sanitize(" (EX Raid Gym)").NewLine()
+              .Sanitize(portal.Address)
+              .Link("\u200B", portal.Image)
+              .ToTextMessageContent();
             results.Add(Init(
-              new InlineQueryResultArticle($"portal:{portal.Guid}+", $"☆ {title} (EX Raid Gym)",
-                new InputTextMessageContent($"☆ *{portal.Name}* (EX Raid Gym)\n{portal.Address}[\u200B]({portal.Image})[\u200B]()") { ParseMode = ParseMode.Markdown }),
+              new InlineQueryResultArticle($"portal:{portal.Guid}+", $"☆ {title} (EX Raid Gym)", exRaidPortalContent),
               InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {pollQuery}")));
           }
         }

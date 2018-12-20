@@ -84,10 +84,12 @@ namespace RaidBattlesBot.Handlers
           if (int.TryParse(query, out int gymPollId))
           {
             pollTitle
-              .AppendLine()
-              .Bold(RaidEx.ParseMode, builder => builder.Append(myRaidService.GetTemporaryPoll(gymPollId)?.Title?.Sanitize(RaidEx.ParseMode)));
+              .NewLine()
+              .Bold( (builder, m) => builder.Sanitize(myRaidService.GetTemporaryPoll(gymPollId)?.Title, m));
           }
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, pollTitle.ToString(), disableNotification: true, parseMode: RaidEx.ParseMode,
+
+          var content = pollTitle.ToTextMessageContent();
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, 
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Начать привязку к гиму", GymCallbackQueryHandler.PREFIX + query)), cancellationToken: cancellationToken);
           return false;
       }

@@ -22,6 +22,8 @@ using Newtonsoft.Json;
 using NodaTime;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
+
 
 namespace RaidBattlesBot
 {
@@ -36,7 +38,7 @@ namespace RaidBattlesBot
       
       return new UriBuilder(uri) { Scheme = "https", Port = -1 }.Uri;
     }
-
+    
     public static Uri AssetsContent(this IUrlHelper urlHelper, [PathReference("~/PogoAssets")] string contentPath)
     {
       var assetsRoot = new Uri(urlHelper.ActionContext.HttpContext.Request.GetUri(),
@@ -47,7 +49,6 @@ namespace RaidBattlesBot
 
     public static IHtmlContent Json(this IHtmlHelper helper, object obj) =>
       helper.Raw(JsonConvert.SerializeObject(obj, JsonSerializerSettingsProvider.CreateSerializerSettings()));
-
     public static PageConventionCollection AddPageRouteWithName(this PageConventionCollection conventions, string pageName, string route, string name = default)
     {
       conventions.AddPageRouteModelConvention(pageName, model =>
@@ -74,7 +75,7 @@ namespace RaidBattlesBot
 
     public static string JoinNonEmpty(this string separator, params string[] values)
     {
-      return String.Join(separator, values.Where(_ => !String.IsNullOrEmpty(_)));
+      return string.Join(separator, values.Where(_ => !string.IsNullOrEmpty(_)));
     }
 
     #endregion
@@ -104,6 +105,8 @@ namespace RaidBattlesBot
 
     #region Formatting
 
+    public const ParseMode DefaultParseMode = ParseMode.Html;
+    
     static Helpers()
     {
       var encoderSettings = new TextEncoderSettings(UnicodeRanges.All);
@@ -114,35 +117,57 @@ namespace RaidBattlesBot
     /* TODO: need better Markdown sanitizer*/
     private static readonly HtmlEncoder TelegramMarkdownEncoder;
 
-    public static string Sanitize(this string text, ParseMode mode) =>
+    public static string Sanitize(this string text, ParseMode mode = DefaultParseMode) =>
       string.IsNullOrEmpty(text) ? text :
       mode == ParseMode.Markdown ? TelegramMarkdownEncoder.Encode(text) :
       mode == ParseMode.Html ? HtmlEncoder.Default.Encode(text) :
       text;
+
+    public static readonly string NewLineString = "\n";
     
-    public static StringBuilder Bold(this StringBuilder builder, ParseMode mode, Action<StringBuilder> contentBuilder)
+    public static StringBuilder NewLine(this StringBuilder builder) => builder.Append(NewLineString);
+
+    public static StringBuilder Bold(this StringBuilder builder, Action<StringBuilder, ParseMode> contentBuilder, ParseMode mode = DefaultParseMode)
     {
       builder.Append(mode == ParseMode.Html ? "<b>" : mode == ParseMode.Markdown ? "*" : null);
-      contentBuilder(builder);
+      contentBuilder(builder, mode);
       builder.Append(mode == ParseMode.Html ? "</b>" : mode == ParseMode.Markdown ? "*" : null);
       return builder;
     }
 
-    public static StringBuilder Link(this StringBuilder builder, string text, string link, ParseMode mode = ParseMode.Default)
+    public static StringBuilder Code(this StringBuilder builder, Action<StringBuilder, ParseMode> contentBuilder, ParseMode mode = DefaultParseMode)
+    {
+      builder.Append(mode == ParseMode.Html ? "<code>" : mode == ParseMode.Markdown ? "`" : null);
+      contentBuilder(builder, mode);
+      builder.Append(mode == ParseMode.Html ? "</code>" : mode == ParseMode.Markdown ? "`" : null);
+      return builder;
+    }
+
+    public static StringBuilder Link(this StringBuilder builder, string text, string link, ParseMode mode = DefaultParseMode)
     {
       switch (mode)
       {
         case ParseMode.Markdown when !string.IsNullOrEmpty(link):
-          return builder.Append($"[{text}]({link})");
+          return builder.Append($"[{text.Sanitize(mode)}]({link})");
 
         case ParseMode.Html when !string.IsNullOrEmpty(link):
-          return builder.Append($"<a href=\"{link}\">{text}</a>");
+          return builder.Append($"<a href=\"{link}\">{text.Sanitize(mode)}</a>");
 
         default:
           return builder.Append(text);
       }
     }
+
+    public static StringBuilder Sanitize(this StringBuilder builder, string content, ParseMode parseMode = DefaultParseMode) =>
+      builder.Append(content.Sanitize(parseMode));
     
+    public static InputTextMessageContent ToTextMessageContent(this StringBuilder builder, ParseMode parseMode = DefaultParseMode, bool disableWebPreview = false) =>
+      new InputTextMessageContent(builder.ToString())
+      {
+        ParseMode = parseMode,
+        DisableWebPagePreview = disableWebPreview
+      };
+
     #endregion
 
     #region Time
@@ -175,13 +200,12 @@ namespace RaidBattlesBot
       {
         aggregateException.Handle(ex => !(ex is TaskCanceledException));
       }
-
       if (exception is ApiRequestException apiRequestException)
       {
         properties = properties ?? new Dictionary<string, string>(1);
         properties["ErrorCode"] = apiRequestException.ErrorCode.ToString();
       }
-      
+
       telemetryClient.TrackException(exception, properties, metrics);
     }
   }

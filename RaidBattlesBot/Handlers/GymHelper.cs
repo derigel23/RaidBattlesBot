@@ -92,7 +92,7 @@ namespace RaidBattlesBot.Handlers
             if (distanceElement?.Distance.Value <= myGeoCoderOptions.MaxDistanceToMetro)
             {
               foundAddress = address;
-              postProcessor = descr => descr.Append(distance = $" ∙ {distanceElement.Distance.Text} ∙ {distanceElement.Duration.Text}");
+              postProcessor = descr => descr.Sanitize(distance = $" ∙ {distanceElement.Distance.Text} ∙ {distanceElement.Duration.Text}");
               break;
             }
           }

@@ -240,10 +240,10 @@ namespace RaidBattlesBot
         }
       }
 
-      var messageText = message.Poll.GetMessageText(urlHelper, RaidEx.ParseMode).ToString();
+      var content = message.Poll.GetMessageText(urlHelper, disableWebPreview: message.Poll.DisableWebPreview());
       if (message.Chat is Chat chat)
       {
-        var postedMessage = await myBot.SendTextMessageAsync(chat, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.DisableWebPreview(),
+        var postedMessage = await myBot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
           replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true,
           
           cancellationToken: cancellationToken);
@@ -269,20 +269,20 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var messageText = poll.GetMessageText(urlHelper, RaidEx.ParseMode).ToString();
+      var content = poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview());
       foreach (var message in poll.Messages)
       {
         try
         {
           if (message.InlineMesssageId is string inlineMessageId)
           {
-            await myBot.EditMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.DisableWebPreview(),
-              replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
+            await myBot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+              await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
           }
           else if (message.ChatId is long chatId && message.MesssageId is int messageId)
           {
-            await myBot.EditMessageTextAsync(chatId, messageId, messageText, RaidEx.ParseMode, disableWebPagePreview: poll.DisableWebPreview(),
-              replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
+            await myBot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+              await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
           }
         }
         catch (Exception ex)
