@@ -62,11 +62,14 @@ namespace RaidBattlesBot
     public async Task<Portal[]> Search(IReadOnlyCollection<string> query, Location location = default, CancellationToken cancellationToken = default)
     {
       var result = await Search(string.Join(' ', query), location, cancellationToken);
-      if (result.Length > 0)
-        return result;
-      
-      // skip words with length less than 3 chars
-      return await Search(string.Join(' ', query.Where(part => part.Length > 2)), location, cancellationToken);
+      if (result.Length == 0)
+      {
+        // skip words with length less than 3 chars
+        var filteredQuery = query.Where(part => part.Length > 2).ToArray();
+        if (filteredQuery.Length != query.Count)
+          result = await Search(string.Join(' ', filteredQuery), location, cancellationToken);
+      }      
+      return result;
     }
     
     public async Task<Portal[]> GetPortals(double radius, Location location = default, CancellationToken cancellationToken = default)
