@@ -51,8 +51,9 @@ namespace RaidBattlesBot.Handlers
       {
         pollQuery = myRaidService.GetTemporaryPoll(pollId)?.Title;
       }
-      string searchQuery = null;
-      foreach (var queryPart in data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1))
+      var queryParts = data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+      var searchQuery = new List<string>(queryParts.Length - 1);
+      foreach (var queryPart in queryParts.Skip(1))
       {
         switch (queryPart)
         {
@@ -63,13 +64,13 @@ namespace RaidBattlesBot.Handlers
             break;
 
           default:
-            searchQuery += (searchQuery == null ? default(char?) : ' ') + queryPart;
+            searchQuery.Add(queryPart);
             break;
         }
       }
 
       IList<Portal> portals;
-      if (string.IsNullOrWhiteSpace(searchQuery))
+      if (searchQuery.Count == 0)
       {
         var localPortals = await myIngressClient.GetPortals(0.200, location, cancellationToken);
         portals = new List<Portal>(Math.Max(localPortals.Length, MAX_PORTALS_AROUND));
@@ -126,7 +127,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
       
-      if (string.IsNullOrWhiteSpace(searchQuery))
+      if (searchQuery.Count == 0)
       {
         results.Add(
           new InlineQueryResultArticle("EnterGymName", "Введите имя гима", new InputTextMessageContent("Введитя имя гима для поиска по имени"))
