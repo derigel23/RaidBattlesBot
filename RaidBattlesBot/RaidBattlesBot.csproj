@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
-    <AspNetCoreModuleName>AspNetCoreModule</AspNetCoreModuleName>
     <ApplicationInsightsResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsAnnotationResourceId>
     <LangVersion>latest</LangVersion>
