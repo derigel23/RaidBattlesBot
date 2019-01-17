@@ -196,9 +196,11 @@ namespace RaidBattlesBot.Handlers
 
       if (results.Count == 0)
       {
-        results.Add(new InlineQueryResultArticle("NothingFound", "Ничего не найдено", new InputTextMessageContent($"Ничего не найдено по запросу `{searchQuery}`") { ParseMode = ParseMode.Markdown })
+        var search = string.Join(" ", searchQuery);
+        results.Add(new InlineQueryResultArticle("NothingFound", "Ничего не найдено", 
+          new StringBuilder($"Ничего не найдено по запросу ").Code((builder, mode) => builder.Sanitize(search, mode)).ToTextMessageContent())
         {
-          Description = $"Запрос {searchQuery}",
+          Description = $"Запрос {search}",
           ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").AbsoluteUri
         });
       }
