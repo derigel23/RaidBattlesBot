@@ -131,6 +131,7 @@ namespace RaidBattlesBot.Handlers
           if (i == 0)
           {
             poll.Id = -poll.Id;
+            poll.ExRaidGym = true;
             results.Add(new InlineQueryResultArticle($"create:{poll.Id}", poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
               poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
