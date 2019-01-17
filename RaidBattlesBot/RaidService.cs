@@ -43,7 +43,7 @@ namespace RaidBattlesBot
 
     public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
     {
-      using (var connection = myContext.Database.GetDbConnection())
+      var connection = myContext.Database.GetDbConnection();
       {
         try
         {
@@ -66,7 +66,6 @@ namespace RaidBattlesBot
           connection.Close();
         }
       }
-
     }
 
     public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -21,7 +22,7 @@ namespace RaidBattlesBot.Handlers
   public class GymInlineQueryHandler : IInlineQueryHandler
   {
     public const string PREFIX = "/gym";
-    private const string PATTERN = "^/gym(?<pollId>\\d*)(\\s+.*)?$";
+    private const string PATTERN = @"(^|\s+)" + PREFIX + @"(?<pollId>\d*)\b";
     
     private readonly Update myUpdate;
     private readonly ITelegramBotClient myBot;
@@ -46,14 +47,13 @@ namespace RaidBattlesBot.Handlers
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var location = data.Location;
-      string pollQuery = null;
-      if (Regex.Match(data.Query, PATTERN) is Match match && match.Success && int.TryParse(match.Groups["pollId"].Value, out var pollId))
-      {
-        pollQuery = myRaidService.GetTemporaryPoll(pollId)?.Title;
-      }
       var queryParts = data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-      var searchQuery = new List<string>(queryParts.Length - 1);
-      foreach (var queryPart in queryParts.Skip(1))
+      
+      var poll = default(Poll);
+      var pollQuery = new List<string>(queryParts.Length);
+      var searchQuery = new List<string>(queryParts.Length);
+      var query = pollQuery;
+      foreach (var queryPart in queryParts)
       {
         switch (queryPart)
         {
@@ -63,8 +63,20 @@ namespace RaidBattlesBot.Handlers
               : location;
             break;
 
+          case string part when Regex.Match(part, PATTERN) is Match match && match.Success:
+            if (int.TryParse(match.Groups["pollId"].Value, out var pollId))
+            {
+              poll = myRaidService.GetTemporaryPoll(pollId);
+            }
+            else
+            {
+              query = searchQuery;
+            }
+
+            break;
+
           default:
-            searchQuery.Add(queryPart);
+            query.Add(queryPart);
             break;
         }
       }
@@ -85,7 +97,52 @@ namespace RaidBattlesBot.Handlers
       }
 
       var results = new List<InlineQueryResultBase>(portals.Count + 2);
-      for (var i = 0; i < portals.Count && i < MAX_PORTALS_PER_RESPONSE; i++)
+
+      if ((poll == null) && (pollQuery.Count != 0))
+      {
+        var voteFormat =
+          (await myDb.Set<Settings>().FirstOrDefaultAsync(_ => _.Chat == data.From.Id, cancellationToken))
+          ?.DefaultAllowedVotes ?? VoteEnum.Standard;
+        var voteFormatOffset = VoteEnumEx.AllowedVoteFormats
+                                 .Select((format, i) => format == voteFormat ? i : default(int?))
+                                 .FirstOrDefault(_ => _ != null) ?? 0;
+
+        for (var i = 0; i < portals.Count && i < MAX_PORTALS_PER_RESPONSE; i++)
+        {
+          poll = new Poll(data)
+          {
+            //Id = pollId + voteFormatOffset,
+            Title = string.Join("  ", pollQuery),
+            AllowedVotes = voteFormat,
+            Portal = portals[i],
+            ExRaidGym = false
+          };
+          poll.Id = await myRaidService.GetPollId(poll, cancellationToken) + voteFormatOffset;
+
+          results.Add(new InlineQueryResultArticle($"create:{poll.Id}", poll.GetTitle(myUrlHelper),
+            poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
+            {
+              Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+              HideUrl = true,
+              ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
+              ReplyMarkup = poll.GetReplyMarkup()
+            });
+          
+          if (i == 0)
+          {
+            poll.Id = -poll.Id;
+            results.Add(new InlineQueryResultArticle($"create:{poll.Id}", poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
+              poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
+            {
+              Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+              HideUrl = true,
+              ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
+              ReplyMarkup = poll.GetReplyMarkup()
+            });
+          }
+        }
+      }
+      else for (var i = 0; i < portals.Count && i < MAX_PORTALS_PER_RESPONSE; i++)
       {
         var portal = portals[i];
         var title = portal.Name is string name && !string.IsNullOrWhiteSpace(name) ? name : portal.Guid;
@@ -96,7 +153,7 @@ namespace RaidBattlesBot.Handlers
             const int thumbnailSize = 64;
             article.Description = portal.Address;
             article.ReplyMarkup = new InlineKeyboardMarkup(createButton);
-            article.ThumbUrl = portal.GetImage(myUrlHelper, thumbnailSize).AbsoluteUri;
+            article.ThumbUrl = portal.GetImage(myUrlHelper, thumbnailSize)?.AbsoluteUri;
             article.ThumbHeight = thumbnailSize;
             article.ThumbWidth = thumbnailSize;
             return article;
@@ -109,7 +166,7 @@ namespace RaidBattlesBot.Handlers
             .ToTextMessageContent();
           results.Add(Init(
             new InlineQueryResultArticle($"portal:{portal.Guid}", title, portalContent),
-            InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {pollQuery}")));
+            InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {poll?.Title}")));
 
           if (i == 0)
           {
@@ -122,7 +179,7 @@ namespace RaidBattlesBot.Handlers
               .ToTextMessageContent();
             results.Add(Init(
               new InlineQueryResultArticle($"portal:{portal.Guid}+", $"☆ {title} (EX Raid Gym)", exRaidPortalContent),
-              InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {pollQuery}")));
+              InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {poll?.Title}")));
           }
         }
       }
@@ -133,7 +190,7 @@ namespace RaidBattlesBot.Handlers
           new InlineQueryResultArticle("EnterGymName", "Введите имя гима", new InputTextMessageContent("Введитя имя гима для поиска по имени"))
           {
             Description = "для поиска по имени",
-            ThumbUrl = default(Portal).GetImage(myUrlHelper).AbsoluteUri
+            ThumbUrl = default(Portal).GetImage(myUrlHelper)?.AbsoluteUri
           });
       }
 

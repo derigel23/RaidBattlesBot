@@ -34,9 +34,11 @@ namespace RaidBattlesBot.Model
       return null;
     }
 
+    [CanBeNull]
     public static string DecodeGuid(ReadOnlySpan<char> encodedGuid)
     {
       var binaryEncodedGuid = Base58.Flickr.Decode(encodedGuid);
+      if (binaryEncodedGuid.IsEmpty) return null;
       var guid = new Guid(binaryEncodedGuid.Slice(0, 16));
       return $"{guid:N}.{binaryEncodedGuid[16]:D}";
     }

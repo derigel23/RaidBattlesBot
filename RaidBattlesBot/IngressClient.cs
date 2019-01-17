@@ -37,6 +37,8 @@ namespace RaidBattlesBot
 
     public async Task<Portal> Get(string guid, Location location = default, CancellationToken cancellationToken = default)
     {
+      if (string.IsNullOrEmpty(guid))
+        return null;
       var portalSet = myContext.Set<Portal>();
       var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
       if (portal != null)
