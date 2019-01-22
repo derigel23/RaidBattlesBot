@@ -90,7 +90,7 @@ namespace RaidBattlesBot.Handlers
 
           var content = pollTitle.ToTextMessageContent();
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, 
-            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Начать привязку к гиму", GymCallbackQueryHandler.PREFIX + query)), cancellationToken: cancellationToken);
+            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
       }
 
