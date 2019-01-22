@@ -68,10 +68,7 @@ namespace RaidBattlesBot.Handlers
             {
               poll = myRaidService.GetTemporaryPoll(pollId);
             }
-            else
-            {
-              query = searchQuery;
-            }
+            query = searchQuery;
 
             break;
 
