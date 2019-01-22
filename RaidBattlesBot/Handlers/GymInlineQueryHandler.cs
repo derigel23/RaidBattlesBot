@@ -22,7 +22,7 @@ namespace RaidBattlesBot.Handlers
   public class GymInlineQueryHandler : IInlineQueryHandler
   {
     public const string PREFIX = "/gym";
-    private const string PATTERN = @"(^|\s+)" + PREFIX + @"(?<pollId>\d*)\b";
+    private const string PATTERN = @"(^|\s+)" + PREFIX + @"(?<pollId>\d*)($|\s+)";
     
     private readonly Update myUpdate;
     private readonly ITelegramBotClient myBot;
