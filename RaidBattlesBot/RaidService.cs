@@ -111,9 +111,20 @@ namespace RaidBattlesBot
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
       if (pollData.Portal is Portal portal)
       {
-        if (await myContext.Set<Portal>().FirstOrDefaultAsync(p => p.Guid == portal.Guid, cancellationToken) == null)
+        var portalSet = myContext.Set<Portal>();
+        var existingPortal = await portalSet.AsTracking().FirstOrDefaultAsync(p => p.Guid == portal.Guid, cancellationToken);
+        if (existingPortal == null)
         {
-          myContext.Set<Portal>().Attach(portal).State = EntityState.Added;
+          portalSet.Attach(portal).State = EntityState.Added;
+        }
+        else
+        {
+          existingPortal.Guid = portal.Guid;
+          existingPortal.Name = portal.Name;
+          existingPortal.Address = portal.Address;
+          existingPortal.Image = portal.Image;
+          existingPortal.Latitude = portal.Latitude;
+          existingPortal.Longitude = portal.Longitude;
         }
       }
       

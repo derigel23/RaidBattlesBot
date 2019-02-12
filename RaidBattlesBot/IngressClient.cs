@@ -11,6 +11,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -22,13 +23,15 @@ namespace RaidBattlesBot
     private readonly HttpClient myHttpClient;
     private readonly TelemetryClient myTelemetryClient;
     private readonly RaidBattlesContext myContext;
+    private readonly IClock myClock;
     private readonly Location myDefaultLocation;
 
-    public IngressClient(HttpClient httpClient, TelemetryClient telemetryClient, RaidBattlesContext context, IOptions<IngressConfiguration> options)
+    public IngressClient(HttpClient httpClient, TelemetryClient telemetryClient, RaidBattlesContext context, IOptions<IngressConfiguration> options, IClock clock)
     {
       myHttpClient = httpClient;
       myTelemetryClient = telemetryClient;
       myContext = context;
+      myClock = clock;
       var configuration = options?.Value ?? throw new ArgumentNullException(nameof(options));
       myHttpClient.BaseAddress = configuration.ServiceUrl;
       myHttpClient.Timeout = configuration.Timeout;
@@ -41,7 +44,7 @@ namespace RaidBattlesBot
         return null;
       var portalSet = myContext.Set<Portal>();
       var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
-      if (portal != null)
+      if ((myClock.GetCurrentInstant().ToDateTimeOffset() - portal?.Modified)?.TotalDays < 1) // refresh every day 
         return portal;
       
       var portals = await Search(guid, location ?? myDefaultLocation, cancellationToken);
