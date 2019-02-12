@@ -84,7 +84,8 @@ namespace RaidBattlesBot
         { "nelng", boundaries.MaxLongitude.ToString(CultureInfo.InvariantCulture) },
         { "swlat", boundaries.MinLatitude.ToString(CultureInfo.InvariantCulture) },
         { "swlng", boundaries.MinLongitude.ToString(CultureInfo.InvariantCulture) },
-        { "offset", 0.ToString() }
+        { "offset", 0.ToString() },
+        { "telegram", "" }
       };
 
       return await Execute("getPortals.php", queryBuilder, cancellationToken, "portalData");

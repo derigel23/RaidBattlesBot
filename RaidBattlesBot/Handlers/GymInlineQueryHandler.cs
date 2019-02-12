@@ -12,7 +12,6 @@ using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -41,7 +40,6 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
     }
 
-    private const int MAX_PORTALS_AROUND = 5;
     private const int MAX_PORTALS_PER_RESPONSE = 20;
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -78,22 +76,17 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      IList<Portal> portals;
+      Portal[] portals;
       if (searchQuery.Count == 0)
       {
-        var localPortals = await myIngressClient.GetPortals(0.200, location, cancellationToken);
-        portals = new List<Portal>(Math.Max(localPortals.Length, MAX_PORTALS_AROUND));
-        for (var i = 0; i < localPortals.Length && i < MAX_PORTALS_AROUND; i++)
-        {
-          portals.Add(await myIngressClient.Get(localPortals[i].Guid, location, cancellationToken));
-        }
+        portals = await myIngressClient.GetPortals(0.200, location, cancellationToken);
       }
       else
       {
         portals = await myIngressClient.Search(searchQuery, location, cancellationToken);
       }
 
-      var results = new List<InlineQueryResultBase>(portals.Count + 2);
+      var results = new List<InlineQueryResultBase>(Math.Min(portals.Length, MAX_PORTALS_PER_RESPONSE) + 2);
 
       if ((poll == null) && (pollQuery.Count != 0))
       {
@@ -104,7 +97,7 @@ namespace RaidBattlesBot.Handlers
                                  .Select((format, i) => format == voteFormat ? i : default(int?))
                                  .FirstOrDefault(_ => _ != null) ?? 0;
 
-        for (var i = 0; i < portals.Count && i < MAX_PORTALS_PER_RESPONSE; i++)
+        for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
           poll = new Poll(data)
           {
@@ -140,7 +133,7 @@ namespace RaidBattlesBot.Handlers
           }
         }
       }
-      else for (var i = 0; i < portals.Count && i < MAX_PORTALS_PER_RESPONSE; i++)
+      else for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
       {
         var portal = portals[i];
         var title = portal.Name is string name && !string.IsNullOrWhiteSpace(name) ? name : portal.Guid;
