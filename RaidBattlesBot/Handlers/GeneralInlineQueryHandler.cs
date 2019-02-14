@@ -56,8 +56,6 @@ namespace RaidBattlesBot.Handlers
             }
             var portalGuid = PortalEx.DecodeGuid(guid);
             portal = await myIngressClient.Get(portalGuid, data.Location, cancellationToken);
-            if (portal != null)
-              myDb.Attach(portal);
             break;
           default:
             query += (query == null ? default(char?) : ' ') + queryPart;
