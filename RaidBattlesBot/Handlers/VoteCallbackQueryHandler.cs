@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using NodaTime;
+using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -17,12 +21,16 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
+    private readonly IClock myClock;
+    private TimeSpan myVoteTimeout;
 
-    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper)
+    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
     {
       myContext = context;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
+      myClock = clock;
+      myVoteTimeout = options.Value.VoteTimeout;
     }
 
     private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
@@ -56,6 +64,11 @@ namespace RaidBattlesBot.Handlers
         poll.Votes.Add(vote = new Vote());
       }
 
+      var now = myClock.GetCurrentInstant().ToDateTimeOffset();
+
+      if ((now - vote.Modified) <= myVoteTimeout)
+        return ($"Вы слишком быстро голосуете. Попробуйте через {myVoteTimeout.TotalSeconds:0} сек", false, null);
+      
       vote.User = user; // update username/firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
