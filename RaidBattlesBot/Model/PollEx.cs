@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Model
       return title.ToString();
     }
 
-    public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode)
+    public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = Helpers.DefaultParseMode)
     {
       var description = poll.GetTitleBase(mode);
       if (!string.IsNullOrEmpty(poll.Title))

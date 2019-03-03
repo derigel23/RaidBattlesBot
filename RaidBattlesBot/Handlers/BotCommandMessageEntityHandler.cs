@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -20,13 +21,15 @@ namespace RaidBattlesBot.Handlers
     private readonly Message myMessage;
     private readonly ITelegramBotClient myTelegramBotClient;
     private readonly RaidService myRaidService;
+    private readonly IUrlHelper myUrlHelper;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper)
     {
       myContext = context;
       myMessage = message;
       myTelegramBotClient = telegramBotClient;
       myRaidService = raidService;
+      myUrlHelper = urlHelper;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -92,6 +95,44 @@ namespace RaidBattlesBot.Handlers
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, 
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
+
+        case var _ when command.StartsWith("/p") && int.TryParse(commandText, out var pollId):
+          var poll = await myContext
+            .Set<Poll>()
+            .Where(_ => _.Id == pollId)
+            .IncludeRelatedData()
+            .FirstOrDefaultAsync(cancellationToken);
+          if (poll == null)
+            return false;
+
+          var voters = poll.Votes.ToDictionary(vote => vote.UserId, vote => vote.User);
+          var users = poll.Messages
+            .Where(message => message.UserId != null)
+            .Select(message => message.UserId.Value)
+            .Distinct()
+            .ToList();
+          var unknownUsers = users.Where(u => !voters.ContainsKey(u)).ToList();
+          var data = await myContext
+            .Set<Vote>()
+            .Where(v => unknownUsers.Contains(v.UserId))
+            .GroupBy(v => v.UserId)
+            .Select(vv => vv.OrderByDescending(vote => vote.Modified).First())
+            .ToListAsync(cancellationToken);
+          var allVoters = voters.Values.Concat(data.Select(d => d.User))
+            .ToDictionary(u => u.Id, u => u);
+          var info = users
+            .Select(u => allVoters.TryGetValue(u, out var user) ?
+                                user : new User { Id = u, FirstName = u.ToString() })
+            .Aggregate(
+              poll.GetDescription(myUrlHelper).NewLine().NewLine(),
+              (builder, user) => builder.Append(user.GetLink()).NewLine())
+            .ToTextMessageContent(disableWebPreview: true);
+
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info.MessageText, info.ParseMode, info.DisableWebPagePreview, disableNotification: true,
+            replyToMessageId: myMessage.MessageId, cancellationToken: cancellationToken);
+
+          return false;
+
       }
 
       return null;
