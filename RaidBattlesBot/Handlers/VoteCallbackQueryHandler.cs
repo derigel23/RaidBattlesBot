@@ -22,7 +22,8 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
-    private TimeSpan myVoteTimeout;
+    private readonly TimeSpan myVoteTimeout;
+    private readonly HashSet<int> myBlackList;
 
     public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
     {
@@ -31,6 +32,7 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
       myClock = clock;
       myVoteTimeout = options.Value.VoteTimeout;
+      myBlackList = options.Value.BlackList;
     }
 
     private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
@@ -46,6 +48,9 @@ namespace RaidBattlesBot.Handlers
     {
       var callback = data.Data.Split(':');
       if (callback[0] != "vote")
+        return (null, false, null);
+      
+      if (myBlackList.Contains(data.From.Id))
         return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
