@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  [UpdateHandler(UpdateType.CallbackQuery)]
+  [UpdateHandler(UpdateType = UpdateType.CallbackQuery)]
   public abstract class CallbackUpdateHandler<TContext, TMetadata> : IUpdateHandler<bool?>
     where TMetadata : Attribute, IHandlerAttribute<CallbackQuery, TContext>
   {

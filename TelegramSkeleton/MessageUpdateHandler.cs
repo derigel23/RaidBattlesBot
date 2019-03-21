@@ -9,7 +9,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  [UpdateHandler(UpdateType.Message, UpdateType.EditedMessage, UpdateType.ChannelPost, UpdateType.EditedChannelPost)]
+  [UpdateHandler(UpdateTypes = new[] { UpdateType.Message, UpdateType.EditedMessage, UpdateType.ChannelPost, UpdateType.EditedChannelPost })]
   public abstract class MessageUpdateHandler<TMessageContext, TMessageResult, TMessageMetadata> : IUpdateHandler<TMessageResult>
     where TMessageMetadata : Attribute, IHandlerAttribute<Message, (UpdateType, TMessageContext)>
   {

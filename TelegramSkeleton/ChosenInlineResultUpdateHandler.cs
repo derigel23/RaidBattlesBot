@@ -7,7 +7,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  [UpdateHandler(UpdateType.ChosenInlineResult)]
+  [UpdateHandler(UpdateType = UpdateType.ChosenInlineResult)]
   public class ChosenInlineResultUpdateHandler : IUpdateHandler<bool?>
   {
     private readonly IEnumerable<IChosenInlineResultHandler> myChosenInlineResultHandlers;

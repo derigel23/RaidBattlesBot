@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Telegram.Bot.Types;
@@ -14,12 +14,13 @@ namespace Team23.TelegramSkeleton
   [MeansImplicitUse]
   public class UpdateHandlerAttribute : Attribute, IHandlerAttribute<Update, OperationTelemetry>
   {
-    public UpdateHandlerAttribute(params UpdateType[] supportedUpdateTypes)
+    public UpdateType UpdateType
     {
-      UpdateTypes = new HashSet<UpdateType>(supportedUpdateTypes);  
+      get => UpdateType.Unknown; // never use
+      set => UpdateTypes = new[] {value};
     }
-    
-    public ISet<UpdateType> UpdateTypes { get; }
+
+    public UpdateType[] UpdateTypes { get; set; }
 
     public bool ShouldProcess(Update update, OperationTelemetry telemetry)
     {
