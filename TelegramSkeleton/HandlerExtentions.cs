@@ -38,7 +38,7 @@ namespace Team23.TelegramSkeleton
       where THandler : IHandler<TData, TContext, TResult>
       where TMetadata : Attribute, IHandlerAttribute<TData, TContext>
     {
-      foreach (var h in handlers)
+      foreach (var h in handlers.OrderBy(meta => meta.Metadata.Order))
       {
         if (!h.Metadata.ShouldProcess(data, context))
           continue;

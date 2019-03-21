@@ -12,14 +12,14 @@ using Telegram.Bot.Types;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class TelegramController : Controller
+  public class TelegramController : Controller
   {
     private readonly string myTelemetryTypeName;
     private readonly TelemetryClient myTelemetryClient;
     private readonly IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> myUpdateHandlers;
 
-    protected TelegramController(string telemetryTypeName, TelemetryClient telemetryClient,
-      IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> updateHandlers)
+    public TelegramController(TelemetryClient telemetryClient,
+      IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> updateHandlers, string telemetryTypeName = null)
     {
       myTelemetryTypeName = telemetryTypeName;
       myTelemetryClient = telemetryClient;
@@ -29,7 +29,7 @@ namespace Team23.TelegramSkeleton
     [HttpPost("/update")]
     public async Task<IActionResult> Update([CanBeNull, FromBody] Update update, CancellationToken cancellationToken = default)
     {
-      var operation = myTelemetryClient.StartOperation(new DependencyTelemetry(myTelemetryTypeName, Request.Host.ToString(), update?.Type.ToString(), update?.Id.ToString()));
+      var operation = myTelemetryClient.StartOperation(new DependencyTelemetry(myTelemetryTypeName ?? GetType().Namespace, Request.Host.ToString(), update?.Type.ToString(), update?.Id.ToString()));
       try
       {
         if (update == null)

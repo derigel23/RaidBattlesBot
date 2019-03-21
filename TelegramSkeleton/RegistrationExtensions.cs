@@ -11,9 +11,9 @@ namespace Team23.TelegramSkeleton
     public static void RegisterTelegramSkeleton/*<TMessageHandler, TMessageEntityHandler, TContext>*/(this ContainerBuilder builder, Assembly assembly = null)
 //      where TMessageHandler : IGenericMessageHandler<TContext>
 //      where TMessageEntityHandler : IGenericMessageEntityHandler<TContext>
-    {      
+    {
       builder
-        .RegisterAssemblyTypes(assembly ?? Assembly.GetCallingAssembly())
+        .RegisterAssemblyTypes(Assembly.GetExecutingAssembly(), assembly ?? Assembly.GetCallingAssembly())
         .Where(t => t.InheritsOrImplements(typeof(IHandler<,,>)))
         .AsImplementedInterfaces()
         .AsClosedTypesOf(typeof(IHandler<,,>))

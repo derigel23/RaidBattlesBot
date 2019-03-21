@@ -29,5 +29,7 @@ namespace RaidBattlesBot.Handlers
     {
       return UpdateTypes.Contains(context.updateType) && message.Type == MessageType;
     }
+
+    public int Order => (int) MessageType;
   }
 }

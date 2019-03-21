@@ -42,6 +42,6 @@ namespace Team23.TelegramSkeleton
       return true;
     }
 
-    public TContext GetContext(Update update) => default;
+    public virtual TContext GetContext(Update update) => default;
   }
 }

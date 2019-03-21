@@ -14,5 +14,7 @@ namespace RaidBattlesBot.Handlers
     {
       return callbackQuery.Data.StartsWith(DataPrefix);
     }
+
+    public int Order => string.IsNullOrEmpty(DataPrefix) ? int.MaxValue : 0;
   }
 }

@@ -7,7 +7,6 @@ namespace Team23.TelegramSkeleton
 {
   public interface IInlineQueryHandler : IHandler<InlineQuery, object, bool?>
   {
-    
   }
 
   [MeansImplicitUse]
@@ -19,5 +18,7 @@ namespace Team23.TelegramSkeleton
     {
       return string.IsNullOrEmpty(QueryPattern) || Regex.IsMatch(inlineQuery.Query, QueryPattern);
     }
+
+    public int Order => string.IsNullOrEmpty(QueryPattern) ? int.MaxValue : 0;
   }
 }

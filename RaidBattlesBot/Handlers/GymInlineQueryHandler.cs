@@ -22,17 +22,15 @@ namespace RaidBattlesBot.Handlers
   {
     public const string PREFIX = "/gym";
     private const string PATTERN = @"(^|\s+)" + PREFIX + @"(?<pollId>\d*)($|\s+)";
-    
-    private readonly Update myUpdate;
+
     private readonly ITelegramBotClient myBot;
     private readonly RaidBattlesContext myDb;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IngressClient myIngressClient;
     
-    public GymInlineQueryHandler(Update update, IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClient bot, RaidBattlesContext db, RaidService raidService)
+    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClient bot, RaidBattlesContext db, RaidService raidService)
     {
-      myUpdate = update;
       myUrlHelper = urlHelper;
       myIngressClient = ingressClient;
       myBot = bot;

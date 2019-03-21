@@ -6,11 +6,11 @@ using Telegram.Bot;
 
 namespace Team23.TelegramSkeleton
 {
-  public abstract class StatusController : Controller
+  public class StatusController : Controller
   {
     private readonly ITelegramBotClient myBot;
 
-    protected StatusController(ITelegramBotClient bot)
+    public StatusController(ITelegramBotClient bot)
     {
       myBot = bot;
     }

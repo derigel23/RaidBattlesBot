@@ -17,5 +17,7 @@ namespace RaidBattlesBot.Handlers
     {
       return messageEntity.Type == EntityType;
     }
+
+    public int Order => (int) EntityType;
   }
 }

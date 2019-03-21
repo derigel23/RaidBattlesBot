@@ -26,5 +26,7 @@ namespace Team23.TelegramSkeleton
     {
       return UpdateTypes.Contains(update.Type);
     }
+
+    public int Order => 0;
   }
 }
