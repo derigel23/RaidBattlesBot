@@ -12,7 +12,7 @@ namespace Team23.TelegramSkeleton
   {
     private readonly IEnumerable<IChosenInlineResultHandler> myChosenInlineResultHandlers;
 
-    protected ChosenInlineResultUpdateHandler(IEnumerable<IChosenInlineResultHandler> chosenInlineResultHandlers)
+    public ChosenInlineResultUpdateHandler(IEnumerable<IChosenInlineResultHandler> chosenInlineResultHandlers)
     {
       myChosenInlineResultHandlers = chosenInlineResultHandlers;
     }
