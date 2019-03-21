@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.Photo)]
   public class PhotoMessageHandler : IMessageHandler
   {
-    public async Task<bool?> Handle(Message data, PollMessage pollMessage = default, CancellationToken cancellationToken = default)
+    public Task<bool?> Handle(Message data, (UpdateType updateType, PollMessage context) _, CancellationToken cancellationToken = default)
     {
       return null;
     }

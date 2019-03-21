@@ -23,16 +23,17 @@ namespace RaidBattlesBot.Handlers
       myDb = db;
     }
 
-    public override async Task<bool?> Handle(Message message, PollMessage pollMessage, CancellationToken cancellationToken = default)
+    public override async Task<bool?> Handle(Message message, (UpdateType updateType, PollMessage context) _, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrEmpty(message.Text))
         return false;
 
+      var (_, pollMessage) = _;
       if (message.ForwardFromChat is Chat forwarderFromChat)
       {
         var forwardedPollMessage = await myDb
           .Set<PollMessage>()
-          .Where(_ => _.ChatId == forwarderFromChat.Id && _.MesssageId == message.ForwardFromMessageId)
+          .Where(pm=> pm.ChatId == forwarderFromChat.Id && pm.MesssageId == message.ForwardFromMessageId)
           .IncludeRelatedData()
           .FirstOrDefaultAsync(cancellationToken);
 
@@ -43,7 +44,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      return await base.Handle(message, pollMessage, cancellationToken);
+      return await base.Handle(message, _, cancellationToken);
     }
   }
 }

@@ -12,29 +12,26 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageType(MessageType = MessageType.Venue)]
+  [MessageType(UpdateType.Message, MessageType = MessageType.Venue)]
   public class VenueMessageHandler : IMessageHandler
   {
-    private readonly RaidBattlesContext myDb;
     private readonly PokemonInfo myPokemonInfo;
     private readonly GymHelper myGymHelper;
     private readonly DateTimeZone myDateTimeZone;
 
-    public VenueMessageHandler(RaidBattlesContext db, PokemonInfo pokemonInfo, GymHelper gymHelper, DateTimeZone dateTimeZone)
+    public VenueMessageHandler(PokemonInfo pokemonInfo, GymHelper gymHelper, DateTimeZone dateTimeZone)
     {
-      myDb = db;
       myPokemonInfo = pokemonInfo;
       myGymHelper = gymHelper;
       myDateTimeZone = dateTimeZone;
     }
 
-    public async Task<bool?> Handle(Message venueMessage, PollMessage pollMessage , CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Message venueMessage, (UpdateType updateType, PollMessage context) _ , CancellationToken cancellationToken = default)
     {
       var venue = venueMessage.Venue;
       if (venue == null) return null;
 
-      if (venueMessage.Chat.Type == ChatType.Channel)
-        return false;
+      var (_, pollMessage) = _;
 
       var raid = new Raid
       {

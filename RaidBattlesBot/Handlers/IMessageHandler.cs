@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -10,13 +11,23 @@ namespace RaidBattlesBot.Handlers
   public interface IMessageHandler : IMessageHandler<PollMessage, bool?> { }
   
   [MeansImplicitUse]
-  public class MessageTypeAttribute : Attribute, IHandlerAttribute<Message, PollMessage>
+  public class MessageTypeAttribute : Attribute, IHandlerAttribute<Message, (UpdateType updateType, PollMessage pollMessage)>
   {
+    // by default only for new messages
+    public MessageTypeAttribute() : this(UpdateType.Message, UpdateType.ChannelPost) { }
+
+    public MessageTypeAttribute(params UpdateType[] updateTypes)
+    {
+      UpdateTypes = new HashSet<UpdateType>(updateTypes);
+    }
+    
     public MessageType MessageType { get; set; }
 
-    public bool ShouldProcess(Message message, PollMessage context)
+    public ISet<UpdateType> UpdateTypes { get; }
+    
+    public bool ShouldProcess(Message message, (UpdateType updateType, PollMessage pollMessage) context)
     {
-      return message.Type == MessageType;
+      return UpdateTypes.Contains(context.updateType) && message.Type == MessageType;
     }
   }
 }
