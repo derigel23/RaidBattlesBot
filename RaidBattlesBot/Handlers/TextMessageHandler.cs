@@ -13,7 +13,7 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Handlers
 {
   [MessageType(MessageType = MessageType.Text)]
-  public class TextMessageHandler : TextMessageHandler<PollMessage, bool?, MessageEntityTypeAttribute>
+  public class TextMessageHandler : TextMessageHandler<PollMessage, bool?, MessageEntityTypeAttribute>, IMessageHandler
   {
     private readonly RaidBattlesContext myDb;
 
