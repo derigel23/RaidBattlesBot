@@ -13,7 +13,7 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Handlers
 {
   [CallbackQueryHandler(DataPrefix = "clone")]
-  public class CloneCallbackQueryHandler : ICallbackQueryHandler<object>
+  public class CloneCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;

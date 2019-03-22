@@ -11,6 +11,7 @@ namespace RaidBattlesBot.Handlers
   public interface IMessageHandler : IMessageHandler<PollMessage, bool?> { }
   
   [MeansImplicitUse]
+  [BaseTypeRequired(typeof(IMessageHandler))]
   public class MessageTypeAttribute : Attribute, IHandlerAttribute<Message, (UpdateType updateType, PollMessage pollMessage)>
   {
     // by default only for new messages

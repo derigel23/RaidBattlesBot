@@ -9,6 +9,7 @@ namespace RaidBattlesBot.Handlers
   public interface IMessageEntityHandler : IMessageEntityHandler<PollMessage, bool?> { }
   
   [MeansImplicitUse]
+  [BaseTypeRequired(typeof(IMessageEntityHandler))]
   public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntityEx, PollMessage>
   {
     public MessageEntityType EntityType { get; set; }

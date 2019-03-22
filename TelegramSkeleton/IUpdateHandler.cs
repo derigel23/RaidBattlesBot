@@ -12,6 +12,7 @@ namespace Team23.TelegramSkeleton
   }
   
   [MeansImplicitUse]
+  [BaseTypeRequired(typeof(IUpdateHandler))]
   public class UpdateHandlerAttribute : Attribute, IHandlerAttribute<Update, OperationTelemetry>
   {
     public UpdateType UpdateType

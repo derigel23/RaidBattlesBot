@@ -10,7 +10,7 @@ using Telegram.Bot.Types;
 namespace RaidBattlesBot.Handlers
 {
   [CallbackQueryHandler(DataPrefix = "adjust")]
-  public class AdjustCallbackQueryHandler : ICallbackQueryHandler<object>
+  public class AdjustCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;

@@ -5,7 +5,12 @@ using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
+  public interface ICallbackQueryHandler : ICallbackQueryHandler<object>
+  {
+  }
+  
   [MeansImplicitUse]
+  [BaseTypeRequired(typeof(ICallbackQueryHandler))]
   public class CallbackQueryHandlerAttribute : Attribute, IHandlerAttribute<CallbackQuery, object>
   {
     public string DataPrefix { get; set; }

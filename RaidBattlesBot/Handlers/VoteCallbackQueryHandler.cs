@@ -16,7 +16,7 @@ using Telegram.Bot.Types;
 namespace RaidBattlesBot.Handlers
 {
   [CallbackQueryHandler(DataPrefix = "vote")]
-  public class VoteCallbackQueryHandler : ICallbackQueryHandler<object>
+  public class VoteCallbackQueryHandler : ICallbackQueryHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;

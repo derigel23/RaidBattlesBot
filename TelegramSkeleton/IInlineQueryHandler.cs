@@ -10,6 +10,7 @@ namespace Team23.TelegramSkeleton
   }
 
   [MeansImplicitUse]
+  [BaseTypeRequired(typeof(IInlineQueryHandler))]
   public class InlineQueryHandlerAttribute : Attribute, IHandlerAttribute<InlineQuery, object>
   {
     public string QueryPattern { get; set; }
