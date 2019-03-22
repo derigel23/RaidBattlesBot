@@ -10,7 +10,7 @@ namespace RaidBattlesBot.Controllers
 {
   public class TelegramController : Team23.TelegramSkeleton.TelegramController
   {
-    public TelegramController(ITelegramBotClient bot, TelemetryClient telemetryClient, IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> updateHandlers)
+    public TelegramController(ITelegramBotClient bot, TelemetryClient telemetryClient, IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> updateHandlers)
       : base(telemetryClient, updateHandlers, bot.GetType().Namespace) { }
   }
 }

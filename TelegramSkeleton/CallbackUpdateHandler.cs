@@ -11,7 +11,7 @@ using Telegram.Bot.Types.Enums;
 namespace Team23.TelegramSkeleton
 {
   [UpdateHandler(UpdateType = UpdateType.CallbackQuery)]
-  public abstract class CallbackUpdateHandler<TContext, TMetadata> : IUpdateHandler<bool?>
+  public abstract class CallbackUpdateHandler<TContext, TMetadata> : IUpdateHandler
     where TMetadata : Attribute, IHandlerAttribute<CallbackQuery, TContext>
   {
     private readonly ITelegramBotClient myTelegramBotClient;

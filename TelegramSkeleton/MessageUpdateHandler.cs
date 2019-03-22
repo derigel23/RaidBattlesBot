@@ -10,17 +10,18 @@ using Telegram.Bot.Types.Enums;
 namespace Team23.TelegramSkeleton
 {
   [UpdateHandler(UpdateTypes = new[] { UpdateType.Message, UpdateType.EditedMessage, UpdateType.ChannelPost, UpdateType.EditedChannelPost })]
-  public abstract class MessageUpdateHandler<TMessageContext, TMessageResult, TMessageMetadata> : IUpdateHandler<TMessageResult>
+  public abstract class MessageUpdateHandler<TMessageHandler, TMessageContext, TMessageResult, TMessageMetadata> : IUpdateHandler
+    where TMessageHandler :IMessageHandler<TMessageContext, TMessageResult>
     where TMessageMetadata : Attribute, IHandlerAttribute<Message, (UpdateType, TMessageContext)>
   {
-    private readonly IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext, TMessageResult>>, TMessageMetadata>> myMessageHandlers;
+    private readonly IEnumerable<Meta<Func<Message, TMessageHandler>, TMessageMetadata>> myMessageHandlers;
 
-    protected MessageUpdateHandler(IEnumerable<Meta<Func<Message, IMessageHandler<TMessageContext, TMessageResult>>, TMessageMetadata>> messageHandlers)
+    protected MessageUpdateHandler(IEnumerable<Meta<Func<Message, TMessageHandler>, TMessageMetadata>> messageHandlers)
     {
       myMessageHandlers = messageHandlers;
     }
     
-    public async Task<TMessageResult> Handle(Update update, OperationTelemetry telemetry, CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(Update update, OperationTelemetry telemetry, CancellationToken cancellationToken = default)
     {
       Message message;
       var updateType = update.Type;
@@ -49,7 +50,7 @@ namespace Team23.TelegramSkeleton
       telemetry.Properties["messageType"] = message.Type.ToString();
       telemetry.Properties["chat"] = message.Chat.Username;
 
-      await ProcessMessage(async (msg, context, properties, ct) =>
+      var result = await ProcessMessage(async (msg, context, properties, ct) =>
       {
         foreach (var property in properties)
         {
@@ -59,6 +60,9 @@ namespace Team23.TelegramSkeleton
         return await HandlerExtentions<TMessageResult>.Handle(myMessageHandlers.Bind(message), message, (updateType, context), ct).ConfigureAwait(false);
       }, message, cancellationToken);
 
+      if (!EqualityComparer<TMessageResult>.Default.Equals(result, default))
+        return true;
+      
       return default;
     }
     

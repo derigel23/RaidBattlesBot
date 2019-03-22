@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -18,12 +18,12 @@ namespace RaidBattlesBot.Handlers
 
     public MessageTypeAttribute(params UpdateType[] updateTypes)
     {
-      UpdateTypes = new HashSet<UpdateType>(updateTypes);
+      UpdateTypes = updateTypes;
     }
     
     public MessageType MessageType { get; set; }
 
-    public ISet<UpdateType> UpdateTypes { get; }
+    public UpdateType[] UpdateTypes { get; set; }
     
     public bool ShouldProcess(Message message, (UpdateType updateType, PollMessage pollMessage) context)
     {

@@ -12,13 +12,13 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  public class MessageUpdateHandler : MessageUpdateHandler<PollMessage, bool?, MessageTypeAttribute>
+  public class MessageUpdateHandler : MessageUpdateHandler<IMessageHandler, PollMessage, bool?, MessageTypeAttribute>
   {
     private readonly RaidService myRaidService;
     private readonly IMemoryCache myCache;
     private readonly IUrlHelper myUrlHelper;
 
-    public MessageUpdateHandler(RaidService raidService, IMemoryCache cache, IUrlHelper urlHelper, IEnumerable<Meta<Func<Message, IMessageHandler<PollMessage, bool?>>, MessageTypeAttribute>> messageHandlers)
+    public MessageUpdateHandler(RaidService raidService, IMemoryCache cache, IUrlHelper urlHelper, IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers)
       : base(messageHandlers)
     {
       myRaidService = raidService;

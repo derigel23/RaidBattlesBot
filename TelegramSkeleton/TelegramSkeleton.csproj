@@ -9,7 +9,7 @@
         <LangVersion>latest</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <DefineConstants>JETBRAINS_ANNOTATIONS</DefineConstants>
-        <Version>1.0.18</Version>
+        <Version>1.0.20</Version>
     </PropertyGroup>
 
     <ItemGroup>

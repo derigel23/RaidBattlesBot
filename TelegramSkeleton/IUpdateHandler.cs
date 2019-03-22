@@ -7,7 +7,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
-  public interface IUpdateHandler<TResult> : IHandler<Update, OperationTelemetry, TResult>
+  public interface IUpdateHandler : IHandler<Update, OperationTelemetry, bool?>
   {
   }
   

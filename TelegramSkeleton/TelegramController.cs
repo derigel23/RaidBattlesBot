@@ -16,10 +16,10 @@ namespace Team23.TelegramSkeleton
   {
     private readonly string myTelemetryTypeName;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> myUpdateHandlers;
+    private readonly IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> myUpdateHandlers;
 
     public TelegramController(TelemetryClient telemetryClient,
-      IEnumerable<Meta<Func<Update, IUpdateHandler<bool?>>, UpdateHandlerAttribute>> updateHandlers, string telemetryTypeName = null)
+      IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> updateHandlers, string telemetryTypeName = null)
     {
       myTelemetryTypeName = telemetryTypeName;
       myTelemetryClient = telemetryClient;

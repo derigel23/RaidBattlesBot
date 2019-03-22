@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 namespace Team23.TelegramSkeleton
 {
   [UpdateHandler(UpdateType = UpdateType.InlineQuery)]
-  public class InlineQueryUpdateHandler : IUpdateHandler<bool?>
+  public class InlineQueryUpdateHandler : IUpdateHandler
   {
     private readonly IEnumerable<Meta<Func<IInlineQueryHandler>, InlineQueryHandlerAttribute>> myInlineQueryHandlers;
 
