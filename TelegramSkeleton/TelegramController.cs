@@ -8,6 +8,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace Team23.TelegramSkeleton
@@ -18,7 +19,11 @@ namespace Team23.TelegramSkeleton
     private readonly TelemetryClient myTelemetryClient;
     private readonly IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> myUpdateHandlers;
 
-    public TelegramController(TelemetryClient telemetryClient,
+    public TelegramController(ITelegramBotClient bot, TelemetryClient telemetryClient,
+      IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> updateHandlers)
+      : this(telemetryClient, updateHandlers, bot.GetType().Name) { }
+
+    protected TelegramController(TelemetryClient telemetryClient,
       IEnumerable<Meta<Func<Update, IUpdateHandler>, UpdateHandlerAttribute>> updateHandlers, string telemetryTypeName = null)
     {
       myTelemetryTypeName = telemetryTypeName;

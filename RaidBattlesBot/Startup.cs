@@ -16,6 +16,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 
 namespace RaidBattlesBot
@@ -81,7 +82,7 @@ namespace RaidBattlesBot
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
         })
         .SetCompatibilityVersion(CompatibilityVersion.Latest)
-        .AddControllersAsServices()
+        .AddApplicationPart(typeof(TelegramController).Assembly)
         .AddRazorPagesOptions(options =>
         {
           options.Conventions.AddPageRouteWithName("/Portal", "~/{guid:minlength(32)?}", "Portal");
