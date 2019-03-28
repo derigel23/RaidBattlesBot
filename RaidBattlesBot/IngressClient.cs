@@ -102,8 +102,7 @@ namespace RaidBattlesBot
         op.Telemetry.ResultCode = response.StatusCode.ToString();
         op.Telemetry.Success = response.IsSuccessStatusCode;
         var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
-        // extract JSON from JSONP
-        var resultObject = JToken.Parse(result.Substring(Math.Min(1, result.Length), Math.Max(result.Length - 2, 0)));
+        var resultObject = JToken.Parse(result);
         var portals = (property == null ? resultObject : resultObject[property]).ToObject<Portal[]>();
         return portals ?? new Portal[0];
       }
