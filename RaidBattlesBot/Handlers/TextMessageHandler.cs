@@ -7,6 +7,7 @@ using Autofac.Features.Metadata;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -17,8 +18,8 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
-      : base(messageEntityHandlers)
+    public TextMessageHandler(ITelegramBotClient bot, IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+      : base(bot, messageEntityHandlers)
     {
       myDb = db;
     }

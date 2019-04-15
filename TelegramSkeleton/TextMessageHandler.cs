@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -12,10 +13,12 @@ namespace Team23.TelegramSkeleton
   public abstract class TextMessageHandler<TContext, TResult, TMetadata> : IMessageHandler<TContext, TResult>
     where TMetadata : Attribute, IHandlerAttribute<MessageEntityEx, TContext>
   {
+    private readonly ITelegramBotClient myBot;
     private readonly IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext, TResult>>, TMetadata>> myMessageEntityHandlers;
 
-    protected TextMessageHandler(IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext, TResult>>, TMetadata>> messageEntityHandlers)
+    protected TextMessageHandler(ITelegramBotClient bot, IEnumerable<Meta<Func<Message, IMessageEntityHandler<TContext, TResult>>, TMetadata>> messageEntityHandlers)
     {
+      myBot = bot;
       myMessageEntityHandlers = messageEntityHandlers;
     }
 
@@ -26,6 +29,15 @@ namespace Team23.TelegramSkeleton
       foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
         var entityEx = new MessageEntityEx(message, entity);
+        if (entityEx.Type == MessageEntityType.BotCommand)
+        {
+          // check bot name, if presents
+          if (entityEx.Value.IndexOf('@') is var nameOffset && nameOffset >= 0)
+          {
+            if (!entityEx.Value.Subsegment(nameOffset + 1).Equals((await myBot.GetMeAsync(cancellationToken)).Username, StringComparison.OrdinalIgnoreCase))
+              continue;
+          }
+        }
         result = await HandlerExtentions<TResult>.Handle(handlers, entityEx, _.context, cancellationToken).ConfigureAwait(false);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
           break;

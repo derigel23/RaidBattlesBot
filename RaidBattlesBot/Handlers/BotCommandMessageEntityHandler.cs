@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -34,23 +35,23 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
-      var command = myMessage.Text.Substring(entity.Offset, entity.Length);
-      var commandText = myMessage.Text.Substring(entity.Offset + entity.Length).Trim();
+      var command = entity.Value.Split(new [] { '@' }).FirstOrDefault();
+      var commandText = entity.AfterValue.Trim();
       switch (command)
       {
-        case var _ when command.StartsWith("/new"):
+        case var _ when command.Equals("/new", StringComparison.OrdinalIgnoreCase):
           var title = commandText;
-          if (string.IsNullOrEmpty(title))
+          if (StringSegment.IsNullOrEmpty(title))
             return false;
           
           pollMessage.Poll = new Poll(myMessage)
           {
-            Title = title
+            Title = title.Value
           };
           return true;
 
-        case var _ when command.StartsWith("/poll") && int.TryParse(commandText, out var pollId):
-        case var _ when command.StartsWith("/start") && int.TryParse(commandText, out pollId):
+        case var _ when command.Equals("/poll", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out var pollId):
+        case var _ when command.Equals("/start", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out pollId):
           
           var existingPoll = await myContext
             .Set<Poll>()
@@ -64,7 +65,7 @@ namespace RaidBattlesBot.Handlers
           pollMessage.Poll = existingPoll;
           return true;
 
-        case var _ when command.StartsWith("/set"):
+        case var _ when command.Equals("/set", StringComparison.OrdinalIgnoreCase):
 
           IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
             VoteEnumEx.AllowedVoteFormats
@@ -75,13 +76,13 @@ namespace RaidBattlesBot.Handlers
           
           return false; // processed, but not pollMessage
 
-        case var _ when command.StartsWith("/help") && myMessage.Chat.Type == ChatType.Private:
+        case var _ when command.Equals("/help", StringComparison.OrdinalIgnoreCase) && myMessage.Chat.Type == ChatType.Private:
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
         
         // deep linking to gym
-        case var _ when command.StartsWith("/start") && commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
+        case var _ when command.Equals("/start", StringComparison.OrdinalIgnoreCase) && commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
           var pollTitle = new StringBuilder("Создание голосования");
           if (int.TryParse(query, out int gymPollId))
@@ -96,7 +97,7 @@ namespace RaidBattlesBot.Handlers
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
 
-        case var _ when command.StartsWith("/p") && int.TryParse(commandText, out var pollId):
+        case var _ when command.Equals("/p", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out var pollId):
           var poll = await myContext
             .Set<Poll>()
             .Where(_ => _.Id == pollId)
