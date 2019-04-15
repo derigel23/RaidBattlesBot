@@ -37,9 +37,9 @@ namespace RaidBattlesBot.Handlers
     {
       var command = entity.Value.Split(new [] { '@' }).FirstOrDefault();
       var commandText = entity.AfterValue.Trim();
-      switch (command)
+      switch (command.ToString().ToLowerInvariant())
       {
-        case var _ when command.Equals("/new", StringComparison.OrdinalIgnoreCase):
+        case "/new":
           var title = commandText;
           if (StringSegment.IsNullOrEmpty(title))
             return false;
@@ -50,8 +50,8 @@ namespace RaidBattlesBot.Handlers
           };
           return true;
 
-        case var _ when command.Equals("/poll", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out var pollId):
-        case var _ when command.Equals("/start", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out pollId):
+        case "/poll" when int.TryParse(commandText, out var pollId):
+        case "/start"when int.TryParse(commandText, out pollId):
           
           var existingPoll = await myContext
             .Set<Poll>()
@@ -65,7 +65,7 @@ namespace RaidBattlesBot.Handlers
           pollMessage.Poll = existingPoll;
           return true;
 
-        case var _ when command.Equals("/set", StringComparison.OrdinalIgnoreCase):
+        case "/set":
 
           IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
             VoteEnumEx.AllowedVoteFormats
@@ -76,13 +76,13 @@ namespace RaidBattlesBot.Handlers
           
           return false; // processed, but not pollMessage
 
-        case var _ when command.Equals("/help", StringComparison.OrdinalIgnoreCase) && myMessage.Chat.Type == ChatType.Private:
+        case "/help" when myMessage.Chat.Type == ChatType.Private:
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
         
         // deep linking to gym
-        case var _ when command.Equals("/start", StringComparison.OrdinalIgnoreCase) && commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
+        case "/start" when commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
           var pollTitle = new StringBuilder("Создание голосования");
           if (int.TryParse(query, out int gymPollId))
@@ -97,7 +97,7 @@ namespace RaidBattlesBot.Handlers
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
 
-        case var _ when command.Equals("/p", StringComparison.OrdinalIgnoreCase) && int.TryParse(commandText, out var pollId):
+        case "/p" when int.TryParse(commandText, out var pollId):
           var poll = await myContext
             .Set<Poll>()
             .Where(_ => _.Id == pollId)
