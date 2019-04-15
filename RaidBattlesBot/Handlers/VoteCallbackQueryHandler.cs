@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
-using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
