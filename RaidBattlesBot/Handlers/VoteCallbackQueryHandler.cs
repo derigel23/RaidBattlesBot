@@ -32,7 +32,7 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
       myClock = clock;
       myVoteTimeout = options.Value.VoteTimeout;
-      myBlackList = options.Value.BlackList;
+      myBlackList = options.Value.BlackList ?? new HashSet<int>(0);
     }
 
     private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
