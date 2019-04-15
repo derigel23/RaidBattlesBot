@@ -53,7 +53,7 @@ namespace RaidBattlesBot.Handlers
       {
         switch (queryPart)
         {
-          case string locationPart when OpenLocationCode.IsValidCode(locationPart):
+          case string locationPart when OpenLocationCode.IsValid(locationPart):
             location = OpenLocationCode.Decode(locationPart) is var code
               ? new Location { Longitude = (float) code.CenterLongitude, Latitude = (float) code.CenterLatitude }
               : location;
