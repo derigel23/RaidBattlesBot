@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Primitives;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Team23.TelegramSkeleton
 {
@@ -16,11 +17,27 @@ namespace Team23.TelegramSkeleton
       
       Value = new StringSegment(Message.Text, Offset, Length);
       AfterValue = new StringSegment(Message.Text, Offset + Length, Message.Text.Length - Offset - Length);
+
+      if (Type == MessageEntityType.BotCommand && Value.IndexOf('@') is var atOffset)
+      {
+        if (atOffset >= 0)
+        {
+          Command = Value.Subsegment(0, atOffset);
+          CommandBot = Value.Subsegment(atOffset + 1);
+        }
+        else
+        {
+          Command = Value;
+        }
+      }
     }
 
     public Message Message { get; }
 
     public StringSegment Value { get; }
     public StringSegment AfterValue { get; }
+
+    public StringSegment Command { get; }
+    public StringSegment CommandBot { get; }
   }
 }

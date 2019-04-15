@@ -35,9 +35,8 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
     {
-      var command = entity.Value.Split(new [] { '@' }).FirstOrDefault();
       var commandText = entity.AfterValue.Trim();
-      switch (command.ToString().ToLowerInvariant())
+      switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/new":
           var title = commandText;

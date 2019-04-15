@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using Microsoft.Extensions.Primitives;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -29,14 +30,11 @@ namespace Team23.TelegramSkeleton
       foreach (var entity in message.Entities ?? Enumerable.Empty<MessageEntity>())
       {
         var entityEx = new MessageEntityEx(message, entity);
-        if (entityEx.Type == MessageEntityType.BotCommand)
+        // check bot name, if presents
+        if ((entityEx.Type == MessageEntityType.BotCommand) && (entityEx.CommandBot is StringSegment commandBot) && !StringSegment.IsNullOrEmpty(commandBot))  
         {
-          // check bot name, if presents
-          if (entityEx.Value.IndexOf('@') is var nameOffset && nameOffset >= 0)
-          {
-            if (!entityEx.Value.Subsegment(nameOffset + 1).Equals((await myBot.GetMeAsync(cancellationToken)).Username, StringComparison.OrdinalIgnoreCase))
-              continue;
-          }
+          if (!commandBot.Equals((await myBot.GetMeAsync(cancellationToken)).Username, StringComparison.OrdinalIgnoreCase))
+            continue;
         }
         result = await HandlerExtentions<TResult>.Handle(handlers, entityEx, _.context, cancellationToken).ConfigureAwait(false);
         if (!EqualityComparer<TResult>.Default.Equals(result, default))
