@@ -10,6 +10,8 @@ using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
+using Poll = RaidBattlesBot.Model.Poll;
+
 namespace RaidBattlesBot.Handlers
 {
   [MessageType(UpdateType.Message, MessageType = MessageType.Venue)]

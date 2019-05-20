@@ -13,6 +13,8 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 
+using Poll = RaidBattlesBot.Model.Poll;
+
 namespace RaidBattlesBot.Handlers
 {
   [InlineQueryHandler(QueryPattern = "^share")]

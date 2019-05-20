@@ -12,6 +12,8 @@ using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
+using Poll = RaidBattlesBot.Model.Poll;
+
 namespace RaidBattlesBot.Pages
 {
   public class MapModel : PageModel

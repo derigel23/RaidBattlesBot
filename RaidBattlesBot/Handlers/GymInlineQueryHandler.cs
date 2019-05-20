@@ -15,6 +15,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
+using Poll = RaidBattlesBot.Model.Poll;
+
 namespace RaidBattlesBot.Handlers
 {
   [InlineQueryHandler(QueryPattern = PATTERN)]

@@ -13,6 +13,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
+using Poll = RaidBattlesBot.Model.Poll;
+
 namespace RaidBattlesBot.Handlers
 {
   [MessageEntityType(EntityType = MessageEntityType.BotCommand)]
