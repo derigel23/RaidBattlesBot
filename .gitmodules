@@ -1,3 +1,7 @@
 [submodule "RaidBattlesBot/PogoAssets"]
 	path = RaidBattlesBot/PogoAssets
 	url = git@github.com:ZeChrales/PogoAssets.git
+
+[submodule "TelegramSkeleton"]
+	path = TelegramSkeleton
+	url = git@github.com:derigel23/TelegramSkeleton.git
