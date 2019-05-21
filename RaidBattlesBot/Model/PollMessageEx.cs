@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+using RaidBattlesBot.Handlers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -34,7 +35,7 @@ namespace RaidBattlesBot.Model
           for (var j = 0; j < inlineKeyboardButtons[i].Length; j++)
           {
             if (inlineKeyboardButtons[i][j].Text == "🌐" )
-              inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData("🌐", $"clone:{message.GetPollId()}");
+              inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData("🌐", $"clone:{message.GetExtendedPollId()}");
           }
 
           return new InlineKeyboardMarkup(inlineKeyboardButtons);
@@ -47,6 +48,7 @@ namespace RaidBattlesBot.Model
       if (!await chatInfo.CandEditPoll(message.Poll.Owner, message.UserId, cancellationToken))
         return pollReplyMarkup;
 
+      var pollId = message.GetExtendedPollId();
       if (pollReplyMarkup == null) // cancelled
       {
         if (!message.Poll.Cancelled)
@@ -54,23 +56,28 @@ namespace RaidBattlesBot.Model
 
         return  new InlineKeyboardMarkup(new []
         {
-          InlineKeyboardButton.WithCallbackData("Возобновить", $"restore:{message.GetPollId()}"),
+          InlineKeyboardButton.WithCallbackData("Возобновить", $"{RestoreCallbackQueryHandler.ID}:{pollId}"),
         });
       }
 
       var additionalKeyboardButtons = new List<InlineKeyboardButton>();
       if (message.Poll.Time != null)
       {
-        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' раньше", $"adjust:{message.GetPollId()}:-5"));
-        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' позже", $"adjust:{message.GetPollId()}:5"));
+        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' раньше", $"{AdjustCallbackQueryHandler.ID}:{pollId}:-5"));
+        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' позже", $"{AdjustCallbackQueryHandler.ID}:{pollId}:5"));
       }
-      additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("Отменить", $"cancel:{message.GetPollId()}"));
+      additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("Отменить", $"{CancelCallbackQueryHandler.ID}:{pollId}"));
       return new InlineKeyboardMarkup(pollReplyMarkup.InlineKeyboard.Append(additionalKeyboardButtons));
     }
 
     public static int? GetPollId(this PollMessage message)
     {
       return message.Poll?.Id ?? message.PollId;
+    }
+
+    public static PollId GetExtendedPollId(this PollMessage message)
+    {
+      return message.Poll?.GetId() ?? new PollId { Id = message.PollId };
     }
     
     public static IQueryable<PollMessage> IncludeRelatedData(this IQueryable<PollMessage> pollMessages)

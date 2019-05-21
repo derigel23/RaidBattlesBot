@@ -70,7 +70,7 @@ namespace RaidBattlesBot
       }
     }
 
-    public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, VoteEnum format, CancellationToken cancellationToken = default)
     {
       bool exRaidGym = false;
       var pollId = pollMessage.PollId;
@@ -104,7 +104,7 @@ namespace RaidBattlesBot
       {
         Id = pollId,
         Title = pollData.Title,
-        AllowedVotes = VoteEnumEx.AllowedVoteFormats[votesFormatIndex],
+        AllowedVotes = format,
         Owner = pollData.Owner,
         Portal = pollData.Portal,
         ExRaidGym = exRaidGym,
@@ -127,6 +127,7 @@ namespace RaidBattlesBot
           existingPortal.Image = portal.Image;
           existingPortal.Latitude = portal.Latitude;
           existingPortal.Longitude = portal.Longitude;
+          portalSet.Attach(portal).State = EntityState.Modified;
         }
       }
       

@@ -109,7 +109,7 @@ namespace RaidBattlesBot.Handlers
           };
           poll.Id = await myRaidService.GetPollId(poll, cancellationToken) + voteFormatOffset;
 
-          results.Add(new InlineQueryResultArticle($"create:{poll.Id}", poll.GetTitle(myUrlHelper),
+          results.Add(new InlineQueryResultArticle($"create:{poll.GetId()}", poll.GetTitle(myUrlHelper),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
               Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
@@ -122,7 +122,7 @@ namespace RaidBattlesBot.Handlers
           {
             poll.Id = -poll.Id;
             poll.ExRaidGym = true;
-            results.Add(new InlineQueryResultArticle($"create:{poll.Id}", poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
+            results.Add(new InlineQueryResultArticle($"create:{poll.GetId()}", poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
               poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
               Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DelegateDecompiler.EntityFramework;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using NodaTime;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -17,9 +18,11 @@ using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
-  [InlineQueryHandler(QueryPattern = "^share")]
+  [InlineQueryHandler(QueryPattern = "^" + ID)]
   public class ShareInlineQueryHandler : IInlineQueryHandler
   {
+    public const string ID = "share";
+    
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly IUrlHelper myUrlHelper;
@@ -37,18 +40,18 @@ namespace RaidBattlesBot.Handlers
 
     async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context, CancellationToken cancellationToken)
     {
-      var queryParts = data.Query.Split(':');
-      if (queryParts[0] != "share")
+      var queryParts = new StringSegment(data.Query).Split(new[] {':'});
+      if (queryParts.First() != "share")
         return null;
 
       var inlineQueryResults = Enumerable.Empty<InlineQueryResultBase>();
-      if (!int.TryParse(queryParts.ElementAtOrDefault(1) ?? "", out var pollid))
+      if (!PollEx.TryGetPollId(queryParts.ElementAtOrDefault(1), out var pollId, out var format))
       {
         inlineQueryResults = await GetActivePolls(data.From, cancellationToken);
       }
       else
       {
-        var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollid }, myUrlHelper, cancellationToken))?.Poll;
+        var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
         var queryResults = new List<InlineQueryResultBase>();
         if (poll != null)

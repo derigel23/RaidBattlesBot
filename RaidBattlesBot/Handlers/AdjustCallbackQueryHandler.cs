@@ -4,14 +4,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
-using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "adjust")]
+  [CallbackQueryHandler(DataPrefix = ID)]
   public class AdjustCallbackQueryHandler : ICallbackQueryHandler
   {
+    public const string ID = "adjust";
+    
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
@@ -31,13 +32,13 @@ namespace RaidBattlesBot.Handlers
       if (callback[0] != "adjust")
         return (null, false, null);
       
-      if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
+      if (!PollEx.TryGetPollId(callback.ElementAtOrDefault(1), out var pollId, out var format))
         return ("Голование подготавливается. Повторите позже", true, null);
 
       if (!int.TryParse(callback.ElementAtOrDefault(2) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var offset))
         return ("", false, null);
 
-      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken))?.Poll;
+      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
       if (poll == null)
         return ("Голосование не найдено", true, null);

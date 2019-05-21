@@ -51,8 +51,8 @@ namespace RaidBattlesBot.Handlers
           };
           return true;
 
-        case "/poll" when int.TryParse(commandText, out var pollId):
-        case "/start"when int.TryParse(commandText, out pollId):
+        case "/poll"  when PollEx.TryGetPollId(commandText, out var pollId, out _):
+        case "/start" when PollEx.TryGetPollId(commandText, out pollId, out _):
           
           var existingPoll = await myContext
             .Set<Poll>()

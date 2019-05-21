@@ -1,12 +1,14 @@
 ﻿﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+ using System.Globalization;
+ using System.Linq;
 using System.Text;
 using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Telegram.Bot.Types.Enums;
+ using RaidBattlesBot.Handlers;
+ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -149,14 +151,13 @@ namespace RaidBattlesBot.Model
       if (poll.Cancelled)
         return null;
 
-      var pollId = poll.Id;
-
+      var pollId = poll.GetId();
       InlineKeyboardButton GetVoteButton(VoteEnum vote) =>
-        InlineKeyboardButton.WithCallbackData(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"vote:{pollId}:{vote}");
+        InlineKeyboardButton.WithCallbackData(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}");
 
       var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard).Select(GetVoteButton))
       {
-        InlineKeyboardButton.WithSwitchInlineQuery("🌐", $"share:{pollId}")
+        InlineKeyboardButton.WithSwitchInlineQuery("🌐", $"{ShareInlineQueryHandler.ID}:{pollId}")
       };
       return new InlineKeyboardMarkup(buttons.ToArray());
     }
@@ -188,7 +189,7 @@ namespace RaidBattlesBot.Model
 
     public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper)
     {
-      return new InlineQueryResultArticle($"poll:{poll.Id}", poll.GetTitle(urlHelper),
+      return new InlineQueryResultArticle($"poll:{poll.GetId()}", poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
         Description = "Клонировать голосование",
@@ -196,6 +197,31 @@ namespace RaidBattlesBot.Model
         ThumbUrl = poll.GetThumbUrl(urlHelper).ToString(),
         ReplyMarkup = poll.GetReplyMarkup()
       };
+    }
+
+    public static PollId GetId(this Poll poll) =>
+      new PollId {Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard};
+
+    public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum format)
+    {
+      if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out pollId))
+      {
+        if (!PollId.TryRead(text, out var pollIdCombined))
+        {
+          format = VoteEnum.None;
+          return false;
+        }
+        
+        pollId = pollIdCombined.Id;
+        format = pollIdCombined.Format;
+      }
+      else
+      {
+        var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
+        format = VoteEnumEx.AllowedVoteFormats[votesFormatIndex];
+      }
+
+      return true;
     }
   }
 }

@@ -28,10 +28,10 @@ namespace RaidBattlesBot.Handlers
       {
           case "poll":
           case "create":
-            if (!int.TryParse(resultParts.ElementAtOrDefault(1) ?? "", out var pollId))
+            if (!PollEx.TryGetPollId(resultParts.ElementAtOrDefault(1), out var pollId, out var format))
               return null;
 
-            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken)) != null;
+            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken)) != null;
       }
 
       return null;

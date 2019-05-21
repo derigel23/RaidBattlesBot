@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
+using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "vote")]
+  [CallbackQueryHandler(DataPrefix = ID)]
   public class VoteCallbackQueryHandler : ICallbackQueryHandler
   {
+    public const string ID = "vote";
+    
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
@@ -45,17 +48,22 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var callback = data.Data.Split(':');
-      if (callback[0] != "vote")
+      var callback = new StringSegment(data.Data ).Split(new[] { ':' });
+      if (callback.First() != "vote")
         return (null, false, null);
       
       if (myBlackList.Contains(data.From.Id))
         return (null, false, null);
-      
-      if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return ("Голование подготавливается. Повторите позже", true, null);
 
-      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, cancellationToken))?.Poll;
+      Poll poll;
+      if (callback.ElementAtOrDefault(1) is var pollIdSegment && PollEx.TryGetPollId(pollIdSegment, out var pollId, out var format))
+      {
+        poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
+      }
+      else
+      {
+        return ("Голование подготавливается. Повторите позже", true, null);
+      }
 
       if (poll == null)
         return ("Голосование не найдено", true, null);
@@ -76,7 +84,7 @@ namespace RaidBattlesBot.Handlers
       vote.User = user; // update username/firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
-      if (!FlagEnums.TryParseFlags(teamAbbr, out VoteEnum team))
+      if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team))
         return ("Неправильный голос", true, null);
 
       var clearTeam = team.RemoveFlags(VoteEnum.Plus);

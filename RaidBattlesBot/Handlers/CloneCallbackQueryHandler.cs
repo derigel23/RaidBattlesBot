@@ -58,7 +58,7 @@ namespace RaidBattlesBot.Handlers
       await myRaidService.AddPollMessage(pollMessage, myUrlHelper, cancellationToken);
 
       var botUser = await myBot.GetMeAsync(cancellationToken);
-      return (null, false, $"https://t.me/{botUser.Username}?start={pollMessage.GetPollId()}");
+      return (null, false, $"https://t.me/{botUser.Username}?start={pollMessage.GetExtendedPollId()}");
     }
   }
 }
