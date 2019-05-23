@@ -70,7 +70,7 @@ namespace RaidBattlesBot
       }
     }
 
-    public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, VoteEnum format, CancellationToken cancellationToken = default)
+    public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, VoteEnum? format = null, CancellationToken cancellationToken = default)
     {
       bool exRaidGym = false;
       var pollId = pollMessage.PollId;
@@ -95,9 +95,7 @@ namespace RaidBattlesBot
         return await AddPollMessage(pollMessage, urlHelper, cancellationToken);
       }
 
-      var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
-      var pollIdBase = pollId - votesFormatIndex;
-      var pollData = GetTemporaryPoll(pollIdBase);
+      var pollData = GetTemporaryPoll(pollId);
       if (pollData == null) return null;
 
       pollMessage.Poll = new Poll

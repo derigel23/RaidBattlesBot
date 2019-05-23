@@ -86,11 +86,11 @@ namespace RaidBattlesBot.Handlers
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
         inlineQueryResults = 
           VoteEnumEx.AllowedVoteFormats
-            .Select((_, i) => new Poll
+            .Select(format => new Poll
             {
-              Id = exRaidGym ? -pollId - i : pollId + i,
+              Id = exRaidGym ? -pollId : pollId,
               Title = query,
-              AllowedVotes = _,
+              AllowedVotes = format,
               Portal = portal,
               ExRaidGym = exRaidGym
             })

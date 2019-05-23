@@ -200,9 +200,9 @@ namespace RaidBattlesBot.Model
     }
 
     public static PollId GetId(this Poll poll) =>
-      new PollId {Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard};
+      new PollId { Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard};
 
-    public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum format)
+    public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum? format)
     {
       if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out pollId))
       {
@@ -217,8 +217,7 @@ namespace RaidBattlesBot.Model
       }
       else
       {
-        var votesFormatIndex = (pollId - RaidBattlesContext.PollIdSeed) % VoteEnumEx.AllowedVoteFormats.Length;
-        format = VoteEnumEx.AllowedVoteFormats[votesFormatIndex];
+        format = null;
       }
 
       return true;

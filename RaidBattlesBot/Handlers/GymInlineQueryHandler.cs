@@ -93,21 +93,17 @@ namespace RaidBattlesBot.Handlers
         var voteFormat =
           (await myDb.Set<Settings>().FirstOrDefaultAsync(_ => _.Chat == data.From.Id, cancellationToken))
           ?.DefaultAllowedVotes ?? VoteEnum.Standard;
-        var voteFormatOffset = VoteEnumEx.AllowedVoteFormats
-                                 .Select((format, i) => format == voteFormat ? i : default(int?))
-                                 .FirstOrDefault(_ => _ != null) ?? 0;
 
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
           poll = new Poll(data)
           {
-            //Id = pollId + voteFormatOffset,
             Title = string.Join("  ", pollQuery),
             AllowedVotes = voteFormat,
             Portal = portals[i],
             ExRaidGym = false
           };
-          poll.Id = await myRaidService.GetPollId(poll, cancellationToken) + voteFormatOffset;
+          poll.Id = await myRaidService.GetPollId(poll, cancellationToken);
 
           results.Add(new InlineQueryResultArticle($"create:{poll.GetId()}", poll.GetTitle(myUrlHelper),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))

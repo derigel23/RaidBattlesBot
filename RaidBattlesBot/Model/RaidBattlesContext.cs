@@ -10,8 +10,6 @@ namespace RaidBattlesBot.Model
     public RaidBattlesContext(DbContextOptions<RaidBattlesContext> options)
       : base(options) { }
 
-    public const int PollIdSeed = 10100;
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.Entity<Raid>(raidEntity =>
@@ -25,7 +23,7 @@ namespace RaidBattlesBot.Model
       
       modelBuilder.Entity<Poll>(pollEntity =>
       {
-        var pollIdSequence = modelBuilder.HasSequence<int>("PollId").StartsAt(PollIdSeed).IncrementsBy(VoteEnumEx.AllowedVoteFormats.Length);
+        var pollIdSequence = modelBuilder.HasSequence<int>("PollId").StartsAt(100000).IncrementsBy(1);
 
         pollEntity.ToTable("Polls");
         pollEntity.Property(poll => poll.Id).HasDefaultValueSql($"NEXT VALUE FOR {pollIdSequence.Metadata.Name}");
