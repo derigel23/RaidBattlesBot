@@ -122,7 +122,7 @@ namespace RaidBattlesBot.Model
         var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
         text.NewLine().Sanitize($"{votesNumber} {countStr}", mode).NewLine();
 
-        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Plus)).OrderBy(_ => _.Key))
+        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Plus | VoteEnum.Share)).OrderBy(_ => _.Key))
         {
           var votes = vote.OrderBy(v => v.Modified);
           if (compactMode)
@@ -155,10 +155,19 @@ namespace RaidBattlesBot.Model
       InlineKeyboardButton GetVoteButton(VoteEnum vote) =>
         InlineKeyboardButton.WithCallbackData(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}");
 
-      var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard).Select(GetVoteButton))
-      {
-        InlineKeyboardButton.WithSwitchInlineQuery("🌐", $"{ShareInlineQueryHandler.ID}:{pollId}")
-      };
+      var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
+        .Select(vote =>
+        {
+          var display = vote.AsString(EnumFormat.DisplayName, EnumFormat.Description);
+          switch (vote)
+          {
+            case VoteEnum.Share:
+              return InlineKeyboardButton.WithSwitchInlineQuery(display, $"{ShareInlineQueryHandler.ID}:{pollId}");
+            
+            default:
+              return InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}");
+          }
+        }));
       return new InlineKeyboardMarkup(buttons.ToArray());
     }
 

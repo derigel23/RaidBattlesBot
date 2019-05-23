@@ -42,6 +42,9 @@ namespace RaidBattlesBot.Model
     [Display(Name = "✖", Order = 100)]
     Cancel = MayBe << 1,
 
+    [Display(Name = "🌐", Order = 9999)]
+    Share = Cancel << 1,
+
     [Display(Name = "❤⁺¹", Order = 1)]
     ValorPlusOne = Valor | Plus1,
 
@@ -54,13 +57,9 @@ namespace RaidBattlesBot.Model
     [Display(Name = "✔⁺¹", Order = 1)]
     YesPlus1 = Yes | Plus1,
 
-    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | MayBe | Cancel,
-    StandardNoDoubt = Valor | Instinct | Mystic | Cancel,
-    Compact =  YesPlus1 | MayBe | Cancel,
-    Minimal =  Yes | Plus1 | Cancel,
-    YesNo =  Yes | Cancel,
-    Full = Valor | Instinct | Mystic | Plus1 | MayBe | Cancel,
-    FullNoDoubt = Valor | Instinct | Mystic | Plus1 | Cancel,
+    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | MayBe | Cancel | Share,
+    Compact =  YesPlus1 | MayBe | Cancel | Share,
+    YesNo =  Yes | Cancel | Share,
 
     Going = Yes | Valor | Instinct | Mystic,
     Thinking = MayBe,
