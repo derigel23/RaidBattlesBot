@@ -106,7 +106,9 @@ namespace RaidBattlesBot.Handlers
             .Append(new [] { InlineKeyboardButton.WithCallbackData("Удалить", $"{ID}:{settings.Id}:delete") })
             .Append(new [] { InlineKeyboardButton.WithCallbackData("Назад", $"{ID}:list") });
 
-          return await Return((settings.Format.Format(new StringBuilder()).ToTextMessageContent(), new InlineKeyboardMarkup(buttons)), message);
+          return await Return((
+            settings.Format.Format(new StringBuilder("Выбранный формат голосования:").AppendLine()).ToTextMessageContent(),
+            new InlineKeyboardMarkup(buttons)), message);
       }
 
       async Task<(string, bool, string)> Return((InputTextMessageContent content, InlineKeyboardMarkup replyMarkup) pass, string notification = "")
