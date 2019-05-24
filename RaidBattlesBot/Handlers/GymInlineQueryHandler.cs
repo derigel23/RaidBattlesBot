@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -90,10 +88,8 @@ namespace RaidBattlesBot.Handlers
 
       if ((poll == null) && (pollQuery.Count != 0))
       {
-        var voteFormat =
-          (await myDb.Set<Settings>().FirstOrDefaultAsync(_ => _.Chat == data.From.Id, cancellationToken))
-          ?.DefaultAllowedVotes ?? VoteEnum.Standard;
-
+        var voteFormat = await myDb.Set<Settings>().GetFormat(data.From.Id, cancellationToken);
+        
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
           poll = new Poll(data)

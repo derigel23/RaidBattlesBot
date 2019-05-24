@@ -138,7 +138,7 @@ namespace RaidBattlesBot
         return message;
       
       message.Poll.AllowedVotes =
-        message.Poll.AllowedVotes ?? (await myContext.Set<Settings>().FirstOrDefaultAsync(settings => settings.Chat == message.ChatId, cancellationToken))?.DefaultAllowedVotes;
+        message.Poll.AllowedVotes ?? await myContext.Set<Settings>().GetFormat(message.UserId, cancellationToken);
 
       var raidUpdated = false;
       var eggRaidUpdated = false;

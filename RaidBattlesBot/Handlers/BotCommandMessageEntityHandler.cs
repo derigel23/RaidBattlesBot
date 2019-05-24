@@ -25,14 +25,16 @@ namespace RaidBattlesBot.Handlers
     private readonly ITelegramBotClient myTelegramBotClient;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
+    private readonly SetCallbackQueryHandler mySetCallbackQueryHandler;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper, SetCallbackQueryHandler setCallbackQueryHandler)
     {
       myContext = context;
       myMessage = message;
       myTelegramBotClient = telegramBotClient;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
+      mySetCallbackQueryHandler = setCallbackQueryHandler;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -68,12 +70,10 @@ namespace RaidBattlesBot.Handlers
 
         case "/set":
 
-          IReplyMarkup replyMarkup = new InlineKeyboardMarkup(
-            VoteEnumEx.AllowedVoteFormats
-              .Select(flags => new[] { InlineKeyboardButton.WithCallbackData(flags.Format(new StringBuilder()).ToString(), $"set:{flags:D}") }).ToArray());
+          var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(myMessage.Chat.Id, cancellationToken);
 
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "Выберите формат голосования по умолчанию:", disableNotification: true,
-            replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, setContent.MessageText, setContent.ParseMode, setContent.DisableWebPagePreview, 
+            disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
 

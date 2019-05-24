@@ -24,7 +24,7 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💙", Order = 10)]
     Mystic = Instinct << 1,
 
-    [Display(Name = "+1", Order = 15)]
+    [Display(Name = "⁺¹", Order = 15)]
     Plus1 = Mystic << 1,
 
     [Display(Name = "+2", Order = 15)]
@@ -61,7 +61,8 @@ namespace RaidBattlesBot.Model
     Compact =  YesPlus1 | MayBe | Cancel | Share,
     YesNo =  Yes | Cancel | Share,
 
-    Going = Yes | Valor | Instinct | Mystic,
+    Team = Valor | Instinct | Mystic,
+    Going = Yes | Team,
     Thinking = MayBe,
     Some = Going | MayBe ,
     SomePlus = Some | Plus,
@@ -72,7 +73,7 @@ namespace RaidBattlesBot.Model
 
   public static class VoteEnumEx
   {
-    public static readonly VoteEnum[] AllowedVoteFormats = 
+    public static readonly ICollection<VoteEnum> DefaultVoteFormats = 
       new [] { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.YesNo }
         .Distinct()
         .ToArray();

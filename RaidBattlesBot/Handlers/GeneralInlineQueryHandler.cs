@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -84,8 +85,12 @@ namespace RaidBattlesBot.Handlers
       {
         var pollId = await myRaidService.GetPollId(new Poll(data) { Title = query, Portal = portal }, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
-        inlineQueryResults = 
-          VoteEnumEx.AllowedVoteFormats
+        ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);
+        if (voteFormats.Count == 0)
+        {
+          voteFormats = VoteEnumEx.DefaultVoteFormats;
+        }
+        inlineQueryResults = voteFormats
             .Select(format => new Poll
             {
               Id = exRaidGym ? -pollId : pollId,
