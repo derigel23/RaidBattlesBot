@@ -45,6 +45,16 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🌐", Order = 9999)]
     Share = Cancel << 1,
 
+    [Display(Name = "👍", Order = 10)]
+    ThumbsUp = Share << 1,
+    
+    [Display(Name = "👎", Order = 10)]
+    ThumbsDown = ThumbsUp << 1,
+    
+    Thumbs = ThumbsUp | ThumbsDown,
+    
+    #region Plused votes
+
     [Display(Name = "❤⁺¹", Order = 1)]
     ValorPlusOne = Valor | Plus1,
 
@@ -57,14 +67,21 @@ namespace RaidBattlesBot.Model
     [Display(Name = "✔⁺¹", Order = 1)]
     YesPlus1 = Yes | Plus1,
 
+    [Display(Name = "👍⁺¹", Order = 1)]
+    ThumbsUpPlus1 = ThumbsUp | Plus1,
+
+    [Display(Name = "👎⁺¹", Order = 1)]
+    ThumbsDownPlus1 = ThumbsDown | Plus1,
+
+    #endregion
+
     Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | MayBe | Cancel | Share,
-    Compact =  YesPlus1 | MayBe | Cancel | Share,
-    YesNo =  Yes | Cancel | Share,
 
     Team = Valor | Instinct | Mystic,
     Going = Yes | Team,
     Thinking = MayBe,
-    Some = Going | MayBe ,
+    Countable = Going | Thumbs,
+    Some = Thumbs | MayBe ,
     SomePlus = Some | Plus,
     ChangedMind = Cancel,
 
@@ -73,10 +90,17 @@ namespace RaidBattlesBot.Model
 
   public static class VoteEnumEx
   {
-    public static readonly ICollection<VoteEnum> DefaultVoteFormats = 
-      new [] { VoteEnum.Standard, VoteEnum.Compact, VoteEnum.YesNo }
-        .Distinct()
-        .ToArray();
+    public static readonly ICollection<VoteEnum> DefaultVoteFormats = new []
+    {
+      // hearts
+      VoteEnum.Standard,
+      
+      // compact
+      VoteEnum.YesPlus1 | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
+      
+      // thumbs up/down
+      VoteEnum.Thumbs | VoteEnum.Share
+    };
 
     private static readonly int FirstPlusBit = (int)Math.Log((int)VoteEnum.Plus1, 2);
 

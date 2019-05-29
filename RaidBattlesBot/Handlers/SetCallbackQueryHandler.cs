@@ -76,7 +76,7 @@ namespace RaidBattlesBot.Handlers
         case var format when FlagEnums.TryParseFlags(format, out VoteEnum toggleVotes, EnumFormat.DecimalValue):
           settings.Format = FlagEnums.ToggleFlags(settings.Format, toggleVotes);
           // adjust ⁺¹
-          if (settings.Format.HasAnyFlags(VoteEnum.Plus) && !settings.Format.HasAnyFlags(VoteEnum.Going))
+          if (settings.Format.HasAnyFlags(VoteEnum.Plus) && !settings.Format.HasAnyFlags(VoteEnum.Countable))
           {
             settings.Format = settings.Format.RemoveFlags(VoteEnum.Plus);
           }
@@ -88,7 +88,16 @@ namespace RaidBattlesBot.Handlers
           goto default;
 
         default:
-          var buttons = new [] { VoteEnum.Team, VoteEnum.Plus1, VoteEnum.MayBe, VoteEnum.Yes, VoteEnum.Cancel, VoteEnum.Share }
+          var buttons = new []
+            {
+              VoteEnum.Team,
+              VoteEnum.Plus1,
+              VoteEnum.MayBe,
+              VoteEnum.Yes,
+              VoteEnum.Thumbs,
+              VoteEnum.Cancel,
+              VoteEnum.Share
+            }
               .Select(format => new []
               {
                 InlineKeyboardButton.WithCallbackData($"{(settings.Format.HasAllFlags(format) ? '☑' : '☐')} {format.Format(new StringBuilder())}", $"{ID}:{settings.Id}:{format:D}")

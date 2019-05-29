@@ -21,6 +21,8 @@ namespace RaidBattlesBot.Model
       { VoteEnum.Going, (1, "идёт", "идут") },
       { VoteEnum.Thinking, (2, "думает", "думают") },
       { VoteEnum.ChangedMind, (3, "передумал", "передумали") },
+      { VoteEnum.ThumbsUp, (4, "за", "за") },
+      { VoteEnum.ThumbsDown, (5, "против", "против") },
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
