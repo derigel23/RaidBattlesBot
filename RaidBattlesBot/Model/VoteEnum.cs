@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Model
     Going = Yes | Team,
     Thinking = MayBe,
     Countable = Going | Thumbs,
-    Some = Thumbs | MayBe ,
+    Some = Countable | MayBe ,
     SomePlus = Some | Plus,
     ChangedMind = Cancel,
 
