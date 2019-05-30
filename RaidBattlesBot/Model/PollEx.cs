@@ -154,8 +154,6 @@ namespace RaidBattlesBot.Model
         return null;
 
       var pollId = poll.GetId();
-      InlineKeyboardButton GetVoteButton(VoteEnum vote) =>
-        InlineKeyboardButton.WithCallbackData(vote.AsString(EnumFormat.DisplayName, EnumFormat.Description), $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}");
 
       var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
         .Select(vote =>
@@ -200,7 +198,7 @@ namespace RaidBattlesBot.Model
 
     public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper)
     {
-      return new InlineQueryResultArticle($"poll:{poll.GetId()}", poll.GetTitle(urlHelper),
+      return new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
         Description = "Клонировать голосование",
@@ -212,6 +210,11 @@ namespace RaidBattlesBot.Model
 
     public static PollId GetId(this Poll poll) =>
       new PollId { Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard};
+
+    public const string InlineIdPrefix = "poll";
+    
+    public static string GetInlineId(this Poll poll) =>
+      $"{InlineIdPrefix}:{poll.GetId()}:{(poll.Portal?.Guid ?? poll.PortalId)}";
 
     public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum? format)
     {

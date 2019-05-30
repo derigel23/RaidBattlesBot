@@ -26,12 +26,11 @@ namespace RaidBattlesBot.Handlers
       var resultParts = data.ResultId.Split(':');
       switch (resultParts[0])
       {
-          case "poll":
-          case "create":
-            if (!PollEx.TryGetPollId(resultParts.ElementAtOrDefault(1), out var pollId, out var format))
-              return null;
+        case PollEx.InlineIdPrefix:
+          if (!PollEx.TryGetPollId(resultParts.ElementAtOrDefault(1), out var pollId, out var format))
+            return null;
 
-            return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken)) != null;
+          return (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken)) != null;
       }
 
       return null;
