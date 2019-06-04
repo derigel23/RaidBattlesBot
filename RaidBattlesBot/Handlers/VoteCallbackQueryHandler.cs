@@ -49,7 +49,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = new StringSegment(data.Data ).Split(new[] { ':' });
-      if (callback.First() != "vote")
+      if (callback.First() != ID)
         return (null, false, null);
       
       if (myBlackList.Contains(data.From.Id))

@@ -10,7 +10,6 @@ using Microsoft.Extensions.Primitives;
 using NodaTime;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 
@@ -24,12 +23,12 @@ namespace RaidBattlesBot.Handlers
     public const string ID = "share";
     
     private readonly RaidBattlesContext myContext;
-    private readonly ITelegramBotClient myBot;
+    private readonly ITelegramBotClientEx myBot;
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly RaidService myRaidService;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClient bot, IUrlHelper urlHelper, IClock clock, RaidService raidService)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClientEx bot, IUrlHelper urlHelper, IClock clock, RaidService raidService)
     {
       myContext = context;
       myBot = bot;
@@ -82,11 +81,11 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults.ToArray(), cacheTime: 0, cancellationToken: cancellationToken);
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, inlineQueryResults.ToArray(), cacheTime: 0, cancellationToken: cancellationToken);
       return true;
     }
 
-    public async Task<IEnumerable<InlineQueryResultArticle>> GetActivePolls(User user, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<InlineQueryResultArticle>> GetActivePolls(User user, CancellationToken cancellationToken = default)
     {
       return Array.Empty<InlineQueryResultArticle>();
       var userId = user.Id;
@@ -104,7 +103,7 @@ namespace RaidBattlesBot.Handlers
         .DecompileAsync()
         .ToArrayAsync(cancellationToken);
 
-      return polls.Select(poll => poll.ClonePoll(myUrlHelper));
+      return Array.ConvertAll(polls, (poll => poll.ClonePoll(myUrlHelper)));
     }
   }
 }

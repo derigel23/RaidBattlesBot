@@ -21,14 +21,14 @@ namespace RaidBattlesBot.Handlers
   {
     public const string SwitchToGymParameter = "linkToGym";
 
-    private readonly ITelegramBotClient myBot;
+    private readonly ITelegramBotClientEx myBot;
     private readonly IUrlHelper myUrlHelper;
     private readonly ShareInlineQueryHandler myShareInlineQueryHandler;
     private readonly RaidService myRaidService;
     private readonly IngressClient myIngressClient;
     private readonly RaidBattlesContext myDb;
 
-    public GeneralInlineQueryHandler(ITelegramBotClient bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db)
+    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
@@ -40,7 +40,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      IEnumerable<InlineQueryResultBase> inlineQueryResults;
+      IReadOnlyCollection<InlineQueryResultBase> inlineQueryResults;
 
       string query = null;
       Portal portal = null;
@@ -106,10 +106,11 @@ namespace RaidBattlesBot.Handlers
                 HideUrl = true,
                 ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
                 ReplyMarkup = fakePoll.GetReplyMarkup()
-            });
+            })
+            .ToArray();
       }
 
-      await myBot.AnswerInlineQueryAsync(data.Id, inlineQueryResults,
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, inlineQueryResults,
         switchPmText: switchPmParameter != null ? "Привязать голосование к гиму" : null, switchPmParameter: switchPmParameter,
         cacheTime: 0, cancellationToken: cancellationToken);
 

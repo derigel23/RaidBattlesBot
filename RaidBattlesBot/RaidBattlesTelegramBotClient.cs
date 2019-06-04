@@ -1,14 +1,15 @@
 using System.Net.Http;
+using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
-using Telegram.Bot;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot
 {
-  public class PoGoTelegramBotClient : TelegramBotClient
+  public class PoGoTelegramBotClient : TelegramBotClientEx
   {
-    public PoGoTelegramBotClient(IOptions<BotConfiguration> options, HttpClient httpClient)
-      : base(options.Value.BotToken, httpClient)
+    public PoGoTelegramBotClient(TelemetryClient telemetryClient, IOptions<BotConfiguration> options, HttpClient httpClient)
+      : base(telemetryClient, options.Value.BotToken, httpClient)
     {
       Timeout = options.Value.Timeout;
     }

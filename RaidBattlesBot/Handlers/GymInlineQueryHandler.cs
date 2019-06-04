@@ -23,13 +23,13 @@ namespace RaidBattlesBot.Handlers
     public const string PREFIX = "/gym";
     private const string PATTERN = @"(^|\s+)" + PREFIX + @"(?<pollId>\d*)($|\s+)";
 
-    private readonly ITelegramBotClient myBot;
+    private readonly ITelegramBotClientEx myBot;
     private readonly RaidBattlesContext myDb;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IngressClient myIngressClient;
     
-    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClient bot, RaidBattlesContext db, RaidService raidService)
+    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService)
     {
       myUrlHelper = urlHelper;
       myIngressClient = ingressClient;
@@ -188,7 +188,7 @@ namespace RaidBattlesBot.Handlers
         });
       }
       
-      await myBot.AnswerInlineQueryAsync(data.Id, results, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, results, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
 
       myDb.SaveChanges();
 
