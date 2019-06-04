@@ -77,7 +77,7 @@ namespace RaidBattlesBot
       services.AddMemoryCache();
       services.AddHttpClient();
       services.AddHttpClient<IngressClient>();
-      services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>();
+      services.AddHttpClient<ITelegramBotClientEx, PoGoTelegramBotClient>();
       services
         .AddMvc(options =>
         {
