@@ -99,7 +99,7 @@ namespace RaidBattlesBot.Handlers
             Portal = portals[i],
             ExRaidGym = false
           };
-          poll.Id = await myRaidService.GetPollId(poll, cancellationToken);
+          await myRaidService.GetPollId(poll, cancellationToken);
 
           results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(myUrlHelper),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
