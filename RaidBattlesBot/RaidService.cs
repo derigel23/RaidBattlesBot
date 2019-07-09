@@ -45,29 +45,14 @@ namespace RaidBattlesBot
 
     public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
     {
-      var connection = myContext.Database.GetDbConnection();
+      var nextId = poll.Id = await myContext.GetNextPollId(cancellationToken);
+      using (var entry = myMemoryCache.CreateEntry(this[nextId]))
       {
-        try
-        {
-          await connection.OpenAsync(cancellationToken);
-          using (var command = connection.CreateCommand())
-          {
-            command.CommandText = "SELECT NEXT VALUE FOR PollId";
-            var pollId = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
-            poll.Id = pollId;
-            using (var entry = myMemoryCache.CreateEntry(this[pollId]))
-            {
-              entry.Value = poll;
-              entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
-            }
-            return pollId;
-          }
-        }
-        finally
-        {
-          connection.Close();
-        }
+        entry.Value = poll;
+        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
       }
+      
+      return nextId;
     }
 
     public async Task<PollMessage> GetOrCreatePollAndMessage(PollMessage pollMessage, IUrlHelper urlHelper, VoteEnum? format = null, CancellationToken cancellationToken = default)

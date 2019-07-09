@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RaidBattlesBot.Model
 {
-  public class RaidBattlesContext : DbContext
+  public partial class RaidBattlesContext : DbContext
   {
     public RaidBattlesContext(DbContextOptions<RaidBattlesContext> options)
       : base(options) { }
