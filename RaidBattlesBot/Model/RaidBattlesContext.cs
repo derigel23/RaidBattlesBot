@@ -23,7 +23,7 @@ namespace RaidBattlesBot.Model
       
       modelBuilder.Entity<Poll>(pollEntity =>
       {
-        var pollIdSequence = modelBuilder.HasSequence<int>("PollId").StartsAt(100000).IncrementsBy(1);
+        var pollIdSequence = modelBuilder.HasSequence<int>("PollId").StartsAt(10_000_000).IncrementsBy(1);
 
         pollEntity.ToTable("Polls");
         pollEntity.Property(poll => poll.Id).HasDefaultValueSql($"NEXT VALUE FOR {pollIdSequence.Metadata.Name}");
