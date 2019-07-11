@@ -213,8 +213,8 @@ namespace RaidBattlesBot.Model
 
     public const string InlineIdPrefix = "poll";
     
-    public static string GetInlineId(this Poll poll) =>
-      $"{InlineIdPrefix}:{poll.GetId()}:{(poll.Portal?.Guid ?? poll.PortalId)}";
+    public static string GetInlineId(this Poll poll, object suffix = null) =>
+      $"{InlineIdPrefix}:{poll.GetId()}:{(poll.Portal?.Guid ?? poll.PortalId)}:{suffix}";
 
     public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum? format)
     {
