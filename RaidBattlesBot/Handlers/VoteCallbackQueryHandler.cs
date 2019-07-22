@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,15 +37,6 @@ namespace RaidBattlesBot.Handlers
       myVoteTimeout = options.Value.VoteTimeout;
       myBlackList = options.Value.BlackList ?? new HashSet<int>(0);
     }
-
-    private static readonly Dictionary<VoteEnum?, string> ourResponse = new Dictionary<VoteEnum?, string>
-    {
-      { VoteEnum.Valor, "Вы проголосовали как Valor" },
-      { VoteEnum.Instinct, "Вы проголосовали как Instinct" },
-      { VoteEnum.Mystic, "Вы проголосовали как Mystic" },
-      { VoteEnum.MayBe, "Вы ещё не решили..." },
-      { VoteEnum.Cancel, "Вы передумали!" },
-    };
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
@@ -98,7 +90,7 @@ namespace RaidBattlesBot.Handlers
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
-        return (ourResponse.TryGetValue(vote.Team, out var response) ? response : "Вы проголосовали", false, null);
+        return (vote.Team?.GetAttributes().Get<DisplayAttribute>()?.Description ?? "Вы проголосовали", false, null);
       }
 
       return ("Вы уже проголосовали", false, null);

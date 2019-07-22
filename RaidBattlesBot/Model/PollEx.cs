@@ -158,7 +158,7 @@ namespace RaidBattlesBot.Model
       var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
         .Select(vote =>
         {
-          var display = vote.AsString(EnumFormat.DisplayName, EnumFormat.Description);
+          var display = vote.AsString(EnumFormat.DisplayName);
           switch (vote)
           {
             case VoteEnum.Share:
