@@ -90,7 +90,7 @@ namespace RaidBattlesBot.Handlers
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
-        return (vote.Team?.GetAttributes().Get<DisplayAttribute>()?.Description ?? "Вы проголосовали", false, null);
+        return (vote.Team?.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "Вы проголосовали", false, null);
       }
 
       return ("Вы уже проголосовали", false, null);
