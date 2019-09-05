@@ -39,6 +39,7 @@ namespace RaidBattlesBot.Model
         messageEntity.ToTable("Messages");
         messageEntity.HasKey(message => message.Id);
         messageEntity.Ignore(message => message.Chat);
+        messageEntity.HasIndex(message => new { message.ChatId, message.MesssageId });
       });
 
       modelBuilder.Entity<Vote>(voteEntity =>

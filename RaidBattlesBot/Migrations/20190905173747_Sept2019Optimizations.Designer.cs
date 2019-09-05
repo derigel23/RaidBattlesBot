@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RaidBattlesBot.Model;
 
 namespace RaidBattlesBot.Migrations
 {
     [DbContext(typeof(RaidBattlesContext))]
-    partial class RaidBattlesContextModelSnapshot : ModelSnapshot
+    [Migration("20190905173747_Sept2019Optimizations")]
+    partial class Sept2019Optimizations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
