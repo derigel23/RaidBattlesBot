@@ -216,7 +216,7 @@ namespace RaidBattlesBot
       }
 
       var messageEntity = myContext.Set<PollMessage>().Attach(message);
-      myContext.SaveChanges();
+      await myContext.SaveChangesAsync(cancellationToken);
 
       // update current raid poll messages if changed
       if (raidUpdated && message.Poll.Raid is Raid raidToUpdate)
@@ -252,7 +252,7 @@ namespace RaidBattlesBot
         //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
       }
 
-      myContext.SaveChanges();
+      await myContext.SaveChangesAsync(cancellationToken);
 
       // log message
       if (withLog && myLogChat != null)

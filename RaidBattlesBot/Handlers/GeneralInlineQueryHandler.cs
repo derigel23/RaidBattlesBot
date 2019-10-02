@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 
@@ -114,7 +113,7 @@ namespace RaidBattlesBot.Handlers
         switchPmText: switchPmParameter != null ? "Привязать голосование к гиму" : null, switchPmParameter: switchPmParameter,
         cacheTime: 0, cancellationToken: cancellationToken);
 
-      myDb.SaveChanges();
+      await myDb.SaveChangesAsync(cancellationToken);
       return true;
     }
   }

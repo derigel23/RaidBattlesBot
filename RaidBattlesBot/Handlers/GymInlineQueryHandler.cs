@@ -8,7 +8,6 @@ using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -190,7 +189,7 @@ namespace RaidBattlesBot.Handlers
       
       await myBot.AnswerInlineQueryWithValidationAsync(data.Id, results, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
 
-      myDb.SaveChanges();
+      await myDb.SaveChangesAsync(cancellationToken);
 
       return true;
     }

@@ -57,7 +57,7 @@ namespace RaidBattlesBot.Handlers
       {
         // create a new
         settings = new Settings { Chat = chatId, Order = allSettings.Select(_ => _.Order).DefaultIfEmpty(-1).Max() + 1, Format = VoteEnum.Standard };
-        settingsSet.Add(settings);
+        await settingsSet.AddAsync(settings, cancellationToken);
       }
 
       string message = null;
@@ -65,12 +65,12 @@ namespace RaidBattlesBot.Handlers
       {
         case "default":
           settings.Order = allSettings.Select(_ => _.Order).DefaultIfEmpty(1).Min() - 1;
-          myContext.SaveChanges();
+          await myContext.SaveChangesAsync(cancellationToken);
           return await Return(await SettingsList(chatId, cancellationToken), "Формат голосования по умолчанию изменён");
 
         case "delete":
           settingsSet.Remove(settings);
-          myContext.SaveChanges();
+          await myContext.SaveChangesAsync(cancellationToken);
           return await Return(await SettingsList(chatId, cancellationToken), "Формат голосования удалён");
         
         case var format when FlagEnums.TryParseFlags(format, out VoteEnum toggleVotes, EnumFormat.DecimalValue):
@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Handlers
             settings.Format = settings.Format.RemoveFlags(VoteEnum.Plus);
           }
 
-          if (myContext.SaveChanges() > 0)
+          if (await myContext.SaveChangesAsync(cancellationToken) > 0)
           {
             message = "Формат голосования изменён";
           }

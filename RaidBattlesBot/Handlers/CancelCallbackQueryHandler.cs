@@ -1,10 +1,8 @@
-﻿using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
-using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
@@ -47,7 +45,7 @@ namespace RaidBattlesBot.Handlers
         return ("Вы не можете отменить голосование", true, null);
 
       poll.Cancelled = true;
-      var changed = myContext.SaveChanges() > 0;
+      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
