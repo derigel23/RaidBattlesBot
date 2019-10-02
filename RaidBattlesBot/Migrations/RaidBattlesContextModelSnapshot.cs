@@ -15,7 +15,7 @@ namespace RaidBattlesBot.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("ProductVersion", "3.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("Relational:Sequence:.PollId", "'PollId', '', '10000000', '1', '', '', 'Int32', 'False'")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
@@ -24,25 +24,35 @@ namespace RaidBattlesBot.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasDefaultValueSql("NEXT VALUE FOR PollId");
 
-                    b.Property<int?>("AllowedVotes");
+                    b.Property<int?>("AllowedVotes")
+                        .HasColumnType("int");
 
-                    b.Property<bool>("Cancelled");
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("bit");
 
-                    b.Property<bool>("ExRaidGym");
+                    b.Property<bool>("ExRaidGym")
+                        .HasColumnType("bit");
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<long?>("Owner");
+                    b.Property<long?>("Owner")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("PortalId");
+                    b.Property<string>("PortalId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("RaidId");
+                    b.Property<int?>("RaidId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("Time");
+                    b.Property<DateTimeOffset?>("Time")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Title");
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -60,21 +70,29 @@ namespace RaidBattlesBot.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<long?>("ChatId");
+                    b.Property<long?>("ChatId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int?>("ChatType");
+                    b.Property<int?>("ChatType")
+                        .HasColumnType("int");
 
-                    b.Property<string>("InlineMesssageId");
+                    b.Property<string>("InlineMesssageId")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("MesssageId");
+                    b.Property<int?>("MesssageId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("PollId");
+                    b.Property<int>("PollId")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("UserId");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -88,11 +106,13 @@ namespace RaidBattlesBot.Migrations
             modelBuilder.Entity("RaidBattlesBot.Model.Portal", b =>
                 {
                     b.Property<string>("Guid")
-                        .ValueGeneratedOnAdd();
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Address");
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Image");
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Latitude")
                         .HasColumnType("decimal(18,15)");
@@ -100,9 +120,11 @@ namespace RaidBattlesBot.Migrations
                     b.Property<decimal>("Longitude")
                         .HasColumnType("decimal(18,15)");
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Guid");
 
@@ -113,15 +135,20 @@ namespace RaidBattlesBot.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Description");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("EggRaidId");
+                    b.Property<int?>("EggRaidId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("EndTime");
+                    b.Property<DateTimeOffset?>("EndTime")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Gym");
+                    b.Property<string>("Gym")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("Lat")
                         .HasColumnType("decimal(18,15)");
@@ -129,27 +156,38 @@ namespace RaidBattlesBot.Migrations
                     b.Property<decimal?>("Lon")
                         .HasColumnType("decimal(18,15)");
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Move1");
+                    b.Property<string>("Move1")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Move2");
+                    b.Property<string>("Move2")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NearByAddress");
+                    b.Property<string>("NearByAddress")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NearByPlaceId");
+                    b.Property<string>("NearByPlaceId")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Pokemon");
+                    b.Property<int?>("Pokemon")
+                        .HasColumnType("int");
 
-                    b.Property<string>("PossibleGym");
+                    b.Property<string>("PossibleGym")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RaidBossLevel");
+                    b.Property<int?>("RaidBossLevel")
+                        .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("StartTime");
+                    b.Property<DateTimeOffset?>("StartTime")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Title");
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -160,21 +198,37 @@ namespace RaidBattlesBot.Migrations
                     b.ToTable("Raids");
                 });
 
+            modelBuilder.Entity("RaidBattlesBot.Model.RaidBattlesContext+Id", b =>
+                {
+                    b.Property<int?>("ExistingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NextId")
+                        .HasColumnType("int");
+
+                    b.ToTable("Generator");
+                });
+
             modelBuilder.Entity("RaidBattlesBot.Model.Settings", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<long>("Chat");
+                    b.Property<long>("Chat")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Format")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasDefaultValue(1822);
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("Order");
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -186,19 +240,26 @@ namespace RaidBattlesBot.Migrations
 
             modelBuilder.Entity("RaidBattlesBot.Model.Vote", b =>
                 {
-                    b.Property<int>("PollId");
+                    b.Property<int>("PollId")
+                        .HasColumnType("int");
 
-                    b.Property<int>("UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("FirstName");
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LasttName");
+                    b.Property<string>("LasttName")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("Modified");
+                    b.Property<DateTimeOffset?>("Modified")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("Team");
+                    b.Property<int?>("Team")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Username");
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PollId", "UserId");
 
@@ -221,7 +282,8 @@ namespace RaidBattlesBot.Migrations
                     b.HasOne("RaidBattlesBot.Model.Poll", "Poll")
                         .WithMany("Messages")
                         .HasForeignKey("PollId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RaidBattlesBot.Model.Raid", b =>
@@ -233,10 +295,11 @@ namespace RaidBattlesBot.Migrations
 
             modelBuilder.Entity("RaidBattlesBot.Model.Vote", b =>
                 {
-                    b.HasOne("RaidBattlesBot.Model.Poll")
+                    b.HasOne("RaidBattlesBot.Model.Poll", null)
                         .WithMany("Votes")
                         .HasForeignKey("PollId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

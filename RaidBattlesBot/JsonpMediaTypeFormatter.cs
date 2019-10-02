@@ -15,24 +15,19 @@ namespace RaidBattlesBot
     private static readonly MediaTypeHeaderValue _applicationJsonp = new MediaTypeHeaderValue("application/json-p");
     private static readonly MediaTypeHeaderValue _textJavaScript = new MediaTypeHeaderValue("text/javascript");
 
-    private readonly JsonOutputFormatter _jsonMediaTypeFormatter;
+    private readonly TextOutputFormatter _jsonOutputFormatter;
     private readonly string _callbackQueryParameter;
 
-    public JsonpMediaTypeFormatter(JsonOutputFormatter jsonMediaTypeFormatter, string callbackQueryParameter = null)
+    public JsonpMediaTypeFormatter(TextOutputFormatter jsonOutputFormatter, string callbackQueryParameter = null)
     {
-      if (jsonMediaTypeFormatter == null)
-      {
-        throw new ArgumentNullException(nameof(jsonMediaTypeFormatter));
-      }
-
-      _jsonMediaTypeFormatter = jsonMediaTypeFormatter;
+      _jsonOutputFormatter = jsonOutputFormatter ?? throw new ArgumentNullException(nameof(jsonOutputFormatter));
       _callbackQueryParameter = callbackQueryParameter ?? "callback";
 
       SupportedMediaTypes.Add(_textJavaScript);
       SupportedMediaTypes.Add(_applicationJavaScript);
       SupportedMediaTypes.Add(_applicationJsonp);
       
-      foreach (var encoding in _jsonMediaTypeFormatter.SupportedEncodings)
+      foreach (var encoding in _jsonOutputFormatter.SupportedEncodings)
       {
         SupportedEncodings.Add(encoding);
       }
@@ -45,7 +40,7 @@ namespace RaidBattlesBot
         throw new ArgumentNullException(nameof(context));
       }
 
-      return _jsonMediaTypeFormatter.CanWriteResult(context);
+      return _jsonOutputFormatter.CanWriteResult(context);
     }
 
     public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
@@ -55,8 +50,7 @@ namespace RaidBattlesBot
         throw new ArgumentNullException(nameof(context));
       }
 
-      string callback;
-      if (IsJsonpRequest(context.HttpContext.Request, _callbackQueryParameter, out callback))
+      if (IsJsonpRequest(context.HttpContext.Request, _callbackQueryParameter, out var callback))
       {
         if (!CallbackValidator.IsValid(callback))
         {
@@ -67,20 +61,21 @@ namespace RaidBattlesBot
         {
           // the /**/ is a specific security mitigation for "Rosetta Flash JSONP abuse"
           // the typeof check is just to reduce client error noise
-          writer.Write("/**/ typeof " + callback + " === 'function' && " + callback + "(");
-          writer.Flush();
-          _jsonMediaTypeFormatter.WriteObject(writer, context.Object);
-          writer.Write(");");
+          await writer.WriteAsync($"/**/ typeof {callback} === 'function' && {callback}(");
+          await writer.FlushAsync();
+          await _jsonOutputFormatter.WriteResponseBodyAsync(context, selectedEncoding);
+          await writer.FlushAsync();
+          await writer.WriteAsync(");");
           await writer.FlushAsync();
         }
       }
       else
       {
-        await _jsonMediaTypeFormatter.WriteResponseBodyAsync(context, selectedEncoding);
+        await _jsonOutputFormatter.WriteResponseBodyAsync(context, selectedEncoding);
       }
     }
 
-    internal static bool IsJsonpRequest(HttpRequest request, string callbackQueryParameter, out string callback)
+    private static bool IsJsonpRequest(HttpRequest request, string callbackQueryParameter, out string callback)
     {
       callback = null;
 

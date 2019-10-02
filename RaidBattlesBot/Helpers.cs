@@ -14,7 +14,6 @@ using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +22,6 @@ using NodaTime;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-
 
 namespace RaidBattlesBot
 {
@@ -47,8 +45,10 @@ namespace RaidBattlesBot
       return new Uri(assetsRoot, assetpath);
     }
 
+
     public static IHtmlContent Json(this IHtmlHelper helper, object obj) =>
-      helper.Raw(JsonConvert.SerializeObject(obj, JsonSerializerSettingsProvider.CreateSerializerSettings()));
+      helper.Raw(JsonConvert.SerializeObject(obj));
+    
     public static PageConventionCollection AddPageRouteWithName(this PageConventionCollection conventions, string pageName, string route, string name = default)
     {
       conventions.AddPageRouteModelConvention(pageName, model =>

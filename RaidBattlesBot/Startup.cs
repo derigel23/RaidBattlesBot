@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -36,6 +37,8 @@ namespace RaidBattlesBot
     // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     public void ConfigureServices(IServiceCollection services)
     {
+      services.AddApplicationInsightsTelemetry();
+      
       // Adds services required for using options.
       services.AddOptions();
 
@@ -46,7 +49,7 @@ namespace RaidBattlesBot
 
       services.AddSingleton(provider =>
       {
-        var hostingEnvironment = provider.GetRequiredService<IHostingEnvironment>();
+        var hostingEnvironment = provider.GetRequiredService<IWebHostEnvironment>();
         var fileProvider = hostingEnvironment.WebRootFileProvider;
         var namesBuilder = new ConfigurationBuilder().SetFileProvider(fileProvider);
         foreach (var fileInfo in fileProvider.GetDirectoryContents("names"))
@@ -77,13 +80,15 @@ namespace RaidBattlesBot
       services.AddMemoryCache();
       services.AddHttpClient();
       services.AddHttpClient<IngressClient>();
-      services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>(nameof(PoGoTelegramBotClient));
-      services.AddHttpClient<ITelegramBotClientEx, PoGoTelegramBotClient>(nameof(PoGoTelegramBotClient));
+      services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>(nameof(ITelegramBotClient));
+      services.AddHttpClient<ITelegramBotClientEx, PoGoTelegramBotClient>(nameof(ITelegramBotClientEx));
       services
         .AddMvc(options =>
         {
-          options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<JsonOutputFormatter>().Single()));
+          options.EnableEndpointRouting = false;
+          options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().Single()));
         })
+        .AddNewtonsoftJson()
         .SetCompatibilityVersion(CompatibilityVersion.Latest)
         .AddApplicationPart(typeof(TelegramController).Assembly)
         .AddRazorPagesOptions(options =>
@@ -101,7 +106,7 @@ namespace RaidBattlesBot
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       if (env.IsDevelopment())
       {

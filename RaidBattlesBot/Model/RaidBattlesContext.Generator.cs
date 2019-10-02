@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -7,41 +8,36 @@ namespace RaidBattlesBot.Model
 {
   public partial class RaidBattlesContext
   {
-    public class Id
-    {
-      public int NextId { get; set; }
-      public int? ExistingId { get; set; }
-
-      public void Deconstruct(out int nextId, out int? existingId)
-      {
-        nextId = NextId;
-        existingId = ExistingId;
-      }
-    }
-    
-    public DbQuery<Id> Generator { get; set; }
-
     public async Task<int> GetNextPollId(CancellationToken cancellationToken = default)
     {
-      var queryable = Generator.FromSql(@"
-        DECLARE @NEXT int;
-        SET @NEXT = NEXT VALUE FOR PollId;
-        SELECT NEXT.Id AS NextId, Polls.Id AS ExistingId FROM (SELECT @NEXT AS Id) AS NEXT LEFT JOIN Polls ON Polls.Id = NEXT.Id");
-
-      int nextId = 0;
-      int? existingId = null;
-      for (var i = 0; i < 5; i++)
+      var connection = Database.GetDbConnection();
+      using (var dbCommand = connection.CreateCommand())
       {
-        (nextId, existingId) = await queryable.SingleAsync(cancellationToken);
-        if (existingId == null)
-          break;
+        dbCommand.CommandType = CommandType.Text;
+        dbCommand.CommandText = @"
+          DECLARE @NEXT int;
+          SET @NEXT = NEXT VALUE FOR PollId;
+          SELECT NEXT.Id AS NextId, Polls.Id AS ExistingId FROM (SELECT @NEXT AS Id) AS NEXT LEFT JOIN Polls ON Polls.Id = NEXT.Id";
+        for (var i = 0; i < 5; i++)
+        {
+          var commandBehavior = CommandBehavior.SingleRow;
+          if (connection.State != ConnectionState.Open)
+          {
+            await connection.OpenAsync(cancellationToken);
+            commandBehavior |= CommandBehavior.CloseConnection;
+          }
+          using (var reader = await dbCommand.ExecuteReaderAsync(commandBehavior , cancellationToken))
+          {
+            while (reader.HasRows && await reader.ReadAsync(cancellationToken))
+            {
+              var nextId = reader.GetInt32("NextId");
+              if (reader.IsDBNull("ExistingId"))
+                return nextId;
+            }
+          }}
       }
-      if (existingId != null)
-        throw new ArgumentOutOfRangeException($"Duplicate ID from sequence: {existingId}");
-      if (nextId == 0)
-        throw new ArgumentOutOfRangeException($"Can't retrieve ID from sequence");
-
-      return nextId;
+      
+      throw new ArgumentOutOfRangeException($"Can't retrieve ID from sequence");
     }
   }
 }

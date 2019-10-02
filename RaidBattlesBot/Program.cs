@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RaidBattlesBot
 {
@@ -13,15 +14,14 @@ namespace RaidBattlesBot
     public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
       WebHost
         .CreateDefaultBuilder(args)
-        .UseApplicationInsights()
         .UseStartup<Startup>()
         .ConfigureServices(services => services.AddAutofac())
         .ConfigureAppConfiguration((context, builder) =>
         {
-          if (context.HostingEnvironment.IsDevelopment())
-          {
-            builder.AddJsonFile($"appsettings.{EnvironmentName.Development}.user.json", true);
-          }
+          builder.AddJsonFile(
+            string.IsNullOrEmpty(context.HostingEnvironment.EnvironmentName)
+              ? $"appsettings.user.json"
+              : $"appsettings.{context.HostingEnvironment.EnvironmentName}.user.json", true);
         });
   }
 }
