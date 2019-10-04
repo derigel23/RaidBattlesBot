@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,13 +18,12 @@ namespace RaidBattlesBot.Model
     {
       return settings
         .GetSettings(chatId)
-        .OrderBy(_ => _.Order)
         .Select(_ => _.Format);
     }
 
     public static async Task<VoteEnum> GetFormat(this DbSet<Settings> settings, long? chatId, CancellationToken cancellationToken = default)
     {
-      return await settings.GetFormats(chatId).DefaultIfEmpty(VoteEnum.Standard).FirstOrDefaultAsync(cancellationToken);
+      return (await settings.GetFormats(chatId).Cast<VoteEnum?>().FirstOrDefaultAsync(cancellationToken)) ?? VoteEnum.Standard;
     }
   }
 }
