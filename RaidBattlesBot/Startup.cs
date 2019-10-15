@@ -119,6 +119,11 @@ namespace RaidBattlesBot
           OnPrepareResponse = context => context.Context.Response.Headers.Append("Cache-Control", "public,max-age=600")
         });
       }
+      else
+      {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+      }
 
       app
         .UseRequestLocalization()
