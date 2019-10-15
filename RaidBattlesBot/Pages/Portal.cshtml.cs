@@ -82,7 +82,13 @@ namespace RaidBattlesBot.Pages
           properties = new
           {
             id = p.Guid,
-            portal = new { p.Guid, p.Name, p.Address, Image = p.GetImage(Url, fallbackToDefault: false).ForceHttps() },
+            portal = new
+            {
+              guid = p.Guid,
+              name = p.Name,
+              address = p.Address,
+              image = p.GetImage(Url, fallbackToDefault: false).ForceHttps()
+            }
           },
           options = new
           {
