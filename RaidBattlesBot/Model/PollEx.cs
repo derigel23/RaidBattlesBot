@@ -79,7 +79,7 @@ namespace RaidBattlesBot.Model
           if (poll.Portal is Portal portal)
           {
             description.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0", mode);
-            description.Link(portal.Name, urlHelper.RouteUrl("Portal", new { guid = portal.Guid }, "https"), mode);
+            description.Link(portal.Name, $"https://pogo.tools/{portal.Guid}", mode);
             if (poll.ExRaidGym)
             {
               description.Sanitize(" (EX Raid Gym)", mode);
