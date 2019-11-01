@@ -107,6 +107,7 @@ namespace RaidBattlesBot.Model
     public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode mode = Helpers.DefaultParseMode, bool disableWebPreview = false)
     {
       var text = poll.GetDescription(urlHelper, mode).NewLine();
+      text.Append(" "); // for better presentation in telegram pins & notifications
       
       if (poll.Cancelled)
       {
