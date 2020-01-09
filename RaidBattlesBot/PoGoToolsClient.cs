@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 
 namespace RaidBattlesBot
