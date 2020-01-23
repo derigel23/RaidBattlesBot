@@ -15,7 +15,7 @@
     <PackageReference Include="Autofac" Version="4.9.4" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="DelegateDecompiler.EntityFrameworkCore" Version="0.28.0" />
-    <PackageReference Include="Enums.NET" Version="3.0.2" />
+    <PackageReference Include="Enums.NET" Version="3.0.3" />
     <PackageReference Include="Geolocation" Version="1.1.1" />
     <PackageReference Include="GoogleMapsApi" Version="0.80.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
