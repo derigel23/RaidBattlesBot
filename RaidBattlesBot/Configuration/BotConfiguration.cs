@@ -11,5 +11,6 @@ namespace RaidBattlesBot.Configuration
     public TimeSpan VoteTimeout { get; set; }
     public long? LogChatId{ get; set; }
     public HashSet<int> BlackList { get; set; }
+    public string[] SkipDomains { get; set; }
   }
 }

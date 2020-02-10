@@ -6,9 +6,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.ApplicationInsights;
+ using JetBrains.Annotations;
+ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Primitives;
+ using Microsoft.Extensions.Options;
+ using Microsoft.Extensions.Primitives;
 using NodaTime;
  using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -25,8 +27,9 @@ using RaidBattlesBot.Model;
     private readonly GymHelper myGymHelper;
     private readonly TelemetryClient myTelemetryClient;
     private readonly IHttpClientFactory myHttpClientFactory;
-
-    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpClientFactory httpClientFactory, Func<MessageEntityEx, StringSegment> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper)
+    [CanBeNull] private readonly BotConfiguration myBotConfiguration;
+    
+    protected UrlLikeMessageEntityHandler(TelemetryClient telemetryClient, IHttpClientFactory httpClientFactory, Func<MessageEntityEx, StringSegment> getUrl, ZonedClock clock, DateTimeZone timeZoneInfo, PokemonInfo pokemons, GymHelper gymHelper, IOptions<BotConfiguration> botConfiguration)
     {
       myGetUrl = getUrl;
       myClock = clock;
@@ -35,6 +38,7 @@ using RaidBattlesBot.Model;
       myGymHelper = gymHelper;
       myTelemetryClient = telemetryClient;
       myHttpClientFactory = httpClientFactory;
+      myBotConfiguration = botConfiguration.Value;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -50,8 +54,14 @@ using RaidBattlesBot.Model;
           poketrackRequest.Method = HttpMethod.Get;
         }
 
-        var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        var requestUri = poketrackResponse.RequestMessage.RequestUri;
+        var requestUri = poketrackRequest.RequestUri;
+        HttpContent poketrackResponseContent = null;
+        if (!myBotConfiguration?.SkipDomains.Contains(requestUri.Host, StringComparer.OrdinalIgnoreCase) ?? true)
+        {
+          var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+          poketrackResponseContent = poketrackResponse.Content;
+          requestUri = poketrackResponse.RequestMessage.RequestUri;
+        }
         var query = QueryHelpers.ParseQuery(requestUri.Query);
 
         bool ParseCoordinate(string str, out decimal coordinate) =>
@@ -87,8 +97,10 @@ using RaidBattlesBot.Model;
           {
             try
             {
-              var poketrackResponseContent = await poketrackResponse.Content.ReadAsStringAsync();
-              if (ourRaidInfoBotGymDetector.Match(poketrackResponseContent) is var raidInfoBotGymMatch && raidInfoBotGymMatch.Success && raidInfoBotGymMatch.Value.Length > 0)
+              if (poketrackResponseContent is HttpContent content &&
+                  await content.ReadAsStringAsync() is var poketrackResponseStringContent &&
+                  ourRaidInfoBotGymDetector.Match(poketrackResponseStringContent) is var raidInfoBotGymMatch &&
+                  raidInfoBotGymMatch.Success)
               {
                 raid.PossibleGym = raidInfoBotGymMatch.Value;
               }
