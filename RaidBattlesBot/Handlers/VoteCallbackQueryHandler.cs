@@ -89,8 +89,10 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
+        var toggle = vote.Team?.CommonFlags(VoteEnum.Toggle) ?? VoteEnum.None;
         vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
+        vote.Team = vote.Team?.CombineFlags(toggle);
       }
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;

@@ -16,14 +16,14 @@ namespace RaidBattlesBot.Model
 {
   public static class PollEx
   {
-    private static readonly Dictionary<VoteEnum, (int Order, string Singular, string Plural)> ourVoteDescription = new Dictionary<VoteEnum, (int, string, string)>
+    private static readonly IEnumerable<(VoteEnum flag, int Order, int DisplayOrder, string Singular, string Plural)> ourVoteDescription = new List<(VoteEnum, int, int, string, string)>
     {
-      { VoteEnum.Going, (1, "going", "going") },
-      { VoteEnum.Remotely, (2, "remotely", "remotely") },
-      { VoteEnum.Thinking, (3, "maybe", "maybe") },
-      { VoteEnum.ChangedMind, (4, "bailed", "bailed") },
-      { VoteEnum.ThumbsUp, (5, "vote for", "votes for") },
-      { VoteEnum.ThumbsDown, (6, "vote against", "votes against") },
+      (VoteEnum.Going, 6, 1,  "going", "going"),
+      (VoteEnum.Remotely, 5, 2, "remotely", "remotely"),
+      (VoteEnum.Thinking, 2, 3, "maybe", "maybe"),
+      (VoteEnum.ChangedMind, 3, 4, "bailed", "bailed"),
+      (VoteEnum.ThumbsUp, 4, 5, "vote for", "votes for"),
+      (VoteEnum.ThumbsDown, 5, 6, "vote against", "votes against"),
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
@@ -119,8 +119,8 @@ namespace RaidBattlesBot.Model
 
       var compactMode = poll.Votes?.Count > 10;
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
-        .GroupBy(vote => ourVoteDescription.OrderByDescending(_ => _.Key).FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Key) ?? false).Value)
-        .OrderBy(voteGroup => voteGroup.Key.Order))
+        .GroupBy(vote => ourVoteDescription.OrderBy(_ => _.Order).FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.flag) ?? false))
+        .OrderBy(voteGroup => voteGroup.Key.DisplayOrder))
       {
         var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
         var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
