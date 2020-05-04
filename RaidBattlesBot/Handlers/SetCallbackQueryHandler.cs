@@ -92,6 +92,7 @@ namespace RaidBattlesBot.Handlers
             {
               VoteEnum.Team,
               VoteEnum.Plus1,
+              VoteEnum.Remotely,
               VoteEnum.MayBe,
               VoteEnum.Yes,
               VoteEnum.Thumbs,
