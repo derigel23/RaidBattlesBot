@@ -79,12 +79,19 @@ namespace RaidBattlesBot.Handlers
       if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team))
         return ("Invalid vote", true, null);
 
-      var clearTeam = team.RemoveFlags(VoteEnum.Plus);
+      var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);
       if (clearTeam == default)
         clearTeam = VoteEnum.Yes;
-      
-      vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is VoteEnum voted && voted.HasAllFlags(clearTeam) ?
+
+      if (team.HasAnyFlags(VoteEnum.Toggle))
+      {
+        vote.Team = FlagEnums.ToggleFlags(vote.Team is { } voted && voted.HasAnyFlags(VoteEnum.Going) ? voted : clearTeam, team.CommonFlags(VoteEnum.Toggle)) ;
+      }
+      else
+      {
+        vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
+      }
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)

@@ -60,6 +60,9 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🧙‍♂", Order = 10, Description = "You've voted as a Professor")]
     Professor = Magizoologist << 1,
     
+    [Display(Name = "📡", Order = 10, Description = "You're going to participate remotely")]
+    Remotely = Professor << 1,
+    
     #region Plused votes
 
     [Display(Name = "❤⁺¹", Order = 1)]
@@ -86,7 +89,7 @@ namespace RaidBattlesBot.Model
 
     #endregion
 
-    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | MayBe | Cancel | Share,
+    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | Remotely | MayBe | Cancel | Share,
 
     Team = Valor | Instinct | Mystic,
     HarryPotter = Auror | Magizoologist | Professor,
@@ -97,7 +100,10 @@ namespace RaidBattlesBot.Model
     SomePlus = Some | Plus,
     ChangedMind = Cancel,
 
-    Plus = Plus1 | Plus2 | Plus4 | Plus8
+    Plus = Plus1 | Plus2 | Plus4 | Plus8,
+    
+    Modifiers = Plus | Remotely | Share,
+    Toggle = Remotely
   }
 
   public static class VoteEnumEx
@@ -108,7 +114,7 @@ namespace RaidBattlesBot.Model
       VoteEnum.Standard,
       
       // compact
-      VoteEnum.YesPlus1 | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
+      VoteEnum.YesPlus1 | VoteEnum.MayBe | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
       
       // thumbs up/down
       VoteEnum.Thumbs | VoteEnum.Share
@@ -125,8 +131,8 @@ namespace RaidBattlesBot.Model
       .CombineFlags((VoteEnum) ((((int)(vote.CommonFlags(VoteEnum.Plus)) >> FirstPlusBit) + diff) << FirstPlusBit));
 
     public static string Description(this VoteEnum vote) =>
-      (vote.RemoveFlags(VoteEnum.Plus) is VoteEnum voteWithoutPlus && voteWithoutPlus.HasAnyFlags() ?
-        voteWithoutPlus : vote.HasAnyFlags(VoteEnum.Plus) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
+      (vote.RemoveFlags(VoteEnum.Modifiers) is { } voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
+        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
 
     public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
     {

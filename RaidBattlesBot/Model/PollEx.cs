@@ -19,10 +19,11 @@ namespace RaidBattlesBot.Model
     private static readonly Dictionary<VoteEnum, (int Order, string Singular, string Plural)> ourVoteDescription = new Dictionary<VoteEnum, (int, string, string)>
     {
       { VoteEnum.Going, (1, "going", "going") },
-      { VoteEnum.Thinking, (2, "maybe", "maybe") },
-      { VoteEnum.ChangedMind, (3, "bailed", "bailed") },
-      { VoteEnum.ThumbsUp, (4, "vote for", "votes for") },
-      { VoteEnum.ThumbsDown, (5, "vote against", "votes against") },
+      { VoteEnum.Remotely, (2, "remotely", "remotely") },
+      { VoteEnum.Thinking, (3, "maybe", "maybe") },
+      { VoteEnum.ChangedMind, (4, "bailed", "bailed") },
+      { VoteEnum.ThumbsUp, (5, "vote for", "votes for") },
+      { VoteEnum.ThumbsDown, (6, "vote against", "votes against") },
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
@@ -113,19 +114,19 @@ namespace RaidBattlesBot.Model
       {
         text
           .NewLine()
-          .Bold((builder, m) => builder.Sanitize("Отмена!", m).NewLine(), mode);
+          .Bold((builder, m) => builder.Sanitize("Cancellation!", m).NewLine(), mode);
       }
 
       var compactMode = poll.Votes?.Count > 10;
       foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
-        .GroupBy(vote => ourVoteDescription.FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Key) ?? false).Value)
+        .GroupBy(vote => ourVoteDescription.OrderByDescending(_ => _.Key).FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Key) ?? false).Value)
         .OrderBy(voteGroup => voteGroup.Key.Order))
       {
         var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
         var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
         text.NewLine().Sanitize($"{votesNumber} {countStr}", mode).NewLine();
 
-        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Plus | VoteEnum.Share)).OrderBy(_ => _.Key))
+        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Modifiers)).OrderBy(_ => _.Key))
         {
           var votes = vote.OrderBy(v => v.Modified);
           if (compactMode)
