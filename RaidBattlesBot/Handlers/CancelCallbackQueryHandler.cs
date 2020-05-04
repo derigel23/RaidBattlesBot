@@ -32,17 +32,17 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
       
       if (!PollEx.TryGetPollId(callback.ElementAtOrDefault(1), out var pollId, out var format))
-        return ("Голование подготавливается. Повторите позже", true, null);
+        return ("Poll is publishing. Try later.", true, null);
 
       var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
       if (poll == null)
-        return ("Голосование не найдено", true, null);
+        return ("Poll is not found.", true, null);
 
       var user = data.From;
 
       if (!await myChatInfo.CandEditPoll(poll.Owner, user.Id, cancellationToken))
-        return ("Вы не можете отменить голосование", true, null);
+        return ("You can't cancel the poll.", true, null);
 
       poll.Cancelled = true;
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
@@ -51,7 +51,7 @@ namespace RaidBattlesBot.Handlers
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
       }
 
-      return (changed ? "Голосование отменено" : "Голование уже отменено", false, null);
+      return (changed ? "Poll is canceled." : "Poll is already canceled.", false, null);
     }
   }
 }

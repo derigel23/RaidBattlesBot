@@ -18,11 +18,11 @@ namespace RaidBattlesBot.Model
   {
     private static readonly Dictionary<VoteEnum, (int Order, string Singular, string Plural)> ourVoteDescription = new Dictionary<VoteEnum, (int, string, string)>
     {
-      { VoteEnum.Going, (1, "идёт", "идут") },
-      { VoteEnum.Thinking, (2, "думает", "думают") },
-      { VoteEnum.ChangedMind, (3, "передумал", "передумали") },
-      { VoteEnum.ThumbsUp, (4, "за", "за") },
-      { VoteEnum.ThumbsDown, (5, "против", "против") },
+      { VoteEnum.Going, (1, "going", "going") },
+      { VoteEnum.Thinking, (2, "maybe", "maybe") },
+      { VoteEnum.ChangedMind, (3, "bailed", "bailed") },
+      { VoteEnum.ThumbsUp, (4, "vote for", "votes for") },
+      { VoteEnum.ThumbsDown, (5, "vote against", "votes against") },
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
@@ -96,7 +96,7 @@ namespace RaidBattlesBot.Model
           {
             description
               .Sanitize(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter, mode)
-              .Link("Карта", raid.GetLink(urlHelper), mode);
+              .Link("Map", raid.GetLink(urlHelper), mode);
           }
           break;
       }
@@ -202,7 +202,7 @@ namespace RaidBattlesBot.Model
       return new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
-        Description = "Клонировать голосование",
+        Description = "Clone a poll",
         HideUrl = true,
         ThumbUrl = poll.GetThumbUrl(urlHelper).ToString(),
         ReplyMarkup = poll.GetReplyMarkup()

@@ -35,7 +35,7 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
 
       if (!await myChatInfo.CandEditPoll(data.Message.Chat, data.From?.Id ,cancellationToken))
-        return ("У вас недостаточно прав", true, null);
+        return ("You can't edit the poll.", true, null);
 
       var chatId = data.Message.Chat.Id;
       var settingsSet = myContext.Set<Settings>();
@@ -66,12 +66,12 @@ namespace RaidBattlesBot.Handlers
         case "default":
           settings.Order = allSettings.Select(_ => _.Order).DefaultIfEmpty(1).Min() - 1;
           await myContext.SaveChangesAsync(cancellationToken);
-          return await Return(await SettingsList(chatId, cancellationToken), "Формат голосования по умолчанию изменён");
+          return await Return(await SettingsList(chatId, cancellationToken), "Default poll format is changed.");
 
         case "delete":
           settingsSet.Remove(settings);
           await myContext.SaveChangesAsync(cancellationToken);
-          return await Return(await SettingsList(chatId, cancellationToken), "Формат голосования удалён");
+          return await Return(await SettingsList(chatId, cancellationToken), "Poll format is deleted.");
         
         case var format when FlagEnums.TryParseFlags(format, out VoteEnum toggleVotes, EnumFormat.DecimalValue):
           settings.Format = FlagEnums.ToggleFlags(settings.Format, toggleVotes);
@@ -83,7 +83,7 @@ namespace RaidBattlesBot.Handlers
 
           if (await myContext.SaveChangesAsync(cancellationToken) > 0)
           {
-            message = "Формат голосования изменён";
+            message = "Poll format is changed.";
           }
           goto default;
 
@@ -108,16 +108,16 @@ namespace RaidBattlesBot.Handlers
           {
             buttons = buttons.Append(new[]
             {
-              InlineKeyboardButton.WithCallbackData("Сделать по умолчанию", $"{ID}:{settings.Id}:default")
+              InlineKeyboardButton.WithCallbackData("Make as a default", $"{ID}:{settings.Id}:default")
             });
           }
           
           buttons = buttons
-            .Append(new [] { InlineKeyboardButton.WithCallbackData("Удалить", $"{ID}:{settings.Id}:delete") })
-            .Append(new [] { InlineKeyboardButton.WithCallbackData("Назад", $"{ID}:list") });
+            .Append(new [] { InlineKeyboardButton.WithCallbackData("Delete", $"{ID}:{settings.Id}:delete") })
+            .Append(new [] { InlineKeyboardButton.WithCallbackData("Back", $"{ID}:list") });
 
           return await Return((
-            settings.Format.Format(new StringBuilder("Выбранный формат голосования:").AppendLine()).ToTextMessageContent(),
+            settings.Format.Format(new StringBuilder("Selected poll format:").AppendLine()).ToTextMessageContent(),
             new InlineKeyboardMarkup(buttons)), message);
       }
 
@@ -140,10 +140,10 @@ namespace RaidBattlesBot.Handlers
       var replyMarkup = new InlineKeyboardMarkup(
         settings
           .Select(setting => new[] { InlineKeyboardButton.WithCallbackData(setting.Format.Format(new StringBuilder()).ToString(), $"{ID}:{setting.Id}") })
-          .Concat(new [] { new []{InlineKeyboardButton.WithCallbackData("Создать новый", $"{ID}:")}})
+          .Concat(new [] { new []{InlineKeyboardButton.WithCallbackData("Create a new", $"{ID}:")}})
           .ToArray());
 
-      return (new StringBuilder("Выберите формат голосования для редактирования или создайте новый:").ToTextMessageContent(), replyMarkup);
+      return (new StringBuilder("Choose a poll format to edit or create a new:").ToTextMessageContent(), replyMarkup);
     }
   }
 }

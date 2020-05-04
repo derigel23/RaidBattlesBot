@@ -85,7 +85,7 @@ namespace RaidBattlesBot.Handlers
         // deep linking to gym
         case "/start" when commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
-          var pollTitle = new StringBuilder("Создание голосования");
+          var pollTitle = new StringBuilder("Poll creation");
           if (int.TryParse(query, out int gymPollId))
           {
             pollTitle
@@ -95,7 +95,7 @@ namespace RaidBattlesBot.Handlers
 
           var content = pollTitle.ToTextMessageContent();
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, 
-            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Выберите гим", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
+            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Choose a Gym", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
 
         case "/p" when int.TryParse(commandText, out var pollId):

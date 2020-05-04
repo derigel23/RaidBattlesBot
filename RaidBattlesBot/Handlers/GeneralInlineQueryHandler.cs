@@ -72,10 +72,10 @@ namespace RaidBattlesBot.Handlers
       {
         inlineQueryResults = new[]
         {
-          new InlineQueryResultArticle($"EnterPollTopic", "Введите тему",
-            new InputTextMessageContent("Введите тему для создания голосования"))
+          new InlineQueryResultArticle($"EnterPollTopic", "Enter a topic",
+            new InputTextMessageContent("Enter a topic to create a poll"))
           {
-            Description = "для создания голосования",
+            Description = "to create a poll",
             ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/POI_Submission_Illustration_02.png").ToString()
           }
         };
@@ -101,7 +101,7 @@ namespace RaidBattlesBot.Handlers
             .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(i), fakePoll.GetTitle(myUrlHelper),
               fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {
-                Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+                Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
                 HideUrl = true,
                 ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
                 ReplyMarkup = fakePoll.GetReplyMarkup()
@@ -110,7 +110,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       await myBot.AnswerInlineQueryWithValidationAsync(data.Id, inlineQueryResults,
-        switchPmText: switchPmParameter != null ? "Привязать голосование к гиму" : null, switchPmParameter: switchPmParameter,
+        switchPmText: switchPmParameter != null ? "Link the poll to a gym" : null, switchPmParameter: switchPmParameter,
         cacheTime: 0, cancellationToken: cancellationToken);
 
       await myDb.SaveChangesAsync(cancellationToken);

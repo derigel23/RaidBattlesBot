@@ -33,7 +33,7 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
       
       if (!PollEx.TryGetPollId(callback.ElementAtOrDefault(1), out var pollId, out var format))
-        return ("Голование подготавливается. Повторите позже", true, null);
+        return ("Poll is publishing. Try later.", true, null);
 
       if (!int.TryParse(callback.ElementAtOrDefault(2) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var offset))
         return ("", false, null);
@@ -41,16 +41,16 @@ namespace RaidBattlesBot.Handlers
       var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
       if (poll == null)
-        return ("Голосование не найдено", true, null);
+        return ("Poll is not found.", true, null);
 
       var user = data.From;
 
       if (!await myChatInfo.CandEditPoll(poll.Owner, user.Id, cancellationToken))
-        return ("Вы не можете редактировать голосование", true, null);
+        return ("You can't edit the poll.", true, null);
 
       poll.Time = poll.Time?.AddMinutes(offset);
       if (poll.Time > poll.Raid?.RaidBossEndTime)
-        return ($"В {poll.Time:t} рейд уже закончится", true, null);
+        return ($"Raid will end in {poll.Time:t}.", true, null);
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
@@ -58,7 +58,7 @@ namespace RaidBattlesBot.Handlers
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
       }
 
-      return ($"Голосование установлено на {poll.Time:t}", false, null);
+      return ($"Poll is scheduled at {poll.Time:t}.", false, null);
     }
   }
 }

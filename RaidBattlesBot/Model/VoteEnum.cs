@@ -15,13 +15,13 @@ namespace RaidBattlesBot.Model
     [Display(Name = "✔", Order = 10)]
     Yes = 1 << 0,
 
-    [Display(Name = "❤", Order = 10, Description = "Вы проголосовали как Valor")]
+    [Display(Name = "❤", Order = 10, Description = "You've voted as a Valor")]
     Valor = Yes << 1,
 
-    [Display(Name = "💛", Order = 10, Description = "Вы проголосовали как Instinct")]
+    [Display(Name = "💛", Order = 10, Description = "You've voted as an Instinct")]
     Instinct = Valor << 1,
 
-    [Display(Name = "💙", Order = 10, Description = "Вы проголосовали как Mystic")]
+    [Display(Name = "💙", Order = 10, Description = "You've voted as a Mystic")]
     Mystic = Instinct << 1,
 
     [Display(Name = "⁺¹", Order = 15)]
@@ -36,10 +36,10 @@ namespace RaidBattlesBot.Model
     [Display(Name = "+8", Order = 15)]
     Plus8 = Plus4 << 1,
 
-    [Display(Name = "💤", Order = 20, Description = "Вы ещё не решили...")]
+    [Display(Name = "💤", Order = 20, Description = "You've not decided yet...")]
     MayBe = Plus8 << 1,
 
-    [Display(Name = "✖", Order = 100, Description = "Вы передумали!")]
+    [Display(Name = "✖", Order = 100, Description = "You've bailed!")]
     Cancel = MayBe << 1,
 
     [Display(Name = "🌐", Order = 9999)]
@@ -53,11 +53,11 @@ namespace RaidBattlesBot.Model
     
     Thumbs = ThumbsUp | ThumbsDown,
 
-    [Display(Name = "🥊", Order = 10, Description = "Вы проголосовали как Auror")]
+    [Display(Name = "🥊", Order = 10, Description = "You've voted as an Auror")]
     Auror = ThumbsDown << 1,
-    [Display(Name = "🦎", Order = 10, Description = "Вы проголосовали как Magizoologist")]
+    [Display(Name = "🦎", Order = 10, Description = "You've voted as a Magizoologist")]
     Magizoologist = Auror << 1,
-    [Display(Name = "🧙‍♂", Order = 10, Description = "Вы проголосовали как Professor")]
+    [Display(Name = "🧙‍♂", Order = 10, Description = "You've voted as a Professor")]
     Professor = Magizoologist << 1,
     
     #region Plused votes

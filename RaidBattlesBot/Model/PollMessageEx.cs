@@ -56,17 +56,17 @@ namespace RaidBattlesBot.Model
 
         return  new InlineKeyboardMarkup(new []
         {
-          InlineKeyboardButton.WithCallbackData("Возобновить", $"{RestoreCallbackQueryHandler.ID}:{pollId}"),
+          InlineKeyboardButton.WithCallbackData("Resume", $"{RestoreCallbackQueryHandler.ID}:{pollId}"),
         });
       }
 
       var additionalKeyboardButtons = new List<InlineKeyboardButton>();
       if (message.Poll.Time != null)
       {
-        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' раньше", $"{AdjustCallbackQueryHandler.ID}:{pollId}:-5"));
-        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' позже", $"{AdjustCallbackQueryHandler.ID}:{pollId}:5"));
+        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' earlier", $"{AdjustCallbackQueryHandler.ID}:{pollId}:-5"));
+        additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("5' later", $"{AdjustCallbackQueryHandler.ID}:{pollId}:5"));
       }
-      additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("Отменить", $"{CancelCallbackQueryHandler.ID}:{pollId}"));
+      additionalKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData("Cancel", $"{CancelCallbackQueryHandler.ID}:{pollId}"));
       return new InlineKeyboardMarkup(pollReplyMarkup.InlineKeyboard.Append(additionalKeyboardButtons));
     }
 

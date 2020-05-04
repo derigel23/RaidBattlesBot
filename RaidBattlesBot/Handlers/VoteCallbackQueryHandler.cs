@@ -54,11 +54,11 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        return ("Голование подготавливается. Повторите позже", true, null);
+        return ("Poll is publishing. Try later.", true, null);
       }
 
       if (poll == null)
-        return ("Голосование не найдено", true, null);
+        return ("Poll is not found", true, null);
 
       var user = data.From;
 
@@ -71,13 +71,13 @@ namespace RaidBattlesBot.Handlers
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
 
       if ((now - vote.Modified) <= myVoteTimeout)
-        return ($"Вы слишком быстро голосуете. Попробуйте через {myVoteTimeout.TotalSeconds:0} сек", false, null);
+        return ($"You're voting too fast. Try again in {myVoteTimeout.TotalSeconds:0} sec", false, null);
       
       vote.User = user; // update username/firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
       if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team))
-        return ("Неправильный голос", true, null);
+        return ("Invalid vote", true, null);
 
       var clearTeam = team.RemoveFlags(VoteEnum.Plus);
       if (clearTeam == default)
@@ -90,10 +90,10 @@ namespace RaidBattlesBot.Handlers
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
-        return (vote.Team?.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "Вы проголосовали", false, null);
+        return (vote.Team?.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "You've voted", false, null);
       }
 
-      return ("Вы уже проголосовали", false, null);
+      return ("You've already voted.", false, null);
     }
   }
 }

@@ -36,7 +36,7 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))
-        return ("Голование подготавливается. Повторите позже", true, null);
+        return ("Poll is publishing. Try later.", true, null);
 
       var poll = await myContext
         .Set<Poll>()
@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll == null)
-        return ("Голосование не найдено", true, null);
+        return ("Poll is not found", true, null);
 
       var pollMessage = new PollMessage
       {

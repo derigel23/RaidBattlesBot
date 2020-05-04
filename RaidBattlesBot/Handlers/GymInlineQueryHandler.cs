@@ -103,7 +103,7 @@ namespace RaidBattlesBot.Handlers
           results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(myUrlHelper),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
-              Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+              Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
               HideUrl = true,
               ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
               ReplyMarkup = poll.GetReplyMarkup()
@@ -116,7 +116,7 @@ namespace RaidBattlesBot.Handlers
             results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
               poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
-              Description = poll.AllowedVotes?.Format(new StringBuilder("Создать голосование ")).ToString(),
+              Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
               HideUrl = true,
               ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
               ReplyMarkup = poll.GetReplyMarkup()
@@ -148,7 +148,7 @@ namespace RaidBattlesBot.Handlers
             .ToTextMessageContent();
           results.Add(Init(
             new InlineQueryResultArticle($"portal:{portal.Guid}", title, portalContent),
-            InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование", $"{PREFIX}{portalGuid} {poll?.Title}")));
+            InlineKeyboardButton.WithSwitchInlineQuery("Create a poll", $"{PREFIX}{portalGuid} {poll?.Title}")));
 
           if (i == 0)
           {
@@ -161,7 +161,7 @@ namespace RaidBattlesBot.Handlers
               .ToTextMessageContent();
             results.Add(Init(
               new InlineQueryResultArticle($"portal:{portal.Guid}+", $"☆ {title} (EX Raid Gym)", exRaidPortalContent),
-              InlineKeyboardButton.WithSwitchInlineQuery("Создать голосование ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {poll?.Title}")));
+              InlineKeyboardButton.WithSwitchInlineQuery("Create a poll ☆ (EX Raid Gym)", $"{PREFIX}{portalGuid}+ {poll?.Title}")));
           }
         }
       }
@@ -169,9 +169,9 @@ namespace RaidBattlesBot.Handlers
       if (searchQuery.Count == 0)
       {
         results.Add(
-          new InlineQueryResultArticle("EnterGymName", "Введите имя гима", new InputTextMessageContent("Введитя имя гима для поиска по имени"))
+          new InlineQueryResultArticle("EnterGymName", "Enter a Gym's Title", new InputTextMessageContent("Enter a Gym's Title to search"))
           {
-            Description = "для поиска по имени",
+            Description = "to search",
             ThumbUrl = default(Portal).GetImage(myUrlHelper)?.AbsoluteUri
           });
       }
@@ -179,10 +179,10 @@ namespace RaidBattlesBot.Handlers
       if (results.Count == 0)
       {
         var search = string.Join(" ", searchQuery);
-        results.Add(new InlineQueryResultArticle("NothingFound", "Ничего не найдено", 
-          new StringBuilder($"Ничего не найдено по запросу ").Code((builder, mode) => builder.Sanitize(search, mode)).ToTextMessageContent())
+        results.Add(new InlineQueryResultArticle("NothingFound", "Nothing found", 
+          new StringBuilder($"Nothing found by request ").Code((builder, mode) => builder.Sanitize(search, mode)).ToTextMessageContent())
         {
-          Description = $"Запрос {search}",
+          Description = $"Request {search}",
           ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").AbsoluteUri
         });
       }

@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
           if (poll.Raid() is Raid raid)
           {
             queryResults.Add(
-              new InlineQueryResultVenue($"location:{raid.Id}", (float)raid.Lat, (float)raid.Lon, raid.Title, "Запостить локу")
+              new InlineQueryResultVenue($"location:{raid.Id}", (float)raid.Lat, (float)raid.Lon, raid.Title, "Share a location")
               {
                 ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/ic_map.png").ToString(),
                 InputMessageContent = new InputVenueMessageContent(raid.Title, RaidEx.Delimeter.JoinNonEmpty(raid.Gym ?? raid.PossibleGym, raid.Description),
@@ -71,7 +71,7 @@ namespace RaidBattlesBot.Handlers
           if (poll.Portal is Portal portal)
           {
             queryResults.Add(
-              new InlineQueryResultVenue($"location:{portal.Guid}", (float)portal.Latitude, (float)portal.Longitude, portal.Name, "Запостить локу")
+              new InlineQueryResultVenue($"location:{portal.Guid}", (float)portal.Latitude, (float)portal.Longitude, portal.Name, "Share a location")
               {
                 ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/ic_map.png").ToString(),
                 InputMessageContent = new InputVenueMessageContent(portal.Name, portal.Address, (float) portal.Latitude, (float) portal.Longitude)
