@@ -65,26 +65,26 @@ namespace RaidBattlesBot.Model
     
     #region Plused votes
 
-    [Display(Name = "❤⁺¹", Order = 1)]
+    [Display(Name = "❤", Order = 1)]
     ValorPlusOne = Valor | Plus1,
-    [Display(Name = "💛⁺¹", Order = 1)]
+    [Display(Name = "💛", Order = 1)]
     InstinctPlusOne = Instinct | Plus1,
-    [Display(Name = "💙⁺¹", Order = 1)]
+    [Display(Name = "💙", Order = 1)]
     MysticPlusOne = Mystic | Plus1,
 
-    [Display(Name = "✔⁺¹", Order = 1)]
+    [Display(Name = "✔", Order = 1)]
     YesPlus1 = Yes | Plus1,
 
-    [Display(Name = "👍⁺¹", Order = 1)]
+    [Display(Name = "👍", Order = 1)]
     ThumbsUpPlus1 = ThumbsUp | Plus1,
-    [Display(Name = "👎⁺¹", Order = 1)]
+    [Display(Name = "👎", Order = 1)]
     ThumbsDownPlus1 = ThumbsDown | Plus1,
 
-    [Display(Name = "🥊⁺¹", Order = 1)]
+    [Display(Name = "🥊", Order = 1)]
     AurorPlusOne = Auror | Plus1,
-    [Display(Name = "🦎⁺¹", Order = 1)]
+    [Display(Name = "🦎", Order = 1)]
     MagizoologistPlusOne = Magizoologist | Plus1,
-    [Display(Name = "🧙‍♂⁺¹", Order = 1)]
+    [Display(Name = "🧙‍♂", Order = 1)]
     ProfessorPlusOne = Professor | Plus1,
 
     #endregion
