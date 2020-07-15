@@ -91,8 +91,10 @@ namespace RaidBattlesBot.Handlers
           var buttons = new []
             {
               VoteEnum.Team,
+              VoteEnum.TeamHarmony,
               VoteEnum.Plus1,
               VoteEnum.Remotely,
+              VoteEnum.Invitation,
               VoteEnum.MayBe,
               VoteEnum.Yes,
               VoteEnum.Thumbs,

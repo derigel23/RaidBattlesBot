@@ -18,12 +18,13 @@ namespace RaidBattlesBot.Model
   {
     private static readonly IEnumerable<(VoteEnum flag, int Order, int DisplayOrder, string Singular, string Plural)> ourVoteDescription = new List<(VoteEnum, int, int, string, string)>
     {
-      (VoteEnum.Going, 6, 1,  "going", "going"),
+      (VoteEnum.Going, 7, 1,  "going", "going"),
       (VoteEnum.Remotely, 5, 2, "remotely", "remotely"),
-      (VoteEnum.Thinking, 2, 3, "maybe", "maybe"),
-      (VoteEnum.ChangedMind, 3, 4, "bailed", "bailed"),
-      (VoteEnum.ThumbsUp, 4, 5, "vote for", "votes for"),
-      (VoteEnum.ThumbsDown, 5, 6, "vote against", "votes against"),
+      (VoteEnum.Invitation, 6, 3, "need an invitation", "need an invitation"),
+      (VoteEnum.Thinking, 2, 4, "maybe", "maybe"),
+      (VoteEnum.ChangedMind, 3, 5, "bailed", "bailed"),
+      (VoteEnum.ThumbsUp, 4, 6, "voted for", "votes for"),
+      (VoteEnum.ThumbsDown, 5, 7, "vote against", "votes against"),
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)

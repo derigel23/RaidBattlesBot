@@ -62,6 +62,12 @@ namespace RaidBattlesBot.Model
     
     [Display(Name = "📡", Order = 10, Description = "You're going to participate remotely")]
     Remotely = Professor << 1,
+
+    [Display(Name = "💚", Order = 10, Description = "You're voted")]
+    TeamHarmony = Remotely << 1,
+
+    [Display(Name = "💌", Order = 10, Description = "You need an invite")]
+    Invitation = TeamHarmony << 1,
     
     #region Plused votes
 
@@ -86,17 +92,20 @@ namespace RaidBattlesBot.Model
     MagizoologistPlusOne = Magizoologist | Plus1,
     [Display(Name = "🧙‍♂", Order = 1)]
     ProfessorPlusOne = Professor | Plus1,
+    
+    [Display(Name = "💚", Order = 1)]
+    TeamHarmonyPlusOne = TeamHarmony | Plus1,
 
     #endregion
 
-    Standard = ValorPlusOne | InstinctPlusOne | MysticPlusOne | Remotely | MayBe | Cancel | Share,
+    Standard = TeamHarmonyPlusOne | Remotely | Invitation | MayBe | Cancel | Share,
 
     Team = Valor | Instinct | Mystic,
     HarryPotter = Auror | Magizoologist | Professor,
-    Going = Yes | Team | HarryPotter,
+    Going = Yes | Team | HarryPotter | TeamHarmony,
     Thinking = MayBe,
     Countable = Going | Thumbs,
-    Some = Countable | MayBe ,
+    Some = Countable | MayBe,
     SomePlus = Some | Plus,
     ChangedMind = Cancel,
 
@@ -132,7 +141,7 @@ namespace RaidBattlesBot.Model
 
     public static string Description(this VoteEnum vote) =>
       (vote.RemoveFlags(VoteEnum.Modifiers) is { } voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
-        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
+        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.TeamHarmony : vote).AsString(EnumFormat.DisplayName);
 
     public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
     {

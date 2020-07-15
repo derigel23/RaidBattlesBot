@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Handlers
 
       var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);
       if (clearTeam == default)
-        clearTeam = VoteEnum.Yes;
+        clearTeam = team.HasFlag(VoteEnum.Remotely) ? VoteEnum.TeamHarmony : VoteEnum.Yes;
 
       if (team.HasAnyFlags(VoteEnum.Toggle))
       {
@@ -92,7 +92,10 @@ namespace RaidBattlesBot.Handlers
         var toggle = vote.Team?.CommonFlags(VoteEnum.Toggle) ?? VoteEnum.None;
         vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
-        vote.Team = vote.Team?.CombineFlags(toggle);
+        if (vote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)
+        {
+          vote.Team = vote.Team?.CombineFlags(toggle);
+        }
       }
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
