@@ -12,7 +12,7 @@ namespace RaidBattlesBot.Model
   {
     None = 0,
 
-    [Display(Name = "✔", Order = 10)]
+    [Display(Name = "✅", Order = 10)]
     Yes = 1 << 0,
 
     [Display(Name = "❤", Order = 10, Description = "You've voted as a Valor")]
@@ -39,7 +39,7 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💤", Order = 20, Description = "You've not decided yet...")]
     MayBe = Plus8 << 1,
 
-    [Display(Name = "✖", Order = 100, Description = "You've bailed!")]
+    [Display(Name = "❌", Order = 100, Description = "You've bailed!")]
     Cancel = MayBe << 1,
 
     [Display(Name = "🌐", Order = 9999)]
@@ -66,7 +66,7 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💚", Order = 10, Description = "You're voted")]
     TeamHarmony = Remotely << 1,
 
-    [Display(Name = "💌", Order = 10, Description = "You need an invite")]
+    [Display(Name = "💌", Order = 10, Description = "You need an invitation")]
     Invitation = TeamHarmony << 1,
     
     #region Plused votes
@@ -78,7 +78,7 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💙", Order = 1)]
     MysticPlusOne = Mystic | Plus1,
 
-    [Display(Name = "✔", Order = 1)]
+    [Display(Name = "✅", Order = 1)]
     YesPlus1 = Yes | Plus1,
 
     [Display(Name = "👍", Order = 1)]
@@ -98,7 +98,7 @@ namespace RaidBattlesBot.Model
 
     #endregion
 
-    Standard = TeamHarmonyPlusOne | Remotely | Invitation | MayBe | Cancel | Share,
+    Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | Share,
 
     Team = Valor | Instinct | Mystic,
     HarryPotter = Auror | Magizoologist | Professor,
@@ -122,8 +122,8 @@ namespace RaidBattlesBot.Model
       // hearts
       VoteEnum.Standard,
       
-      // compact
-      VoteEnum.YesPlus1 | VoteEnum.MayBe | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
+      // classic
+      VoteEnum.Team | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
       
       // thumbs up/down
       VoteEnum.Thumbs | VoteEnum.Share
@@ -141,7 +141,7 @@ namespace RaidBattlesBot.Model
 
     public static string Description(this VoteEnum vote) =>
       (vote.RemoveFlags(VoteEnum.Modifiers) is { } voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
-        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.TeamHarmony : vote).AsString(EnumFormat.DisplayName);
+        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
 
     public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
     {

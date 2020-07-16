@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Handlers
 
       var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);
       if (clearTeam == default)
-        clearTeam = team.HasFlag(VoteEnum.Remotely) ? VoteEnum.TeamHarmony : VoteEnum.Yes;
+        clearTeam = VoteEnum.Yes;
 
       if (team.HasAnyFlags(VoteEnum.Toggle))
       {

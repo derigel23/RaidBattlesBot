@@ -20,7 +20,7 @@ namespace RaidBattlesBot.Model
     {
       (VoteEnum.Going, 7, 1,  "going", "going"),
       (VoteEnum.Remotely, 5, 2, "remotely", "remotely"),
-      (VoteEnum.Invitation, 6, 3, "need an invitation", "need an invitation"),
+      (VoteEnum.Invitation, 6, 3, "needs an invitation", "need an invitation"),
       (VoteEnum.Thinking, 2, 4, "maybe", "maybe"),
       (VoteEnum.ChangedMind, 3, 5, "bailed", "bailed"),
       (VoteEnum.ThumbsUp, 4, 6, "voted for", "votes for"),
