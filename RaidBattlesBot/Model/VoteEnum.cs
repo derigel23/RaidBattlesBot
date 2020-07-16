@@ -60,13 +60,13 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🧙‍♂", Order = 10, Description = "You've voted as a Professor")]
     Professor = Magizoologist << 1,
     
-    [Display(Name = "📡", Order = 10, Description = "You're going to participate remotely")]
+    [Display(Name = "📡", Order = 11, Description = "You're going to participate remotely")]
     Remotely = Professor << 1,
 
     [Display(Name = "💚", Order = 10, Description = "You're voted")]
     TeamHarmony = Remotely << 1,
 
-    [Display(Name = "💌", Order = 10, Description = "You need an invitation")]
+    [Display(Name = "💌", Order = 12, Description = "You need an invitation")]
     Invitation = TeamHarmony << 1,
     
     #region Plused votes
