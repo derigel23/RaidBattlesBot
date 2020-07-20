@@ -4,13 +4,13 @@
 @using RaidBattlesBot
 @using RaidBattlesBot.Model
 @model RaidBattlesBot.Pages.PortalModel
-
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 <!DOCTYPE html>
 
 <html>
 <head>
   <title>Raid Battles</title>
-  @if (Model.Portal is Portal portal)
+  @if (Model.Portal is { } portal)
   {
     <meta property="og:title" content="@portal.Name"/>
     <meta property="og:description" content="@portal.Address"/>
@@ -26,7 +26,12 @@
     <meta property="og:description" content="Pokémon GO Raid Bot. Questions, comments and suggestions @@team_23." />
     <meta property="og:site_name" content="Raid Battles" />
     <meta property="og:image" content="@Url.AssetsContent("static_assets/png/raid_tut_raid.png")" />
-    <meta http-equiv="refresh" content="0; url=https://pogo.tools" />
+    <environment include="Development">
+      <meta http-equiv="refresh" content="0; url=/refresh" />
+    </environment>
+    <environment exclude="Development">
+      <meta http-equiv="refresh" content="0; url=https://pogo.tools" />
+    </environment>
   }
 </head>
 <body>
