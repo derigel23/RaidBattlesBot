@@ -165,8 +165,14 @@ namespace RaidBattlesBot.Model
           groupsCount++;
           var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
           var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
-          StringBuilder FormatCaption(StringBuilder sb) =>
-            sb.NewLine().Sanitize(string.Join(" ", votesNumber, extraPhrase, countStr), mode).NewLine();
+          StringBuilder FormatCaption(StringBuilder sb)
+          {
+            var captionParts = new[] { votesNumber.ToString(), extraPhrase, countStr }.Where(s => !string.IsNullOrWhiteSpace(s));
+            return sb
+              .NewLine()
+              .Sanitize(string.Join(" ", captionParts), mode)
+              .NewLine();
+          }
 
           if (voteGroup.Key.NestedGrouping is {} nestedGrouping)
           {
