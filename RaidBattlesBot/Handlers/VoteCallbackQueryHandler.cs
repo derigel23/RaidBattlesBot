@@ -83,20 +83,8 @@ namespace RaidBattlesBot.Handlers
       if (clearTeam == default)
         clearTeam = VoteEnum.Yes;
 
-      if (team.HasAnyFlags(VoteEnum.Toggle))
-      {
-        vote.Team = FlagEnums.ToggleFlags(vote.Team is { } voted && voted.HasAnyFlags(VoteEnum.Going) ? voted : clearTeam, team.CommonFlags(VoteEnum.Toggle)) ;
-      }
-      else
-      {
-        var toggle = vote.Team?.CommonFlags(VoteEnum.Toggle) ?? VoteEnum.None;
-        vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
+      vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
-        if (vote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)
-        {
-          vote.Team = vote.Team?.CombineFlags(toggle);
-        }
-      }
 
       var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
       if (changed)

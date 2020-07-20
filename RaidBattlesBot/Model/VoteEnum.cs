@@ -102,7 +102,7 @@ namespace RaidBattlesBot.Model
 
     Team = Valor | Instinct | Mystic,
     HarryPotter = Auror | Magizoologist | Professor,
-    Going = Yes | Team | HarryPotter | TeamHarmony | Invitation,
+    Going = Yes | Team | HarryPotter | TeamHarmony | Remotely | Invitation,
     Thinking = MayBe,
     Countable = Going | Thumbs,
     Some = Countable | MayBe,
@@ -111,8 +111,7 @@ namespace RaidBattlesBot.Model
 
     Plus = Plus1 | Plus2 | Plus4 | Plus8,
     
-    Modifiers = Plus | Remotely | Share,
-    Toggle = Remotely
+    Modifiers = Plus | Share,
   }
 
   public static class VoteEnumEx
