@@ -102,7 +102,7 @@ namespace RaidBattlesBot.Model
 
     Team = Valor | Instinct | Mystic,
     HarryPotter = Auror | Magizoologist | Professor,
-    Going = Yes | Team | HarryPotter | TeamHarmony,
+    Going = Yes | Team | HarryPotter | TeamHarmony | Invitation,
     Thinking = MayBe,
     Countable = Going | Thumbs,
     Some = Countable | MayBe,

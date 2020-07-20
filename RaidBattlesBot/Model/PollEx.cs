@@ -7,8 +7,8 @@ using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
- using RaidBattlesBot.Handlers;
- using Telegram.Bot.Types.Enums;
+using RaidBattlesBot.Handlers;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -16,21 +16,50 @@ namespace RaidBattlesBot.Model
 {
   public static class PollEx
   {
-    private static readonly IEnumerable<(VoteEnum flag, int Order, int DisplayOrder, string Singular, string Plural)> ourVoteDescription = new List<(VoteEnum, int, int, string, string)>
+    public struct VoteGrouping
     {
-      (VoteEnum.Going, 7, 1,  "going", "going"),
-      (VoteEnum.Remotely, 5, 2, "remotely", "remotely"),
-      (VoteEnum.Invitation, 6, 3, "needs an invitation", "need an invitation"),
-      (VoteEnum.Thinking, 2, 4, "maybe", "maybe"),
-      (VoteEnum.ChangedMind, 3, 5, "bailed", "bailed"),
-      (VoteEnum.ThumbsUp, 4, 6, "voted for", "votes for"),
-      (VoteEnum.ThumbsDown, 5, 7, "vote against", "votes against"),
+      public readonly VoteEnum Flag;
+      public readonly int Order;
+      public readonly int DisplayOrder;
+      public readonly string Singular;
+      public readonly string Plural;
+      public readonly VoteGrouping[] NestedGrouping;
+
+      public VoteGrouping(VoteEnum flag, int order, int displayOrder, string singular, string plural, params VoteGrouping[] nestedGrouping):
+        this(flag, order, displayOrder, singular, plural)
+      {
+        NestedGrouping = nestedGrouping;
+      }
+
+      public VoteGrouping(VoteEnum flag, int order, int displayOrder, string singular, string plural)
+      {
+        Order = order;
+        DisplayOrder = displayOrder;
+        Singular = singular;
+        Plural = plural;
+        Flag = flag;
+        NestedGrouping = null;
+      }
+    }
+    
+    private static readonly VoteGrouping[] ourVoteGrouping =
+    {
+      new VoteGrouping(VoteEnum.Going, 1, 1, "is going", "are going", new[]
+      {
+        new VoteGrouping(VoteEnum.Going, 3, 1,  "on-site", "on-site"),
+        new VoteGrouping(VoteEnum.Remotely, 2, 2, "remotely", "remotely"),
+        new VoteGrouping(VoteEnum.Invitation, 1, 3, "by invitation", "by invitation")
+      }),
+      new VoteGrouping(VoteEnum.Thinking, 2, 2, "maybe", "maybe"),
+      new VoteGrouping(VoteEnum.ChangedMind, 3, 3, "bailed", "bailed"),
+      new VoteGrouping(VoteEnum.ThumbsUp, 4, 4, "voted for", "votes for"),
+      new VoteGrouping(VoteEnum.ThumbsDown, 5, 5, "vote against", "votes against"),
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
     {
       var thumbnail = default(Uri);
-      if (poll.Portal is Portal portal)
+      if (poll.Portal is { } portal)
       {
         thumbnail = portal.GetImage(urlHelper, 64, false);
       }
@@ -78,7 +107,7 @@ namespace RaidBattlesBot.Model
         else
         {
           description.Bold((builder, m) => builder.Sanitize(poll.Title, m), mode);
-          if (poll.Portal is Portal portal)
+          if (poll.Portal is { } portal)
           {
             description.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0", mode);
             description.Link(portal.Name, $"https://pogo.tools/{portal.Guid}", mode);
@@ -119,36 +148,64 @@ namespace RaidBattlesBot.Model
       }
 
       var compactMode = poll.Votes?.Count > 10;
-      foreach (var voteGroup in (poll.Votes ?? Enumerable.Empty<Vote>())
-        .GroupBy(vote => ourVoteDescription.OrderBy(_ => _.Order).FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.flag) ?? false))
-        .OrderBy(voteGroup => voteGroup.Key.DisplayOrder))
-      {
-        var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
-        var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
-        text.NewLine().Sanitize($"{votesNumber} {countStr}", mode).NewLine();
-
-        foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Modifiers)).OrderBy(_ => _.Key))
-        {
-          var votes = vote.OrderBy(v => v.Modified);
-          if (compactMode)
-          {
-            text
-              .Sanitize(vote.Key?.Description()).Append('\x00A0')
-              .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
-              .NewLine();
-          }
-          else
-          {
-            text
-              .AppendJoin(Helpers.NewLineString, votes.Select(v => $"{v.Team?.Description().Sanitize(mode)} {v.GetUserLinkWithPluses(mode)}"))
-              .NewLine();
-          }
-        }
-      }
+      var pollVotes = poll.Votes ?? Enumerable.Empty<Vote>();
+      GroupVotes(text, pollVotes, ourVoteGrouping);
 
       text.Link("\x200B", poll.Raid()?.GetLink(urlHelper), mode);
 
       return text.ToTextMessageContent(mode, disableWebPreview);
+      
+      int GroupVotes(StringBuilder result, IEnumerable<Vote> enumerable, IEnumerable<VoteGrouping> grouping, string extraPhrase = null)
+      {
+        int groupsCount = 0;
+        foreach (var voteGroup in enumerable
+          .GroupBy(vote => grouping.OrderBy(_ => _.Order).FirstOrDefault(_ => vote.Team?.HasAnyFlags(_.Flag) ?? false))
+          .OrderBy(voteGroup => voteGroup.Key.DisplayOrder))
+        {
+          groupsCount++;
+          var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
+          var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
+          StringBuilder FormatCaption(StringBuilder sb) =>
+            sb.NewLine().Sanitize(string.Join(" ", votesNumber, extraPhrase, countStr), mode).NewLine();
+
+          if (voteGroup.Key.NestedGrouping is {} nestedGrouping)
+          {
+            var nestedResult = new StringBuilder();
+            if (GroupVotes(nestedResult, voteGroup, nestedGrouping) > 1)
+            {
+              FormatCaption(result).Append(nestedResult);
+            }
+            else
+            {
+              GroupVotes(result, voteGroup, nestedGrouping, countStr);
+            }
+            continue;
+          }
+
+          FormatCaption(result);
+
+          foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Modifiers)).OrderBy(_ => _.Key))
+          {
+            var votes = vote.OrderBy(v => v.Modified);
+            if (compactMode)
+            {
+              result
+                .Sanitize(vote.Key?.Description()).Append('\x00A0')
+                .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
+                .NewLine();
+            }
+            else
+            {
+              result
+                .AppendJoin(Helpers.NewLineString,
+                  votes.Select(v => $"{v.Team?.Description().Sanitize(mode)} {v.GetUserLinkWithPluses(mode)}"))
+                .NewLine();
+            }
+          }
+        }
+
+        return groupsCount;
+      }
     }
 
     public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
