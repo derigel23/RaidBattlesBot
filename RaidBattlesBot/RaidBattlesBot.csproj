@@ -40,5 +40,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <None Include=".config\dotnet-tools.json" />
   </ItemGroup>
 </Project>

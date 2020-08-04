@@ -35,11 +35,11 @@ namespace RaidBattlesBot.Handlers
       {
         if (success)
         {
-          if (string.IsNullOrEmpty(pollMessage.Poll.Title) &&
+          if (pollMessage.Poll is {} poll && string.IsNullOrEmpty(poll.Title) &&
               myCache.TryGetValue<Message>(message.Chat.Id, out var prevMessage) &&
               (prevMessage.From?.Id == message.From?.Id))
           {
-            pollMessage.Poll.Title = prevMessage.Text;
+            poll.Title = prevMessage.Text;
             myCache.Remove(message.Chat.Id);
           }
 

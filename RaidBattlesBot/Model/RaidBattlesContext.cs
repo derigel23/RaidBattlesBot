@@ -64,6 +64,13 @@ namespace RaidBattlesBot.Model
         builder.Property(portal => portal.Latitude).HasColumnType("decimal(18,15)");
         builder.Property(portal => portal.Longitude).HasColumnType("decimal(18,15)");
       });
+
+      modelBuilder.Entity<Player>(builder =>
+      {
+        builder.ToTable("Players");
+        builder.HasKey(player => player.UserId);
+        builder.Property(player => player.UserId).ValueGeneratedNever();
+      });
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
