@@ -93,14 +93,21 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🧙‍♂", Order = 1)]
     ProfessorPlusOne = Professor | Plus1,
     
+    [Display(Name = "📡", Order = 2)]
+    RemotelyPlusOne = Remotely | Plus1,
+    
     [Display(Name = "💚", Order = 1)]
     TeamHarmonyPlusOne = TeamHarmony | Plus1,
 
+    [Display(Name = "💌", Order = 3)]
+    InvitationPlusOne = Invitation | Plus1,
+    
     #endregion
 
     Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | Share,
 
     Team = Valor | Instinct | Mystic,
+    TeamPlusOne = Team | Plus1,
     HarryPotter = Auror | Magizoologist | Professor,
     Going = Yes | Team | HarryPotter | TeamHarmony | Remotely | Invitation,
     Thinking = MayBe,
@@ -122,7 +129,7 @@ namespace RaidBattlesBot.Model
       VoteEnum.Standard,
       
       // classic
-      VoteEnum.Team | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
+      VoteEnum.TeamPlusOne | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
       
       // thumbs up/down
       VoteEnum.Thumbs | VoteEnum.Share
