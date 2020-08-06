@@ -53,7 +53,7 @@ namespace RaidBattlesBot
 
     public async Task<Portal[]> Search(string query, Location location = default, CancellationToken cancellationToken = default)
     {
-      location = location ?? myDefaultLocation;
+      location ??= myDefaultLocation;
       var queryBuilder = new QueryBuilder
       {
         { "lat", location.Latitude.ToString(CultureInfo.InvariantCulture) },
@@ -79,7 +79,7 @@ namespace RaidBattlesBot
     
     public async Task<Portal[]> GetPortals(double radius, Location location = default, CancellationToken cancellationToken = default)
     {
-      location = location ?? myDefaultLocation;
+      location ??= myDefaultLocation;
       var boundaries = new CoordinateBoundaries(location.Latitude, location.Longitude, radius, DistanceUnit.Kilometers);
       var queryBuilder = new QueryBuilder
       {

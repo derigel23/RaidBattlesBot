@@ -202,7 +202,7 @@ namespace RaidBattlesBot
       }
       if (exception is ApiRequestException apiRequestException)
       {
-        properties = properties ?? new Dictionary<string, string>(1);
+        properties ??= new Dictionary<string, string>(1);
         properties["ErrorCode"] = apiRequestException.ErrorCode.ToString();
       }
 

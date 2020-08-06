@@ -267,7 +267,7 @@ using RaidBattlesBot.Model;
             }
           }
 
-          raid.Pokemon = raid.Pokemon ?? myPokemons.GetPokemonNumber(raid.Name);
+          raid.Pokemon ??= myPokemons.GetPokemonNumber(raid.Name);
 
           await raid.SetTitleAndDescription(title, description, myGymHelper, cancellationToken: cancellationToken);
 

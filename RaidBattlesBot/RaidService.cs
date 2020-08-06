@@ -122,8 +122,7 @@ namespace RaidBattlesBot
       if (message?.Poll == null)
         return message;
       
-      message.Poll.AllowedVotes =
-        message.Poll.AllowedVotes ?? await myContext.Set<Settings>().GetFormat(message.UserId, cancellationToken);
+      message.Poll.AllowedVotes ??= await myContext.Set<Settings>().GetFormat(message.UserId, cancellationToken);
 
       var raidUpdated = false;
       var eggRaidUpdated = false;
@@ -181,8 +180,8 @@ namespace RaidBattlesBot
               .FirstOrDefaultAsync(cancellationToken);
             if ((eggRaid != null) && (raid.Id != eggRaid.Id))
             {
-              var eggRaidPolls = eggRaid.Polls = eggRaid.Polls ?? new List<Poll>(0);
-              var raidPolls = raid.Polls = raid.Polls ?? new List<Poll>(eggRaidPolls.Count);
+              var eggRaidPolls = eggRaid.Polls ??= new List<Poll>(0);
+              var raidPolls = raid.Polls ??= new List<Poll>(eggRaidPolls.Count);
               // on post egg raid creation update all existing polls to new raid
               foreach (var eggRaidPoll in new List<Poll>(eggRaidPolls))
               {

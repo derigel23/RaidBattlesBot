@@ -125,7 +125,7 @@ namespace RaidBattlesBot.Model
 
     public static StringBuilder GetTitle(this Raid raid, StringBuilder title = null, bool extended = true)
     {
-      title = title ?? new StringBuilder();
+      title ??= new StringBuilder();
       if (title.Length == 0)
       {
         title
