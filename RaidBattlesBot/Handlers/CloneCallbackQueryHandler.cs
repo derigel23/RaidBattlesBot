@@ -13,9 +13,11 @@ using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
-  [CallbackQueryHandler(DataPrefix = "clone")]
+  [CallbackQueryHandler(DataPrefix = ID)]
   public class CloneCallbackQueryHandler : ICallbackQueryHandler
   {
+    public const string ID = "clone";
+
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
@@ -32,7 +34,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "clone")
+      if (callback[0] != ID)
         return (null, false, null);
       
       if (!int.TryParse(callback.ElementAtOrDefault(1) ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out var pollId))

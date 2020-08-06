@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Handlers;
@@ -29,13 +30,14 @@ namespace RaidBattlesBot.Model
 
           var inlineKeyboardButtons = pollReplyMarkup.InlineKeyboard.Select(_ => _.ToArray()).ToArray();
 
+          var shareButtonText = VoteEnum.Share.AsString(EnumFormat.DisplayName);
           // channel, not cancelled
           // replace share button with clone button
           for (var i = 0; i < inlineKeyboardButtons.Length; i++)
           for (var j = 0; j < inlineKeyboardButtons[i].Length; j++)
           {
-            if (inlineKeyboardButtons[i][j].Text == "🌐" )
-              inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData("🌐", $"clone:{message.GetExtendedPollId()}");
+            if (inlineKeyboardButtons[i][j].Text == shareButtonText)
+              inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(shareButtonText, $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
           }
 
           return new InlineKeyboardMarkup(inlineKeyboardButtons);

@@ -40,7 +40,7 @@ namespace RaidBattlesBot.Handlers
     async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context, CancellationToken cancellationToken)
     {
       var queryParts = new StringSegment(data.Query).Split(new[] {':'});
-      if (queryParts.First() != "share")
+      if (queryParts.First() != ID)
         return null;
 
       var inlineQueryResults = Enumerable.Empty<InlineQueryResultBase>();
@@ -57,7 +57,7 @@ namespace RaidBattlesBot.Handlers
         {
           queryResults.Add(poll.ClonePoll(myUrlHelper));
 
-          if (poll.Raid() is Raid raid)
+          if (poll.Raid() is { } raid)
           {
             queryResults.Add(
               new InlineQueryResultVenue($"location:{raid.Id}", (float)raid.Lat, (float)raid.Lon, raid.Title, "Share a location")
