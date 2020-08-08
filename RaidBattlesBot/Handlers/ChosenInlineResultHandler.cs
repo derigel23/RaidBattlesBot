@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
-using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -36,7 +35,7 @@ namespace RaidBattlesBot.Handlers
           var pollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
           if (pollMessage != null)
           {
-            if (pollMessage.Poll is Poll poll &&  (poll.Portal?.Guid ?? poll.PortalId) is string guid)
+            if (pollMessage.Poll is { } poll &&  (poll.Portal?.Guid ?? poll.PortalId) is { } guid)
             {
               await myPoGoToolsClient.UpdateWayspot(guid, poll.ExRaidGym ? Wayspot.ExRaidGym : Wayspot.Gym, cancellationToken);
             }
