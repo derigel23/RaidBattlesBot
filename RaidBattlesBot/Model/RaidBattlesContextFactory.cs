@@ -1,6 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,7 @@ namespace RaidBattlesBot.Model
       var optionsBuilder = new DbContextOptionsBuilder<RaidBattlesContext>();
       optionsBuilder.UseSqlServer(connectionSting, opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds));
 
+      optionsBuilder.ReplaceService<IMigrationsSqlGenerator, SqlServerMigrationsSqlGeneratorWithExec>();
       return new RaidBattlesContext(optionsBuilder.Options);
     }
   }
