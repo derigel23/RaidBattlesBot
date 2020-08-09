@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DelegateDecompiler.EntityFrameworkCore;
+using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
@@ -56,7 +57,12 @@ namespace RaidBattlesBot.Handlers
         if (poll != null)
         {
           queryResults.Add(poll.ClonePoll(myUrlHelper));
-
+          // clone poll in invitation mode if the user is going and someone needs invitation
+          if ((poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false) &&
+              poll.Votes.Any(vote => vote.UserId == data.From.Id && (vote.Team?.HasAnyFlags(VoteEnum.Going.RemoveFlags(VoteEnum.Invitation)) ?? false)))
+          {
+            queryResults.Add(poll.ClonePoll(myUrlHelper, PollMode.Invitation));
+          }
           if (poll.Raid() is { } raid)
           {
             queryResults.Add(
@@ -68,7 +74,7 @@ namespace RaidBattlesBot.Handlers
               });
           }
           
-          if (poll.Portal is Portal portal)
+          if (poll.Portal is { } portal)
           {
             queryResults.Add(
               new InlineQueryResultVenue($"location:{portal.Guid}", (float)portal.Latitude, (float)portal.Longitude, portal.Name, "Share a location")
@@ -81,7 +87,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, inlineQueryResults.ToArray(), cacheTime: 0, cancellationToken: cancellationToken);
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, inlineQueryResults.ToArray(), cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
       return true;
     }
 

@@ -40,13 +40,14 @@ namespace RaidBattlesBot.Model
     public ChatType? ChatType { get; set; }
     public int? MesssageId { get; set; }
     public string InlineMesssageId { get; set; }
+    public PollMode? PollMode { get; set; }
     public DateTimeOffset? Modified { get; set; }
 
     public Poll Poll { get; set; }
 
     public Chat Chat
     {
-      get => ChatId is long chatId ?  new Chat { Id = chatId, Type = ChatType.GetValueOrDefault() } : null;
+      get => ChatId is { } chatId ? new Chat { Id = chatId, Type = ChatType.GetValueOrDefault() } : null;
       set { ChatId = value?.Id; ChatType = value?.Type; }
     }
   }

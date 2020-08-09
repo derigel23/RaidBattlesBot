@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -31,8 +32,12 @@ namespace RaidBattlesBot.Handlers
         case PollEx.InlineIdPrefix:
           if (!PollEx.TryGetPollId(resultParts.ElementAtOrDefault(1), out var pollId, out var format))
             return null;
-
-          var pollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
+          var message = new PollMessage(data) { PollId = pollId };
+          if (Enum.TryParse<PollMode>(resultParts.ElementAtOrDefault(3), out var pollMode))
+          {
+            message.PollMode = pollMode;
+          }
+          var pollMessage = await myRaidService.GetOrCreatePollAndMessage(message, myUrlHelper, format, cancellationToken);
           if (pollMessage != null)
           {
             if (pollMessage.Poll is { } poll &&  (poll.Portal?.Guid ?? poll.PortalId) is { } guid)

@@ -15,7 +15,7 @@ namespace RaidBattlesBot.Model
   {
     public static async Task<InlineKeyboardMarkup> GetReplyMarkup(this PollMessage message, ChatInfo chatInfo, CancellationToken cancellationToken = default)
     {
-      var pollReplyMarkup = message.Poll.GetReplyMarkup();
+      var pollReplyMarkup = message.Poll.GetReplyMarkup(message.PollMode);
       
       var messageChat = message.Chat;
       if (messageChat == null) // inline message

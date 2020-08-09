@@ -214,7 +214,7 @@ namespace RaidBattlesBot.Model
       }
     }
 
-    public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll)
+    public static InlineKeyboardMarkup GetReplyMarkup(this Poll poll, PollMode? pollMode = null)
     {
       if (poll.Cancelled)
         return null;
@@ -225,16 +225,24 @@ namespace RaidBattlesBot.Model
         .Select(vote =>
         {
           var display = vote.AsString(EnumFormat.DisplayName);
-          switch (vote)
+          return vote switch
           {
-            case VoteEnum.Share:
-              return InlineKeyboardButton.WithSwitchInlineQuery(display, $"{ShareInlineQueryHandler.ID}:{pollId}");
-            
-            default:
-              return InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}");
-          }
+            VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display, $"{ShareInlineQueryHandler.ID}:{pollId}"),
+            _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}")
+          };
         }));
-      return new InlineKeyboardMarkup(buttons.ToArray());
+      
+      if (pollMode != PollMode.Invitation)
+        return new InlineKeyboardMarkup(buttons);
+
+      return new InlineKeyboardMarkup(new[]
+      { 
+        buttons.ToArray(),
+        new[]
+        {
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InvitationInlineQueryHandler.PREFIX}{pollId}")
+        }
+      });
     }
 
     public static IQueryable<Poll> IncludeRelatedData(this IQueryable<Poll> polls)
@@ -262,15 +270,16 @@ namespace RaidBattlesBot.Model
       return poll.Raid?.PostEggRaid ?? poll.Raid;
     }
 
-    public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper)
+    public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper, PollMode? pollMode = null)
     {
-      return new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(urlHelper),
+      return new InlineQueryResultArticle(poll.GetInlineId(pollMode), poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
-        Description = "Clone a poll",
+        Description = pollMode == PollMode.Invitation ? "Clone the poll in invitation mode" : "Clone the poll",
         HideUrl = true,
-        ThumbUrl = poll.GetThumbUrl(urlHelper).ToString(),
-        ReplyMarkup = poll.GetReplyMarkup()
+        ThumbUrl = pollMode == PollMode.Invitation ? urlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString():
+          poll.GetThumbUrl(urlHelper).ToString(),
+        ReplyMarkup = poll.GetReplyMarkup(pollMode)
       };
     }
 
