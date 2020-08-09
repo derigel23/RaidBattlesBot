@@ -59,16 +59,22 @@ namespace RaidBattlesBot.Handlers
             player.Nickname = nickname;
           }
           await myContext.SaveChangesAsync(cancellationToken);
+          
           InputTextMessageContent content;
           if (string.IsNullOrEmpty(nickname))
           {
-            content = new StringBuilder("Your in-game-nick is cleared.").ToTextMessageContent();
+            content = new StringBuilder()
+              .Append("Your in-game-nick is cleared.\r\nUse ")
+              .Code((b, m) => b.Append("/ign your-in-game-nick"))
+              .Append(" command to record it.")
+              .ToTextMessageContent();
           }
           else
           {
             content = new StringBuilder("Your in-game-nick ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
           }
           await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, cancellationToken: cancellationToken);
+          
           return false; // processed, but not pollMessage
 
         default:
