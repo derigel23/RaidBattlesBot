@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -14,12 +16,12 @@ namespace RaidBattlesBot.Handlers
   public class PlayerCommandsHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
-    private readonly Message myMessage;
+    private readonly ITelegramBotClient myBot;
 
-    public PlayerCommandsHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient)
+    public PlayerCommandsHandler(RaidBattlesContext context, ITelegramBotClient bot)
     {
       myContext = context;
-      myMessage = message;
+      myBot = bot;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
@@ -57,6 +59,16 @@ namespace RaidBattlesBot.Handlers
             player.Nickname = nickname;
           }
           await myContext.SaveChangesAsync(cancellationToken);
+          InputTextMessageContent content;
+          if (string.IsNullOrEmpty(nickname))
+          {
+            content = new StringBuilder("Your in-game-nick is cleared.").ToTextMessageContent();
+          }
+          else
+          {
+            content = new StringBuilder("Your in-game-nick ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
+          }
+          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, replyToMessageId: entity.Message.MessageId, cancellationToken: cancellationToken);
           return false; // processed, but not pollMessage
 
         default:
