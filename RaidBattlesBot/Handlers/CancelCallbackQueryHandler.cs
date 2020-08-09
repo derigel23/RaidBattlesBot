@@ -28,7 +28,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "cancel")
+      if (callback[0] != ID)
         return (null, false, null);
       
       if (!PollEx.TryGetPollId(callback.ElementAtOrDefault(1), out var pollId, out var format))
