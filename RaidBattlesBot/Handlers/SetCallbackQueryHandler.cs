@@ -31,7 +31,7 @@ namespace RaidBattlesBot.Handlers
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var callback = data.Data.Split(':');
-      if (callback[0] != "set")
+      if (callback[0] != ID)
         return (null, false, null);
 
       if (!await myChatInfo.CandEditPoll(data.Message.Chat, data.From?.Id ,cancellationToken))

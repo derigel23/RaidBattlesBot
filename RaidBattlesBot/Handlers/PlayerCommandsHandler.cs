@@ -57,10 +57,10 @@ namespace RaidBattlesBot.Handlers
             player.Nickname = nickname;
           }
           await myContext.SaveChangesAsync(cancellationToken);
-          return true;
+          return false; // processed, but not pollMessage
 
         default:
-          return false;
+          return null;
       }
     }
   }
