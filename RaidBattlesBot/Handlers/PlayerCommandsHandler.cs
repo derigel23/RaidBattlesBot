@@ -68,7 +68,7 @@ namespace RaidBattlesBot.Handlers
           {
             content = new StringBuilder("Your in-game-nick ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
           }
-          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, replyToMessageId: entity.Message.MessageId, cancellationToken: cancellationToken);
+          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, cancellationToken: cancellationToken);
           return false; // processed, but not pollMessage
 
         default:
