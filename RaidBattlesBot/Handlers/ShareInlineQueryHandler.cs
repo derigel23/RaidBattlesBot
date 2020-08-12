@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DelegateDecompiler.EntityFrameworkCore;
-using EnumsNET;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
@@ -57,9 +56,8 @@ namespace RaidBattlesBot.Handlers
         if (poll != null)
         {
           queryResults.Add(poll.ClonePoll(myUrlHelper));
-          // clone poll in invitation mode if the user is going and someone needs invitation
-          if ((poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false) &&
-              poll.Votes.Any(vote => vote.UserId == data.From.Id && (vote.Team?.HasAnyFlags(VoteEnum.Going.RemoveFlags(VoteEnum.Invitation)) ?? false)))
+          // clone the poll in invitation mode if possible
+          if (poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false)
           {
             queryResults.Add(poll.ClonePoll(myUrlHelper, PollMode.Invitation));
           }
