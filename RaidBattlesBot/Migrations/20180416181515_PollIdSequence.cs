@@ -22,9 +22,9 @@ namespace RaidBattlesBot.Migrations
 
       //migrationBuilder.Sql("UPDATE Polls SET Id2 = Id");
 
-      //migrationBuilder.DropForeignKey(name: "FK_Messages_Polls_PollId", table: "Messages");
+      migrationBuilder.DropForeignKey(name: "FK_Messages_Polls_PollId", table: "Messages");
 
-      //migrationBuilder.DropForeignKey(name: "FK_Votes_Polls_PollId", table: "Votes");
+      migrationBuilder.DropForeignKey(name: "FK_Votes_Polls_PollId", table: "Votes");
 
       //migrationBuilder.DropPrimaryKey(name: "PK_Polls", table: "Polls");
 
