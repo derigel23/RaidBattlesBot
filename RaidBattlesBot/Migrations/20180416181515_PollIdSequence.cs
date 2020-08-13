@@ -14,54 +14,44 @@ namespace RaidBattlesBot.Migrations
                 name: "PollId",
                 startValue: 10000L);
 
-      //migrationBuilder.AddColumn<int>(
-      //    name: "Id2",
-      //    table: "Polls",
-      //    nullable: true,
-      //    defaultValueSql: "NEXT VALUE FOR PollId");
+            migrationBuilder.AddColumn<int>(
+              name: "Id2",
+              table: "Polls",
+              nullable: true,
+              defaultValueSql: "NEXT VALUE FOR PollId");
 
-      //migrationBuilder.Sql("UPDATE Polls SET Id2 = Id");
+            migrationBuilder.Sql("UPDATE Polls SET Id2 = Id");
 
-      migrationBuilder.DropForeignKey(name: "FK_Messages_Polls_PollId", table: "Messages");
+            migrationBuilder.DropForeignKey(name: "FK_Messages_Polls_PollId", table: "Messages");
 
-      migrationBuilder.DropForeignKey(name: "FK_Votes_Polls_PollId", table: "Votes");
+            migrationBuilder.DropForeignKey(name: "FK_Votes_Polls_PollId", table: "Votes");
 
-      //migrationBuilder.DropPrimaryKey(name: "PK_Polls", table: "Polls");
+            migrationBuilder.DropPrimaryKey(name: "PK_Polls", table: "Polls");
 
-      //migrationBuilder.DropColumn(
-      //    name: "Id",
-      //    table: "Polls");
+          migrationBuilder.DropColumn(
+              name: "Id",
+              table: "Polls");
 
-
-      //migrationBuilder.RenameColumn(
-      //  name: "Id2",
-      //  table: "Polls",
-      //  newName: "Id");
-
-      //migrationBuilder.AlterColumn<int>(
-      //    name: "Id",
-      //    table: "Polls",
-      //    nullable: false,
-      //    defaultValueSql: "NEXT VALUE FOR PollId",
-      //    oldClrType: typeof(int),
-      //    oldNullable: true);
-      //.OldAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-      //migrationBuilder.AlterColumn<int>(
-      //      name: "Id",
-      //      table: "Polls",
-      //      nullable: false,
-      //      defaultValueSql: "NEXT VALUE FOR PollId",
-      //      oldClrType: typeof(int))
-      //      .OldAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-      //migrationBuilder.AddPrimaryKey(name: "PK_Polls", table: "Polls", column: "Id");
-
-      migrationBuilder.CreateIndex(
-            name: "IX_Polls_Id",
+          migrationBuilder.RenameColumn(
+            name: "Id2",
             table: "Polls",
-            column: "Id",
-            unique: true);
+            newName: "Id");
+
+          migrationBuilder.AlterColumn<int>(
+              name: "Id",
+              table: "Polls",
+              nullable: false,
+              defaultValueSql: "NEXT VALUE FOR PollId",
+              oldClrType: typeof(int),
+              oldNullable: true);
+
+          migrationBuilder.AddPrimaryKey(name: "PK_Polls", table: "Polls", column: "Id");
+
+          migrationBuilder.CreateIndex(
+                name: "IX_Polls_Id",
+                table: "Polls",
+                column: "Id",
+                unique: true);
 
           migrationBuilder.AddForeignKey(
                 name: "FK_Votes_Polls_PollId",

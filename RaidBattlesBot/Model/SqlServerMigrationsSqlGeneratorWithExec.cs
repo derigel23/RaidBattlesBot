@@ -1,4 +1,3 @@
-using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -19,13 +18,15 @@ namespace RaidBattlesBot.Model
             subBuilder.EndCommand();
 
             var stringTypeMapping = Dependencies.TypeMappingSource.GetMapping(typeof(string));
-            var command = subBuilder.GetCommandList().Single();
-            builder
-                .Append("EXEC(")
-                .Append(stringTypeMapping.GenerateSqlLiteral(command.CommandText.TrimEnd('\n', '\r', ';')))
-                .Append(")")
-                .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator)
-                .EndCommand(command.TransactionSuppressed);
+            foreach (var command in subBuilder.GetCommandList())
+            {
+                builder
+                    .Append("EXEC(")
+                    .Append(stringTypeMapping.GenerateSqlLiteral(command.CommandText.TrimEnd('\n', '\r', ';')))
+                    .Append(")")
+                    .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator)
+                    .EndCommand(command.TransactionSuppressed);
+            }
         }
     }
 }
