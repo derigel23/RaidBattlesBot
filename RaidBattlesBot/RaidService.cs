@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DelegateDecompiler.EntityFrameworkCore;
@@ -14,7 +15,7 @@ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-
+using Telegram.Bot.Types.Enums;
 using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot
@@ -36,7 +37,7 @@ namespace RaidBattlesBot
       myTelemetryClient = telemetryClient;
       myChatInfo = chatInfo;
       myMemoryCache = memoryCache;
-      myLogChat = botOptions.Value?.LogChatId is long chatId && chatId != default ? chatId : default(long?);
+      myLogChat = botOptions.Value?.LogChatId is { } chatId && chatId != default ? chatId : default(long?);
     }
     
     private string this[int pollId] => $"poll:data:{pollId}";
@@ -94,7 +95,7 @@ namespace RaidBattlesBot
         Votes = new List<Vote>()
       };
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
-      if (pollData.Portal is Portal portal)
+      if (pollData.Portal is { } portal)
       {
         var portalSet = myContext.Set<Portal>();
         var existingPortal = await portalSet.AsTracking().FirstOrDefaultAsync(p => p.Guid == portal.Guid, cancellationToken);
@@ -126,7 +127,7 @@ namespace RaidBattlesBot
 
       var raidUpdated = false;
       var eggRaidUpdated = false;
-      if (message.Poll?.Raid is Raid raid)
+      if (message.Poll?.Raid is { } raid)
       {
         if (raid.Id == 0)
         {
@@ -218,7 +219,7 @@ namespace RaidBattlesBot
       await myContext.SaveChangesAsync(cancellationToken);
 
       // update current raid poll messages if changed
-      if (raidUpdated && message.Poll.Raid is Raid raidToUpdate)
+      if (raidUpdated && message.Poll.Raid is { } raidToUpdate)
       {
         foreach (var poll in raidToUpdate.Polls ?? Enumerable.Empty<Poll>())
         {
@@ -227,7 +228,7 @@ namespace RaidBattlesBot
       }
 
       // update egg raid poll messages if any
-      if (eggRaidUpdated && message.Poll.Raid?.EggRaid is Raid eggRaidToUpdate)
+      if (eggRaidUpdated && message.Poll.Raid?.EggRaid is { } eggRaidToUpdate)
       {
         foreach (var poll in eggRaidToUpdate.Polls ?? Enumerable.Empty<Poll>())
         {
@@ -236,7 +237,7 @@ namespace RaidBattlesBot
       }
 
       var content = message.Poll.GetMessageText(urlHelper, disableWebPreview: message.Poll.DisableWebPreview());
-      if (message.Chat is Chat chat)
+      if (message.Chat is { } chat)
       {
         var postedMessage = await myBot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
           replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true,
@@ -245,7 +246,7 @@ namespace RaidBattlesBot
         message.Chat = postedMessage.Chat;
         message.MesssageId = postedMessage.MessageId;
       }
-      else if (message.InlineMesssageId is string inlineMessageId)
+      else if (message.InlineMesssageId is { } inlineMessageId)
       {
         //await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
         //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
@@ -264,26 +265,55 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var content = poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview());
+      static bool NeedNickname(PollMessage message) => message.PollMode?.HasFlag(PollMode.Nicknames) ?? false;
+      Func<User, StringBuilder, ParseMode, StringBuilder> nicknamesUserFormatter = null;
+      if (poll.Messages.Any(NeedNickname))
+      {
+        nicknamesUserFormatter = await GetNicknamesUserFormatter(poll, cancellationToken);
+      }
       foreach (var message in poll.Messages)
       {
-        try
+        await UpdatePollMessage(message, urlHelper, NeedNickname(message) ? nicknamesUserFormatter : null, cancellationToken);
+      }
+    }
+
+    public async Task UpdatePollMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
+    {
+      var nicknamesUserFormatter = pollMessage.PollMode?.HasFlag(PollMode.Nicknames) ?? false ? await GetNicknamesUserFormatter(pollMessage.Poll, cancellationToken) : null;
+      await UpdatePollMessage(pollMessage, urlHelper, nicknamesUserFormatter, cancellationToken);
+    }
+
+    private async Task<Func<User, StringBuilder, ParseMode, StringBuilder>> GetNicknamesUserFormatter(Poll poll, CancellationToken cancellationToken = default)
+    {
+      var userIDs = poll.Votes.Select(_ => _.UserId).ToList();
+      var nicknames = (await myContext.Set<Player>()
+        .Where(player => userIDs.Contains(player.UserId)).ToListAsync(cancellationToken))
+        .ToDictionary(player => player.UserId, player => player.Nickname);
+
+      return (user, builder, mode) => 
+        nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname, mode) : 
+          builder.Italic((b, m) => _ = user.Username is {} username ? b.Sanitize(username, m) : UserEx.DefaultUserExtractor(user, b, m), mode);
+    }
+
+    private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, CancellationToken cancellationToken = default)
+    {
+      try
+      {
+        var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, disableWebPreview: message.Poll.DisableWebPreview());
+        if (message.InlineMesssageId is { } inlineMessageId)
         {
-          if (message.InlineMesssageId is string inlineMessageId)
-          {
-            await myBot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-              await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
-          }
-          else if (message.ChatId is long chatId && message.MesssageId is int messageId)
-          {
-            await myBot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-              await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
-          }
+          await myBot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+            await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
         }
-        catch (Exception ex)
+        else if (message.ChatId is { } chatId && message.MesssageId is { } messageId)
         {
-          myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties());
+          await myBot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+            await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
         }
+      }
+      catch (Exception ex)
+      {
+        myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties());
       }
     }
   }

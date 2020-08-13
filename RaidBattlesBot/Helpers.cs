@@ -41,8 +41,8 @@ namespace RaidBattlesBot
     {
       var assetsRoot = new Uri(urlHelper.ActionContext.HttpContext.Request.GetUri(),
         urlHelper.ActionContext.HttpContext.RequestServices.GetService<IConfiguration>()["AssetsRoot"]);
-      var assetpath = Path.Combine(assetsRoot.AbsolutePath, urlHelper.Content(contentPath));
-      return new Uri(assetsRoot, assetpath);
+      var assetPath = Path.Combine(assetsRoot.AbsolutePath, urlHelper.Content(contentPath));
+      return new Uri(assetsRoot, assetPath);
     }
 
 
@@ -127,36 +127,92 @@ namespace RaidBattlesBot
     
     public static StringBuilder NewLine(this StringBuilder builder) => builder.Append(NewLineString);
 
-    public static StringBuilder Bold(this StringBuilder builder, Action<StringBuilder, ParseMode> contentBuilder, ParseMode mode = DefaultParseMode)
+    public static StringBuilder Bold(this StringBuilder builder, Func<StringBuilder, ParseMode, StringBuilder> contentBuilder, ParseMode mode = DefaultParseMode)
     {
-      builder.Append(mode == ParseMode.Html ? "<b>" : mode == ParseMode.Markdown ? "*" : null);
-      contentBuilder(builder, mode);
-      builder.Append(mode == ParseMode.Html ? "</b>" : mode == ParseMode.Markdown ? "*" : null);
-      return builder;
-    }
-
-    public static StringBuilder Code(this StringBuilder builder, Action<StringBuilder, ParseMode> contentBuilder, ParseMode mode = DefaultParseMode)
-    {
-      builder.Append(mode == ParseMode.Html ? "<code>" : mode == ParseMode.Markdown ? "`" : null);
-      contentBuilder(builder, mode);
-      builder.Append(mode == ParseMode.Html ? "</code>" : mode == ParseMode.Markdown ? "`" : null);
-      return builder;
-    }
-
-    public static StringBuilder Link(this StringBuilder builder, string text, string link, ParseMode mode = DefaultParseMode)
-    {
-      switch (mode)
+      builder.Append(mode switch
       {
-        case ParseMode.Markdown when !string.IsNullOrEmpty(link):
-          return builder.Append($"[{text.Sanitize(mode)}]({link})");
-
-        case ParseMode.Html when !string.IsNullOrEmpty(link):
-          return builder.Append($"<a href=\"{link}\">{text.Sanitize(mode)}</a>");
-
-        default:
-          return builder.Append(text);
-      }
+        ParseMode.Html => "<b>",
+        ParseMode.Markdown => "**",
+        _ => null
+      });
+      contentBuilder(builder, mode);
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "</b>",
+        ParseMode.Markdown => "**",
+        _ => null
+      });
+      return builder;
     }
+
+    public static StringBuilder Italic(this StringBuilder builder, Func<StringBuilder, ParseMode, StringBuilder> contentBuilder, ParseMode mode = DefaultParseMode)
+    {
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "<i>",
+        ParseMode.Markdown => "*",
+        _ => null
+      });
+      contentBuilder(builder, mode);
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "</i>",
+        ParseMode.Markdown => "*",
+        _ => null
+      });
+      return builder;
+    }
+
+    public static StringBuilder Strike(this StringBuilder builder, Func<StringBuilder, ParseMode, StringBuilder> contentBuilder, ParseMode mode = DefaultParseMode)
+    {
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "<s>",
+        ParseMode.Markdown => "~~",
+        _ => null
+      });
+      contentBuilder(builder, mode);
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "</s>",
+        ParseMode.Markdown => "~~",
+        _ => null
+      });
+      return builder;
+    }
+
+    public static StringBuilder Code(this StringBuilder builder, Func<StringBuilder, ParseMode, StringBuilder> contentBuilder, ParseMode mode = DefaultParseMode)
+    {
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "<code>",
+        ParseMode.Markdown => "`",
+        _ => null
+      });
+      contentBuilder(builder, mode);
+      builder.Append(mode switch
+      {
+        ParseMode.Html => "</code>",
+        ParseMode.Markdown => "`",
+        _ => null
+      });
+      return builder;
+    }
+
+    public static StringBuilder Link(this StringBuilder builder, string text, string link, ParseMode mode = DefaultParseMode) =>
+      Link(builder, (b, m) => b.Sanitize(text, m), link, mode);
+
+    public static StringBuilder Link(this StringBuilder builder, Func<StringBuilder, ParseMode, StringBuilder> textBuilder, string link, ParseMode mode = DefaultParseMode) =>
+      mode switch
+      {
+        ParseMode.Markdown when !string.IsNullOrEmpty(link) =>
+          textBuilder(builder.Append("["), mode).AppendFormat("]({0})", link),
+        
+        ParseMode.Html when !string.IsNullOrEmpty(link) =>
+          textBuilder(builder.AppendFormat("<a href=\"{0}\">", link), mode).Append("</a>"),
+        
+        _ => textBuilder(builder, mode)
+      };
 
     public static StringBuilder Sanitize(this StringBuilder builder, string content, ParseMode parseMode = DefaultParseMode) =>
       builder.Append(content.Sanitize(parseMode));

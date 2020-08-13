@@ -59,7 +59,7 @@ namespace RaidBattlesBot.Handlers
           // clone the poll in invitation mode if possible
           if (poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false)
           {
-            queryResults.Add(poll.ClonePoll(myUrlHelper, PollMode.Invitation));
+            queryResults.Add(poll.ClonePoll(myUrlHelper, PollMode.Invitation | PollMode.Names));
           }
           if (poll.Raid() is { } raid)
           {

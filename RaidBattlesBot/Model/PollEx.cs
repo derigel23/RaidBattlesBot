@@ -1,14 +1,15 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
- using System.Globalization;
- using System.Linq;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Handlers;
-using Telegram.Bot.Types.Enums;
+ using Telegram.Bot.Types;
+ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -135,25 +136,25 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode mode = Helpers.DefaultParseMode, bool disableWebPreview = false)
+    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode parseMode = Helpers.DefaultParseMode, bool disableWebPreview = false, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null)
     {
-      var text = poll.GetDescription(urlHelper, mode).NewLine();
+      var text = poll.GetDescription(urlHelper, parseMode).NewLine();
       text.Append(" "); // for better presentation in telegram pins & notifications
       
       if (poll.Cancelled)
       {
         text
           .NewLine()
-          .Bold((builder, m) => builder.Sanitize("Cancellation!", m).NewLine(), mode);
+          .Bold((builder, m) => builder.Sanitize("Cancellation!", m).NewLine(), parseMode);
       }
 
       var compactMode = poll.Votes?.Count > 10;
       var pollVotes = poll.Votes ?? Enumerable.Empty<Vote>();
       GroupVotes(text, pollVotes, ourVoteGrouping);
 
-      text.Link("\x200B", poll.Raid()?.GetLink(urlHelper), mode);
+      text.Link("\x200B", poll.Raid()?.GetLink(urlHelper), parseMode);
 
-      return text.ToTextMessageContent(mode, disableWebPreview);
+      return text.ToTextMessageContent(parseMode, disableWebPreview);
       
       int GroupVotes(StringBuilder result, IEnumerable<Vote> enumerable, IEnumerable<VoteGrouping> grouping, string extraPhrase = null)
       {
@@ -170,7 +171,7 @@ namespace RaidBattlesBot.Model
             var captionParts = new[] { votesNumber.ToString(), extraPhrase, countStr }.Where(s => !string.IsNullOrWhiteSpace(s));
             return sb
               .NewLine()
-              .Sanitize(string.Join(" ", captionParts), mode)
+              .Sanitize(string.Join(" ", captionParts), parseMode)
               .NewLine();
           }
 
@@ -197,14 +198,14 @@ namespace RaidBattlesBot.Model
             {
               result
                 .Sanitize(vote.Key?.Description()).Append('\x00A0')
-                .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(mode)))
+                .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(userFormatter, parseMode)))
                 .NewLine();
             }
             else
             {
               result
                 .AppendJoin(Helpers.NewLineString,
-                  votes.Select(v => $"{v.Team?.Description().Sanitize(mode)} {v.GetUserLinkWithPluses(mode)}"))
+                  votes.Select(v => $"{v.Team?.Description().Sanitize(parseMode)} {v.GetUserLinkWithPluses(userFormatter, parseMode)}"))
                 .NewLine();
             }
           }
@@ -221,28 +222,48 @@ namespace RaidBattlesBot.Model
 
       var pollId = poll.GetId();
 
-      var buttons = new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
-        .Select(vote =>
-        {
-          var display = vote.AsString(EnumFormat.DisplayName);
-          return vote switch
+      var buttons = new List<IReadOnlyCollection<InlineKeyboardButton>>
+      {
+        new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
+          .Select(vote =>
           {
-            VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display, $"{ShareInlineQueryHandler.ID}:{pollId}"),
-            _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}")
-          };
-        }));
-      
-      if (pollMode != PollMode.Invitation)
-        return new InlineKeyboardMarkup(buttons);
+            var display = vote.AsString(EnumFormat.DisplayName);
+            return vote switch
+            {
+              VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display,
+                $"{ShareInlineQueryHandler.ID}:{pollId}"),
+              _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}")
+            };
+          }))
+      };
 
-      return new InlineKeyboardMarkup(new[]
-      { 
-        buttons.ToArray(),
-        new[]
+      if (pollMode?.HasFlag(PollMode.Nicknames) ?? false)
+      {
+        var newMode = (pollMode?.RemoveFlags(PollMode.Nicknames))?.CombineFlags(PollMode.Names);
+        buttons.Add(new[]
+        {
+          InlineKeyboardButton.WithCallbackData("Show names", $"{PollModeCallbackQueryHandler.ID}:{pollId}:{newMode}")
+        });
+      }
+
+      if (pollMode?.HasFlag(PollMode.Names) ?? false)
+      {
+        var newMode = (pollMode?.RemoveFlags(PollMode.Names))?.CombineFlags(PollMode.Nicknames);
+        buttons.Add(new[]
+        {
+          InlineKeyboardButton.WithCallbackData("Show IGNs", $"{PollModeCallbackQueryHandler.ID}:{pollId}:{newMode}")
+        });
+      }
+
+      if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
+      {
+        buttons.Add(new[]
         {
           InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InvitationInlineQueryHandler.PREFIX}{pollId}")
-        }
-      });
+        });
+      }
+
+      return new InlineKeyboardMarkup(buttons);
     }
 
     public static IQueryable<Poll> IncludeRelatedData(this IQueryable<Poll> polls)
@@ -275,9 +296,9 @@ namespace RaidBattlesBot.Model
       return new InlineQueryResultArticle(poll.GetInlineId(pollMode), poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
-        Description = pollMode == PollMode.Invitation ? "Clone the poll in invitation mode" : "Clone the poll",
+        Description = pollMode?.HasFlag(PollMode.Invitation) ?? false ? "Clone the poll in invitation mode" : "Clone the poll",
         HideUrl = true,
-        ThumbUrl = pollMode == PollMode.Invitation ? urlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString():
+        ThumbUrl = pollMode?.HasFlag(PollMode.Invitation) ?? false ? urlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString():
           poll.GetThumbUrl(urlHelper).ToString(),
         ReplyMarkup = poll.GetReplyMarkup(pollMode)
       };

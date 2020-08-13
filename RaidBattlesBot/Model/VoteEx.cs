@@ -1,21 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class VoteEx
   {
-    public static string GetUserLinkWithPluses(this Vote vote, ParseMode mode = Helpers.DefaultParseMode)
+    public static string GetUserLinkWithPluses(this Vote vote, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, ParseMode parseMode = Helpers.DefaultParseMode)
     {
-      var result = vote.User.GetLink(mode);
+      var result = vote.User.GetLink(userFormatter ?? UserEx.DefaultUserExtractor, parseMode);
 
       if (vote.Team.GetPlusVotesCount() is var plusCount && plusCount > 0)
       {
         result
-          .Sanitize("⁺", mode)
+          .Sanitize("⁺", parseMode)
           .Sanitize(
-            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)), mode);
+            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)), parseMode);
       }
 
       return result.ToString();

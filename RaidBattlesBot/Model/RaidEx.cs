@@ -23,12 +23,12 @@ namespace RaidBattlesBot.Model
 
       description.Bold((builder, m) =>
       {
-        if (raid.RaidBossLevel is int raidBossLevel)
+        if (raid.RaidBossLevel is { } raidBossLevel)
         {
           builder.Sanitize($@"[R{raidBossLevel}] ", m);
         }
 
-        builder.Sanitize(raid.Name, m);
+        return builder.Sanitize(raid.Name, m);
       }, mode);
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
@@ -133,7 +133,7 @@ namespace RaidBattlesBot.Model
           .Append(raid.Name);
       }
 
-      if (raid.EndTime is DateTimeOffset endTime)
+      if (raid.EndTime is { } endTime)
       {
         title.Append($" ∙ {endTime:t}");
         if (raid.IsEgg && extended)
