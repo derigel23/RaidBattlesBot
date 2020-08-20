@@ -66,7 +66,7 @@ namespace RaidBattlesBot.Handlers
             content = new StringBuilder()
               .Append("Your in-game-nick is cleared.\r\nUse ")
               .Code((b, m) => b.Append("/ign your-in-game-nick"))
-              .Append(" command to record it.")
+              .Append(" command to set it up.")
               .ToTextMessageContent();
           }
           else
