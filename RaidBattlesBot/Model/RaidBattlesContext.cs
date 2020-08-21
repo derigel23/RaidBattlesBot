@@ -71,13 +71,6 @@ namespace RaidBattlesBot.Model
         builder.HasKey(player => player.UserId);
         builder.Property(player => player.UserId).ValueGeneratedNever();
       });
-      
-      modelBuilder.Entity<Notification>(builder =>
-      {
-        builder.ToTable("Notifications");
-        builder.HasKey(notification => notification.UserId);
-        builder.Property(notification => notification.UserId).ValueGeneratedNever();
-      });
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
