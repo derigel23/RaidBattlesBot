@@ -64,14 +64,14 @@ namespace RaidBattlesBot.Handlers
           if (string.IsNullOrEmpty(nickname))
           {
             content = new StringBuilder()
-              .Append("Your in-game-nick is cleared.\r\nUse ")
-              .Code((b, m) => b.Append("/ign your-in-game-nick"))
+              .Append("Your IGN is cleared.\r\nUse ")
+              .Code((b, m) => b.Append("/ign your-in-game-name"))
               .Append(" command to set it up.")
               .ToTextMessageContent();
           }
           else
           {
-            content = new StringBuilder("Your in-game-nick ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
+            content = new StringBuilder("Your IGN ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
           }
           await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, cancellationToken: cancellationToken);
           

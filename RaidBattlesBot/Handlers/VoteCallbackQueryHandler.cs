@@ -13,6 +13,7 @@ using Microsoft.Extensions.Primitives;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Poll = RaidBattlesBot.Model.Poll;
 
@@ -23,16 +24,18 @@ namespace RaidBattlesBot.Handlers
   {
     public const string ID = "vote";
     
-    private readonly RaidBattlesContext myContext;
+    private readonly RaidBattlesContext myDb;
+    private readonly ITelegramBotClient myBot;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly TimeSpan myVoteTimeout;
     private readonly HashSet<int> myBlackList;
 
-    public VoteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
+    public VoteCallbackQueryHandler(RaidBattlesContext db, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
     {
-      myContext = context;
+      myDb = db;
+      myBot = bot;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myClock = clock;
@@ -88,11 +91,21 @@ namespace RaidBattlesBot.Handlers
       vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
         voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
 
-      var changed = await myContext.SaveChangesAsync(cancellationToken) > 0;
+      var changed = await myDb.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
 
+        if (vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
+        {
+          var player = await myDb.Set<Player>().SingleOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+          if (string.IsNullOrEmpty(player?.Nickname))
+          {
+            var botInfo = await myBot.GetMeAsync(cancellationToken);
+            return ("Please, set up your in-game name.", true, $"https://t.me/{botInfo.Username}?start=ign");
+          }
+        }
+        
         return (vote.Team?.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "You've voted", false, null);
       }
 

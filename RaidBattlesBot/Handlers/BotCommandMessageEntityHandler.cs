@@ -98,6 +98,16 @@ namespace RaidBattlesBot.Handlers
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Choose a Gym", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
 
+        // deep linking with IGN
+        case "/start" when commandText.Equals("ign", StringComparison.Ordinal):
+          content = new StringBuilder()
+            .Append("To set up your in-game name use command ")
+            .Code((b, m) => b.Append("/ign your-in-game-name"))
+            .Append(".")
+            .ToTextMessageContent();
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
+          return false;
+
         case "/p" when int.TryParse(commandText, out var pollId):
           var poll = await myContext
             .Set<Poll>()
