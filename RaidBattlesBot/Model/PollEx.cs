@@ -293,7 +293,7 @@ namespace RaidBattlesBot.Model
 
     public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper, PollMode? pollMode = null)
     {
-      return new InlineQueryResultArticle(poll.GetInlineId(pollMode?.AsString(EnumFormat.HexadecimalValue)), poll.GetTitle(urlHelper),
+      return new InlineQueryResultArticle(poll.GetInlineId(pollMode), poll.GetTitle(urlHelper),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
         Description = pollMode?.HasFlag(PollMode.Invitation) ?? false ? "Clone the poll in invitation mode" : "Clone the poll",
@@ -309,8 +309,8 @@ namespace RaidBattlesBot.Model
 
     public const string InlineIdPrefix = "poll";
     
-    public static string GetInlineId(this Poll poll, object suffix = null) =>
-      $"{InlineIdPrefix}:{poll.GetId()}:{(poll.Portal?.Guid ?? poll.PortalId)}:{suffix}";
+    public static string GetInlineId(this Poll poll, PollMode? pollMode = null, int? suffixNumber = null) =>
+      $"{InlineIdPrefix}:{poll.GetId()}:{poll.Portal?.Guid ?? poll.PortalId}:{pollMode?.AsString(EnumFormat.HexadecimalValue)}:{suffixNumber}";
 
     public static bool TryGetPollId(ReadOnlySpan<char> text, out int pollId, out VoteEnum? format)
     {

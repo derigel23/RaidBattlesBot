@@ -98,7 +98,7 @@ namespace RaidBattlesBot.Handlers
               Portal = portal,
               ExRaidGym = exRaidGym
             })
-            .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(i), fakePoll.GetTitle(myUrlHelper),
+            .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(myUrlHelper),
               fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {
                 Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),

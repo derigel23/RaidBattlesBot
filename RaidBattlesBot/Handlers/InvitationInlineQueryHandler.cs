@@ -64,7 +64,7 @@ namespace RaidBattlesBot.Handlers
           .Where(_ => !string.IsNullOrEmpty(_))
           .ToList();
         if (resultNicknames.Count == 0) return null;
-        return new InlineQueryResultArticle(poll.GetInlineId(votes.Key),
+        return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(suffixNumber: votes.Key),
           $"Invite {votes.Key * InvitationBatchSize + 1} - {(votes.Key + 1) * InvitationBatchSize}",
           new StringBuilder()
             .Code((builder, mode) =>
