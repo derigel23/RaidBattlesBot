@@ -152,12 +152,12 @@ namespace RaidBattlesBot.Model
     public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
     {
       var processed = VoteEnum.None;
-      foreach (var possiblleVote in Enums.GetValues<VoteEnum>(EnumMemberSelection.DisplayOrder | EnumMemberSelection.Distinct))
+      foreach (var possibleVote in Enums.GetValues<VoteEnum>(EnumMemberSelection.DisplayOrder | EnumMemberSelection.Distinct))
       {
-        if (vote.HasAllFlags(possiblleVote) && !processed.HasAllFlags(possiblleVote))
+        if (vote.HasAllFlags(possibleVote) && !processed.HasAllFlags(possibleVote))
         {
-          processed |= possiblleVote;
-          yield return possiblleVote;
+          processed |= possibleVote;
+          yield return possibleVote;
         }
       }
     }
