@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using EnumsNET;
 
 namespace RaidBattlesBot.Model
 {
@@ -69,6 +65,11 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💌", Order = 12, Description = "You need an invitation")]
     Invitation = TeamHarmony << 1,
     
+    [Display(Name = "🎮", Order = 110, Description = "Show IGNs"), PollModeAttribute(Model.PollMode.Nicknames)]
+    PollModeNicknames = Invitation << 1,
+    [Display(Name = "🗛", Order = 110, Description = "Show Names"), PollModeAttribute(Model.PollMode.Names)]
+    PollModeNames = PollModeNicknames << 1,
+    
     #region Plused votes
 
     [Display(Name = "❤", Order = 1)]
@@ -104,7 +105,7 @@ namespace RaidBattlesBot.Model
     
     #endregion
 
-    Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | Share,
+    Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | PollMode | Share,
 
     Team = Valor | Instinct | Mystic,
     TeamPlusOne = Team | Plus1,
@@ -118,51 +119,9 @@ namespace RaidBattlesBot.Model
 
     Plus = Plus1 | Plus2 | Plus4 | Plus8,
     
-    Modifiers = Plus | Share,
-  }
-
-  public static class VoteEnumEx
-  {
-    public static readonly ICollection<VoteEnum> DefaultVoteFormats = new []
-    {
-      // hearts
-      VoteEnum.Standard,
-      
-      // classic
-      VoteEnum.TeamPlusOne | VoteEnum.MayBe | VoteEnum.Cancel | VoteEnum.Share,
-      
-      // thumbs up/down
-      VoteEnum.Thumbs | VoteEnum.Share
-    };
-
-    private static readonly int FirstPlusBit = (int)Math.Log((int)VoteEnum.Plus1, 2);
-
-    public static int GetPlusVotesCount(this VoteEnum? vote) =>
-      ((int)(vote?.CommonFlags(VoteEnum.Plus) ?? VoteEnum.None) >> FirstPlusBit);
-
-    // TODO: check for overflow
-    public static VoteEnum IncreaseVotesCount(this VoteEnum vote, int diff) => vote
-      .RemoveFlags(VoteEnum.Plus)
-      .CombineFlags((VoteEnum) ((((int)(vote.CommonFlags(VoteEnum.Plus)) >> FirstPlusBit) + diff) << FirstPlusBit));
-
-    public static string Description(this VoteEnum vote) =>
-      (vote.RemoveFlags(VoteEnum.Modifiers) is { } voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
-        voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
-
-    public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
-    {
-      var processed = VoteEnum.None;
-      foreach (var possibleVote in Enums.GetValues<VoteEnum>(EnumMemberSelection.DisplayOrder | EnumMemberSelection.Distinct))
-      {
-        if (vote.HasAllFlags(possibleVote) && !processed.HasAllFlags(possibleVote))
-        {
-          processed |= possibleVote;
-          yield return possibleVote;
-        }
-      }
-    }
+    [Display(Name = "🎮 🗛", Order = 101, Description = "Show IGNs / Names")]
+    PollMode = PollModeNicknames | PollModeNames,
     
-    public static StringBuilder Format(this VoteEnum vote, StringBuilder builder) =>
-      builder.AppendJoin("", GetFlags(vote).Select(_ => _.AsString(EnumFormat.DisplayName)));
+    Modifiers = Plus | Share | PollMode,
   }
 }

@@ -8,6 +8,8 @@ namespace RaidBattlesBot.Model
     None = 0,
     Invitation = 1,
     Nicknames = 2,
-    Names = 4
+    Names = 4,
+    
+    Default = Names
   }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
@@ -15,7 +14,6 @@ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -45,58 +43,91 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var callback = new StringSegment(data.Data ).Split(new[] { ':' });
+      var callback = new StringSegment(data.Data).Split(new[] { ':' });
       if (callback.First() != ID)
         return (null, false, null);
       
       if (myBlackList.Contains(data.From.Id))
         return (null, false, null);
 
-      Poll poll;
+      PollMessage pollMessage;
       if (callback.ElementAtOrDefault(1) is var pollIdSegment && PollEx.TryGetPollId(pollIdSegment, out var pollId, out var format))
       {
-        poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
+        pollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
       }
       else
       {
         return ("Poll is publishing. Try later.", true, null);
       }
 
-      if (poll == null)
+      if (pollMessage?.Poll is var poll && poll == null)
         return ("Poll is not found", true, null);
 
       var user = data.From;
-
-      var vote = poll.Votes.SingleOrDefault(v => v.UserId == user.Id);
-      if (vote == null)
-      {
-        poll.Votes.Add(vote = new Vote());
-      }
-
-      var now = myClock.GetCurrentInstant().ToDateTimeOffset();
-
-      if ((now - vote.Modified) <= myVoteTimeout)
-        return ($"You're voting too fast. Try again in {myVoteTimeout.TotalSeconds:0} sec", false, null);
-      
-      vote.User = user; // update username/firstname/lastname if necessary
 
       var teamAbbr = callback.ElementAt(2);
       if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team))
         return ("Invalid vote", true, null);
 
       var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);
-      if (clearTeam == default)
-        clearTeam = VoteEnum.Yes;
+      var votedTeam = clearTeam;
+      var pollMode = pollMessage.PollMode ?? PollMode.Default;
+      var votePollModes =  team.GetPollModes();
+      switch (votePollModes.Length)
+      {
+        case 0:
+          if (clearTeam == VoteEnum.None)
+          {
+            votedTeam = clearTeam = VoteEnum.Yes;
+          }
+          break;
+        case 1:
+          pollMessage.PollMode = FlagEnums.ToggleFlags(pollMode, votePollModes[0].Value);
+          break;
+        default:
+          int enabledFlag = -1;
+          for (var i = 0; i < votePollModes.Length; i++)
+          {
+            if (enabledFlag < 0 && pollMode.HasFlag(votePollModes[i].Value))
+            {
+              enabledFlag = i;
+            }
 
-      vote.Team = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
-        voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
+            pollMode = pollMode.RemoveFlags(votePollModes[i].Value);
+          }
+
+          var votedPollMode = votePollModes[++enabledFlag % votePollModes.Length];
+          pollMessage.PollMode = pollMode.CombineFlags(votedPollMode.Value);
+          votedTeam = votedPollMode.Key;
+          break;
+      }
+
+      var vote = poll.Votes.SingleOrDefault(v => v.UserId == user.Id);
+
+      var now = myClock.GetCurrentInstant().ToDateTimeOffset();
+
+      if ((now - vote?.Modified) <= myVoteTimeout)
+        return ($"You're voting too fast. Try again in {myVoteTimeout.TotalSeconds:0} sec", false, null);
+      
+      if (clearTeam.HasAnyFlags())
+      {
+        if (vote == null)
+        {
+          poll.Votes.Add(vote = new Vote());
+        }
+
+        vote.User = user; // update username/firstname/lastname if necessary
+
+        vote.Team = votedTeam = team.HasAnyFlags(VoteEnum.Plus) && vote.Team is { } voted && voted.HasAllFlags(clearTeam) ?
+          voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
+      }
 
       var changed = await myDb.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
         await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
 
-        if (vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
+        if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
           var player = await myDb.Set<Player>().SingleOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
           if (string.IsNullOrEmpty(player?.Nickname))
@@ -106,7 +137,7 @@ namespace RaidBattlesBot.Handlers
           }
         }
         
-        return (vote.Team?.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "You've voted", false, null);
+        return (votedTeam.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "You've voted", false, null);
       }
 
       return ("You've already voted.", false, null);

@@ -99,6 +99,7 @@ namespace RaidBattlesBot.Handlers
               VoteEnum.Yes,
               VoteEnum.Thumbs,
               VoteEnum.HarryPotter,
+              VoteEnum.PollMode,
               VoteEnum.Cancel,
               VoteEnum.Share
             }
@@ -107,7 +108,7 @@ namespace RaidBattlesBot.Handlers
                 InlineKeyboardButton.WithCallbackData($"{(settings.Format.HasAllFlags(format) ? '☑' : '☐')} {format.Format(new StringBuilder())}", $"{ID}:{settings.Id}:{format:D}")
               });
 
-          if (allSettings.FirstOrDefault() is Settings existingDefault && existingDefault != settings)
+          if (allSettings.FirstOrDefault() is { } existingDefault && existingDefault != settings)
           {
             buttons = buttons.Append(new[]
             {

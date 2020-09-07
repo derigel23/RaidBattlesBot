@@ -227,33 +227,30 @@ namespace RaidBattlesBot.Model
         new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
           .Select(vote =>
           {
-            var display = vote.AsString(EnumFormat.DisplayName);
+            string display = null;
+            var votePollModes = vote.GetPollModes();
+            if (votePollModes.Length > 1)
+            {
+                int enabledFlag = -1;
+                for (var i = 0; i < votePollModes.Length; i++)
+                {
+                  if (enabledFlag < 0 && (pollMode?.HasFlag(votePollModes[i].Value) ?? false))
+                  {
+                    enabledFlag = i;
+                  }
+                }
+
+                display = votePollModes[++enabledFlag % votePollModes.Length].Key.AsString(EnumFormat.DisplayName);
+            }
+
+            display ??= vote.AsString(EnumFormat.DisplayName);
             return vote switch
             {
-              VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display,
-                $"{ShareInlineQueryHandler.ID}:{pollId}"),
+              VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display,$"{ShareInlineQueryHandler.ID}:{pollId}"),
               _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}")
             };
           }))
       };
-
-      if (pollMode?.HasFlag(PollMode.Nicknames) ?? false)
-      {
-        var newMode = (pollMode?.RemoveFlags(PollMode.Nicknames))?.CombineFlags(PollMode.Names);
-        buttons.Add(new[]
-        {
-          InlineKeyboardButton.WithCallbackData("Show names", $"{PollModeCallbackQueryHandler.ID}:{pollId}:{newMode}")
-        });
-      }
-
-      if (pollMode?.HasFlag(PollMode.Names) ?? false)
-      {
-        var newMode = (pollMode?.RemoveFlags(PollMode.Names))?.CombineFlags(PollMode.Nicknames);
-        buttons.Add(new[]
-        {
-          InlineKeyboardButton.WithCallbackData("Show IGNs", $"{PollModeCallbackQueryHandler.ID}:{pollId}:{newMode}")
-        });
-      }
 
       if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
       {
