@@ -67,7 +67,7 @@ namespace RaidBattlesBot.Model
     
     [Display(Name = "🎮", Order = 110, Description = "Show IGNs"), PollModeAttribute(Model.PollMode.Nicknames)]
     PollModeNicknames = Invitation << 1,
-    [Display(Name = "🗛", Order = 110, Description = "Show Names"), PollModeAttribute(Model.PollMode.Names)]
+    [Display(Name = "✍️", Order = 110, Description = "Show Names"), PollModeAttribute(Model.PollMode.Names)]
     PollModeNames = PollModeNicknames << 1,
     
     #region Plused votes
