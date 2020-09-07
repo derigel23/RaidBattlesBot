@@ -119,7 +119,7 @@ namespace RaidBattlesBot.Model
 
     Plus = Plus1 | Plus2 | Plus4 | Plus8,
     
-    [Display(Name = "🎮 🗛", Order = 101, Description = "Show IGNs / Names")]
+    [Display(Name = "🎮", Order = 101, Description = "Show IGNs / Names")]
     PollMode = PollModeNicknames | PollModeNames,
     
     Modifiers = Plus | Share | PollMode,
