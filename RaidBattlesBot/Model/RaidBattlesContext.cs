@@ -47,6 +47,8 @@ namespace RaidBattlesBot.Model
         voteEntity.ToTable("Votes");
         voteEntity.HasKey(vote => new {vote.PollId, User = vote.UserId});
         voteEntity.Ignore(vote => vote.User);
+        voteEntity.HasIndex(vote => vote.PollId);
+        voteEntity.HasIndex(vote => vote.UserId);
       });
 
       modelBuilder.Entity<Settings>(settingsEntity =>
