@@ -8,7 +8,7 @@ namespace RaidBattlesBot.Model
   public static class UserEx
   {
     public static readonly Func<User, StringBuilder, ParseMode, StringBuilder> DefaultUserExtractor =
-      (user, builder, mode) => builder.Sanitize(" ".JoinNonEmpty(user.FirstName, user.LastName), mode);
+      (user, builder, mode) => builder.Sanitize(" ".JoinNonEmpty(user.FirstName, user.LastName) is {} name  && !string.IsNullOrWhiteSpace(name) ? name : user.Username, mode);
     
     public static StringBuilder GetLink(this User user, ParseMode parseMode = Helpers.DefaultParseMode)
     {
