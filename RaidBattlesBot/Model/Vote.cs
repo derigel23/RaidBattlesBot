@@ -9,7 +9,7 @@ namespace RaidBattlesBot.Model
     public int UserId { get; set; }
     public string Username { get; set; }
     public string FirstName { get; set; }
-    public string LasttName { get; set; }
+    public string LastName { get; set; }
     public VoteEnum? Team { get; set; }
     public DateTimeOffset? Modified { get; set; }
 
@@ -20,14 +20,14 @@ namespace RaidBattlesBot.Model
         Id = UserId,
         Username = Username,
         FirstName = FirstName,
-        LastName = LasttName
+        LastName = LastName
       };
       set
       {
         UserId = value.Id;
         Username = value.Username;
         FirstName = value.FirstName;
-        LasttName = value.LastName;
+        LastName = value.LastName;
       }
     }
   }
