@@ -17,7 +17,7 @@ namespace RaidBattlesBot.Model
 {
   public static class PollEx
   {
-    public struct VoteGrouping
+    public readonly struct VoteGrouping
     {
       public readonly VoteEnum Flag;
       public readonly int Order;
@@ -45,12 +45,10 @@ namespace RaidBattlesBot.Model
     
     private static readonly VoteGrouping[] ourVoteGrouping =
     {
-      new VoteGrouping(VoteEnum.Going, 1, 1, "is going", "are going", new[]
-      {
+      new VoteGrouping(VoteEnum.Going, 1, 1, "is going", "are going", 
         new VoteGrouping(VoteEnum.Going, 3, 1,  "on-site", "on-site"),
         new VoteGrouping(VoteEnum.Remotely, 2, 2, "remotely", "remotely"),
-        new VoteGrouping(VoteEnum.Invitation, 1, 3, "by invitation", "by invitation")
-      }),
+        new VoteGrouping(VoteEnum.Invitation, 1, 3, "by invitation", "by invitation")),
       new VoteGrouping(VoteEnum.Thinking, 2, 2, "maybe", "maybe"),
       new VoteGrouping(VoteEnum.ChangedMind, 3, 3, "bailed", "bailed"),
       new VoteGrouping(VoteEnum.ThumbsUp, 4, 4, "voted for", "votes for"),
@@ -256,7 +254,11 @@ namespace RaidBattlesBot.Model
       {
         buttons.Add(new[]
         {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InvitationInlineQueryHandler.PREFIX}{pollId}")
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}")
+        });
+        buttons.Add(new[]
+        {
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId}")
         });
       }
 
