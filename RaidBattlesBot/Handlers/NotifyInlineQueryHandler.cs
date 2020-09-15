@@ -57,7 +57,7 @@ namespace RaidBattlesBot.Handlers
       var notifications = invitePartitionedVotes.Select(votes =>
       {
         return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(suffixNumber: votes.Key),
-          $"Notify {votes.Key * InvitationBatchSize + 1} - {(votes.Key + 1) * InvitationBatchSize} ",
+          $"Notify {votes.Key * InvitationBatchSize + 1} - {(votes.Key + 1) * InvitationBatchSize}",
             votes.Aggregate(initial.Append(" "),
               (builder, vote) => (string.IsNullOrEmpty(vote.Username) ? builder.Append(vote.User.GetLink()) : builder.Append('@').Append(vote.Username)).Append(", "),
               builder => builder.Remove(builder.Length - 2, 2).ToTextMessageContent()))

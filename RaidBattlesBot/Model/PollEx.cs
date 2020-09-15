@@ -258,7 +258,7 @@ namespace RaidBattlesBot.Model
         });
         buttons.Add(new[]
         {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId}")
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId} ")
         });
       }
 
