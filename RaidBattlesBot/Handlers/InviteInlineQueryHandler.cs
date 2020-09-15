@@ -13,7 +13,7 @@ using Telegram.Bot.Types.InlineQueryResults;
 namespace RaidBattlesBot.Handlers
 {
   [InlineQueryHandler(QueryPattern = "^" + PREFIX)]
-  public class InvitationInlineQueryHandler : IInlineQueryHandler
+  public class InviteInlineQueryHandler : IInlineQueryHandler
   {
     public const string PREFIX = "invite:";
 
@@ -22,7 +22,7 @@ namespace RaidBattlesBot.Handlers
     private readonly ITelegramBotClientEx myBot;
     private readonly RaidBattlesContext myDB;
 
-    public InvitationInlineQueryHandler(IUrlHelper urlHelper, RaidService raidService, ITelegramBotClientEx bot, RaidBattlesContext db)
+    public InviteInlineQueryHandler(IUrlHelper urlHelper, RaidService raidService, ITelegramBotClientEx bot, RaidBattlesContext db)
     {
       myUrlHelper = urlHelper;
       myRaidService = raidService;
@@ -34,7 +34,7 @@ namespace RaidBattlesBot.Handlers
     
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var queryParts = new StringSegment(data.Query).Split(new[] {':'});
+      var queryParts = new StringSegment(data.Query).Split(new []{' '}).FirstOrDefault().Split(new[] {':'});
 
       if (!PollEx.TryGetPollId(queryParts.ElementAtOrDefault(1), out var pollId, out var format))
         return null;
