@@ -22,76 +22,70 @@ namespace RaidBattlesBot.Handlers
     private readonly ITelegramBotClientEx myBot;
     private readonly RaidBattlesContext myDB;
 
-    public InviteInlineQueryHandler(IUrlHelper urlHelper, RaidService raidService, ITelegramBotClientEx bot, RaidBattlesContext db)
+    public InviteInlineQueryHandler(IUrlHelper urlHelper, RaidService raidService, ITelegramBotClientEx bot,
+      RaidBattlesContext db)
     {
       myUrlHelper = urlHelper;
       myRaidService = raidService;
       myBot = bot;
       myDB = db;
     }
-    
-    private const int InvitationBatchSize = 5;
-    
-    public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
+
+    public async Task<bool?> Handle(InlineQuery data, object context = default,
+      CancellationToken cancellationToken = default)
     {
-      var queryParts = new StringSegment(data.Query).Split(new []{' '}).FirstOrDefault().Split(new[] {':'});
+      var queryParts = new StringSegment(data.Query).Split(new[] {' '}).FirstOrDefault().Split(new[] {':'});
 
       if (!PollEx.TryGetPollId(queryParts.ElementAtOrDefault(1), out var pollId, out var format))
         return null;
-      
-      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
+
+      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) {PollId = pollId}, myUrlHelper,
+        format, cancellationToken))?.Poll;
       if (poll == null)
+        return null;
+
+      if (!poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? true)
         return null;
 
       var inviteVotes = poll.Votes
         .Where(vote => vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
         .OrderBy(vote => vote.Modified)
         .ToList();
+
       var invitees = inviteVotes.Select(vote => vote.UserId).ToList();
       var nicknames = (await myDB.Set<Player>()
-        .Where(player => invitees.Contains(player.UserId))
-        .ToListAsync(cancellationToken))
+          .Where(player => invitees.Contains(player.UserId))
+          .ToListAsync(cancellationToken))
         .ToDictionary(player => player.UserId, player => player.Nickname);
-      var i = 0;
-      var invitePartitionedVotes = from vote in inviteVotes
-        group vote by i++ / InvitationBatchSize into parts
-        select parts;
-      
-      var invitations = invitePartitionedVotes.Select(votes =>
-      {
-        var resultNicknames = votes
-          .Select(vote => nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : vote.Username)
-          .Where(_ => !string.IsNullOrEmpty(_))
-          .ToList();
-        if (resultNicknames.Count == 0) return null;
-        return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(suffixNumber: votes.Key),
-          $"Invite {votes.Key * InvitationBatchSize + 1} - {(votes.Key + 1) * InvitationBatchSize}",
-          new StringBuilder()
-            .Code((builder, mode) =>
-              builder.Sanitize(
-                string.Join(",", resultNicknames), mode))
-            .ToTextMessageContent())
-        {
-          ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
-        };
-      });
 
-      var result = invitations.Where(invitation => invitation != null).ToArray();
-      if (result.Length == 0)
+      var resultNicknames = inviteVotes
+        .Select(vote => nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : vote.Username)
+        .Where(_ => !string.IsNullOrEmpty(_))
+        .ToList();
+
+      InlineQueryResultBase result;
+      if (resultNicknames.Count > 0)
       {
-        result = new[]
-        {
-          new InlineQueryResultArticle("NobodyToInvite", "Nobody to invite",
+        result = new InlineQueryResultArticle(PREFIX + poll.GetInlineId(),"Invite",
+          new StringBuilder()
+              .Code((builder, mode) =>
+                builder.Sanitize(string.Join(",", resultNicknames), mode))
+              .ToTextMessageContent())
+              {
+                ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
+              };
+      }
+      else
+      {
+        result = new InlineQueryResultArticle("NobodyToInvite", "Nobody to invite",
             new StringBuilder().Sanitize($"Nobody to invite").ToTextMessageContent())
-          {
-            ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").ToString()
-          }
-        };
+            {
+              ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").ToString()
+            };
       }
 
-      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, result, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, new[] { result }, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
       return true;
-
     }
   }
 }
