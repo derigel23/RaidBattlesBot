@@ -27,14 +27,18 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly RaidService myRaidService;
+    private readonly NotifyInlineQueryHandler myNotifyInlineQueryHandler;
+    private readonly InviteInlineQueryHandler myInviteInlineQueryHandler;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClientEx bot, IUrlHelper urlHelper, IClock clock, RaidService raidService)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClientEx bot, IUrlHelper urlHelper, IClock clock, RaidService raidService, NotifyInlineQueryHandler notifyInlineQueryHandler, InviteInlineQueryHandler inviteInlineQueryHandler)
     {
       myContext = context;
       myBot = bot;
       myUrlHelper = urlHelper;
       myClock = clock;
       myRaidService = raidService;
+      myNotifyInlineQueryHandler = notifyInlineQueryHandler;
+      myInviteInlineQueryHandler = inviteInlineQueryHandler;
     }
 
     async Task<bool?> IHandler<InlineQuery, object, bool?>.Handle(InlineQuery data, object context, CancellationToken cancellationToken)
@@ -56,6 +60,17 @@ namespace RaidBattlesBot.Handlers
         if (poll != null)
         {
           queryResults.Add(poll.ClonePoll(myUrlHelper));
+          
+          if (await myInviteInlineQueryHandler.GetResult(poll, cancellationToken) is {} inviteResult)
+          {
+            queryResults.Add(inviteResult);
+          }
+          
+          if (myNotifyInlineQueryHandler.GetResult(data, poll) is {} notifyResult)
+          {
+            queryResults.Add(notifyResult);
+          }
+          
           // clone the poll in invitation mode if possible
           if (poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false)
           {

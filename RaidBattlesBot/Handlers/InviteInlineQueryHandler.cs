@@ -9,6 +9,7 @@ using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
+using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -44,6 +45,20 @@ namespace RaidBattlesBot.Handlers
       if (poll == null)
         return null;
 
+      var result = await GetResult(poll, cancellationToken);
+
+      result ??= new InlineQueryResultArticle("NobodyToInvite", "Nobody to invite",
+        new StringBuilder().Sanitize($"Nobody to invite").ToTextMessageContent())
+        {
+          ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").ToString()
+        };
+
+      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, new[] { result }, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
+      return true;
+    }
+
+    public async Task<InlineQueryResultBase> GetResult(Poll poll, CancellationToken cancellationToken)
+    {
       if (!poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? true)
         return null;
 
@@ -63,29 +78,19 @@ namespace RaidBattlesBot.Handlers
         .Where(_ => !string.IsNullOrEmpty(_))
         .ToList();
 
-      InlineQueryResultBase result;
       if (resultNicknames.Count > 0)
       {
-        result = new InlineQueryResultArticle(PREFIX + poll.GetInlineId(),"Invite",
+        return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(), "Invite",
           new StringBuilder()
-              .Code((builder, mode) =>
-                builder.Sanitize(string.Join(",", resultNicknames), mode))
-              .ToTextMessageContent())
-              {
-                ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
-              };
-      }
-      else
-      {
-        result = new InlineQueryResultArticle("NobodyToInvite", "Nobody to invite",
-            new StringBuilder().Sanitize($"Nobody to invite").ToTextMessageContent())
-            {
-              ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").ToString()
-            };
+            .Code((builder, mode) =>
+              builder.Sanitize(string.Join(",", resultNicknames), mode))
+            .ToTextMessageContent())
+        {
+          ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
+        };
       }
 
-      await myBot.AnswerInlineQueryWithValidationAsync(data.Id, new[] { result }, cacheTime: 0, isPersonal: true, cancellationToken: cancellationToken);
-      return true;
+      return null;
     }
   }
 }
