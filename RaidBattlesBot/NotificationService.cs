@@ -55,7 +55,7 @@ namespace RaidBattlesBot
 
     private async void DoWork(CancellationToken cancellationToken)
     {
-      var nowWithLeadTime = myClock.GetCurrentInstant().ToDateTimeOffset() - myNotificationLeadTime;
+      var nowWithLeadTime = myClock.GetCurrentInstant().ToDateTimeOffset() + myNotificationLeadTime;
       var previous = nowWithLeadTime - myCheckPeriod - myErrorOffset;
       var polls = await myDB.Set<Poll>()
         .Where(poll => poll.Time > previous && poll.Time <= nowWithLeadTime)
