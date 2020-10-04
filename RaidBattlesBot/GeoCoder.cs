@@ -218,7 +218,7 @@ namespace RaidBattlesBot
       var timeZoneResponse = await GoogleMaps.TimeZone.QueryAsync(timeZoneRequest, myTelemetryClient, cancellationToken);
       
       if (!timeZoneResponse.IsSuccess())
-        return myClock.GetCurrentZonedDateTime().Zone;
+        return myClock.Zone;
 
       if (timeZoneResponse.TimeZoneId is { } timeZoneId &&
           DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is { } dateTimeZone)
