@@ -46,6 +46,9 @@ namespace RaidBattlesBot.Model
           return pollReplyMarkup;
       }
 
+      return pollReplyMarkup;
+      
+      // TODO: Currently, no additional admin buttons
       if (!await chatInfo.CandEditPoll(message.Poll.Owner, message.UserId, cancellationToken))
         return pollReplyMarkup;
 

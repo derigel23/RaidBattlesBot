@@ -80,7 +80,7 @@ namespace RaidBattlesBot.Pages
             raidLevel = $"R{p.Raid.RaidBossLevel}",
             name = p.Raid.Name,
             img = p.GetThumbUrl(Url),
-            title = p.GetTitle(Url),
+            title = p.GetTitle(),
             description = $"{p.Raid.Description}",
           },
           options = new

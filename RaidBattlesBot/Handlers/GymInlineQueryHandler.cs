@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
+using NodaTime;
+using NodaTime.Extensions;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -25,16 +27,20 @@ namespace RaidBattlesBot.Handlers
     private readonly ITelegramBotClientEx myBot;
     private readonly RaidBattlesContext myDb;
     private readonly RaidService myRaidService;
+    private readonly GeoCoderEx myGeoCoder;
+    private readonly IClock myClock;
     private readonly IUrlHelper myUrlHelper;
     private readonly IngressClient myIngressClient;
     
-    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService)
+    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService, GeoCoderEx geoCoder, IClock clock)
     {
       myUrlHelper = urlHelper;
       myIngressClient = ingressClient;
       myBot = bot;
       myDb = db;
       myRaidService = raidService;
+      myGeoCoder = geoCoder;
+      myClock = clock;
     }
 
     private const int MAX_PORTALS_PER_RESPONSE = 20;
@@ -52,13 +58,13 @@ namespace RaidBattlesBot.Handlers
       {
         switch (queryPart)
         {
-          case string locationPart when OpenLocationCode.IsValid(locationPart):
+          case { } locationPart when OpenLocationCode.IsValid(locationPart):
             location = OpenLocationCode.Decode(locationPart) is var code
               ? new Location { Longitude = (float) code.CenterLongitude, Latitude = (float) code.CenterLatitude }
               : location;
             break;
 
-          case string part when Regex.Match(part, PATTERN) is Match match && match.Success:
+          case { } part when Regex.Match(part, PATTERN) is { } match && match.Success:
             if (int.TryParse(match.Groups["pollId"].Value, out var pollId))
             {
               poll = myRaidService.GetTemporaryPoll(pollId);
@@ -88,19 +94,22 @@ namespace RaidBattlesBot.Handlers
       if ((poll == null) && (pollQuery.Count != 0))
       {
         var voteFormat = await myDb.Set<Settings>().GetFormat(data.From.Id, cancellationToken);
+        poll = new Poll(data)
+        {
+          Title = string.Join("  ", pollQuery),
+          AllowedVotes = voteFormat,
+          ExRaidGym = false
+        }.DetectRaidTime(myClock.InZone(await myGeoCoder.GetTimeZone(data, cancellationToken)));
         
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
-          poll = new Poll(data)
+          poll = new Poll(poll)
           {
-            Title = string.Join("  ", pollQuery),
-            AllowedVotes = voteFormat,
-            Portal = portals[i],
-            ExRaidGym = false
+            Portal = portals[i]
           };
           await myRaidService.GetPollId(poll, cancellationToken);
 
-          results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(myUrlHelper),
+          results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
               Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
@@ -113,7 +122,7 @@ namespace RaidBattlesBot.Handlers
           {
             poll.Id = -poll.Id;
             poll.ExRaidGym = true;
-            results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(myUrlHelper) + " (EX Raid Gym)",
+            results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle() + " (EX Raid Gym)",
               poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
               Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
@@ -127,8 +136,8 @@ namespace RaidBattlesBot.Handlers
       else for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
       {
         var portal = portals[i];
-        var title = portal.Name is string name && !string.IsNullOrWhiteSpace(name) ? name : portal.Guid;
-        if (portal.EncodeGuid() is string portalGuid)
+        var title = portal.Name is { } name && !string.IsNullOrWhiteSpace(name) ? name : portal.Guid;
+        if (portal.EncodeGuid() is { } portalGuid)
         {
           InlineQueryResultArticle Init(InlineQueryResultArticle article, InlineKeyboardButton createButton)
           {

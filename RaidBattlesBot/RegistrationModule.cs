@@ -1,5 +1,7 @@
-﻿using Autofac;
+﻿using System.Reflection;
+using Autofac;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using NodaTime;
 using NodaTime.Extensions;
 using RaidBattlesBot.Handlers;
@@ -35,6 +37,16 @@ namespace RaidBattlesBot
       builder.RegisterType<RaidService>().InstancePerLifetimeScope();
 
       builder.RegisterTelegramSkeleton();
+
+      builder.RegisterType<GeoCoder>().SingleInstance();
+      builder.RegisterType<GeoCoderEx>().SingleInstance();
+      
+      builder
+        .RegisterAssemblyTypes(Assembly.GetExecutingAssembly(), Assembly.GetCallingAssembly())
+        .Where(type => type.InheritsOrImplements(typeof(IHostedService)))
+        .AsImplementedInterfaces()
+        .InstancePerLifetimeScope();
+
     }
   }
 }

@@ -21,6 +21,25 @@ namespace RaidBattlesBot.Model
       Title = inlineQuery.Query;
     }
 
+    public Poll(Poll poll)
+    {
+      Id = poll.Id;
+      RaidId = poll.RaidId;
+      Raid = poll.Raid;
+      PortalId = poll.PortalId;
+      Portal = poll.Portal;
+      Owner = poll.Owner;
+      Title = poll.Title;
+      Time = poll.Time;
+      Modified = poll.Modified;
+      Cancelled = poll.Cancelled;
+      AllowedVotes = poll.AllowedVotes;
+      ExRaidGym = poll.ExRaidGym;
+
+      Messages = poll.Messages;
+      Votes = poll.Votes;
+    }
+    
     public int Id { get; set; }
 
     public int? RaidId { get; set; }
@@ -37,6 +56,7 @@ namespace RaidBattlesBot.Model
     public bool Cancelled { get; set; }
     public VoteEnum? AllowedVotes { get; set; }
     public bool ExRaidGym { get; set; }
+    
     private static readonly TimeSpan LiveTime = TimeSpan.FromHours(1);
 
     [Computed, NotMapped]

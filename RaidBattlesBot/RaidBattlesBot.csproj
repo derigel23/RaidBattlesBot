@@ -42,4 +42,9 @@
     </Content>
     <None Include=".config\dotnet-tools.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="YandexMapsClient.Raw.cs">
+      <DependentUpon>YandexMapsClient.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

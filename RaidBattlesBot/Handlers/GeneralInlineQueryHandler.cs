@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using NodaTime.Extensions;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -26,8 +28,10 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly IngressClient myIngressClient;
     private readonly RaidBattlesContext myDb;
+    private readonly GeoCoderEx myGeoCoder;
+    private readonly IClock myClock;
 
-    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db)
+    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db, GeoCoderEx geoCoder, IClock clock)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
@@ -35,6 +39,8 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
       myIngressClient = ingressClient;
       myDb = db;
+      myGeoCoder = geoCoder;
+      myClock = clock;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -49,7 +55,7 @@ namespace RaidBattlesBot.Handlers
       {
         switch (queryPart)
         {
-          case string _ when queryPart.StartsWith(GymInlineQueryHandler.PREFIX):
+          case { } when queryPart.StartsWith(GymInlineQueryHandler.PREFIX):
             var guid = queryPart.Substring(GymInlineQueryHandler.PREFIX.Length);
             if (guid.EndsWith('+'))
             {
@@ -82,7 +88,8 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var pollId = await myRaidService.GetPollId(new Poll(data) { Title = query, Portal = portal }, cancellationToken);
+        var poll = new Poll(data) { Title = query, Portal = portal }.DetectRaidTime(myClock.InZone(await myGeoCoder.GetTimeZone(data, cancellationToken)));
+        var pollId = await myRaidService.GetPollId(poll, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
         ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);
         if (voteFormats.Count == 0)
@@ -98,7 +105,7 @@ namespace RaidBattlesBot.Handlers
               Portal = portal,
               ExRaidGym = exRaidGym
             })
-            .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(myUrlHelper),
+            .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(),
               fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {
                 Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),

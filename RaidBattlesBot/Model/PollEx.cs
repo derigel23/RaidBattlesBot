@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using NodaTime.Extensions;
+using NodaTime.Text;
 using RaidBattlesBot.Handlers;
  using Telegram.Bot.Types;
  using Telegram.Bot.Types.Enums;
@@ -68,17 +72,17 @@ namespace RaidBattlesBot.Model
     private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode)
     {
       var result = poll.Raid()?.GetDescription(mode) ?? new StringBuilder();
-      if (poll.Time != null)
-      {
-        if (result.Length > 0)
-          result.Insert(0, RaidEx.Delimeter);
-        result.Insert(0, new StringBuilder().Bold((builder, m) => builder.Sanitize($"Бой {poll.Time:t}", m), mode));
-      }
+      // if (poll.Time != null)
+      // {
+      //   if (result.Length > 0)
+      //     result.Insert(0, RaidEx.Delimeter);
+      //   result.Insert(0, new StringBuilder().Bold((builder, m) => builder.Sanitize($"Battle at {poll.Time:t}", m), mode));
+      // }
 
       return result;
     }
 
-    public static string GetTitle(this Poll poll, IUrlHelper urlHelper, ParseMode mode = ParseMode.Default)
+    public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
     {
       var title = poll.GetTitleBase(mode) ?? new StringBuilder();
       if (title.Length == 0)
@@ -122,7 +126,7 @@ namespace RaidBattlesBot.Model
         case ParseMode.Html:
         case ParseMode.Markdown:
           var raid = poll.Raid();
-          if (raid?.Lat != null && raid?.Lon != null)
+          if (raid?.Lat != null && raid?.Lon != null && urlHelper != null)
           {
             description
               .Sanitize(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter, mode)
@@ -292,7 +296,7 @@ namespace RaidBattlesBot.Model
 
     public static InlineQueryResultArticle ClonePoll(this Poll poll, IUrlHelper urlHelper, PollMode? pollMode = null)
     {
-      return new InlineQueryResultArticle(poll.GetInlineId(pollMode), poll.GetTitle(urlHelper),
+      return new InlineQueryResultArticle(poll.GetInlineId(pollMode), poll.GetTitle(),
         poll.GetMessageText(urlHelper, disableWebPreview: poll.DisableWebPreview()))
       {
         Description = pollMode?.HasFlag(PollMode.Invitation) ?? false ? "Clone the poll in invitation mode" : "Clone the poll",
@@ -330,6 +334,37 @@ namespace RaidBattlesBot.Model
       }
 
       return true;
+    }
+    
+    private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[a-zA-Z0-9/_-]+)?(\b|\s|$)");
+    
+    public static Poll DetectRaidTime(this Poll poll, ZonedClock clock)
+    {
+      if (ourRaidTimeDetector.Matches(poll.Title) is {} matches && matches.LastOrDefault() is {} match)
+      {
+        var timePattern = LocalTimePattern.CreateWithCurrentCulture(@$"H\{match.Groups["delimeter"]}mm");
+        if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(LocalTime.MinValue, out var time))
+        {
+          if (match.Groups["timezone"] is {} timezoneMatch && timezoneMatch.Success)
+          {
+            if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneMatch.Value) is {} timeZone)
+            {
+              clock = clock.InZone(timeZone);
+            }
+          }
+          
+          if (match.Groups["designator"] is {} designatorMatch && designatorMatch.Success && designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+          {
+            time = time.PlusHours(12);
+          }
+
+          var ((date, _), dateTimeZone, _) = clock.GetCurrentZonedDateTime();
+          var localDateTime = time.On(date);
+          var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
+          poll.Time = detectedTime.ToDateTimeOffset();
+        }
+      }
+      return poll;
     }
   }
 }

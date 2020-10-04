@@ -10,6 +10,8 @@ using GoogleMapsApi.Entities.Geocoding.Request;
 using GoogleMapsApi.Entities.Geocoding.Response;
 using GoogleMapsApi.Entities.PlacesNearBy.Request;
 using GoogleMapsApi.Entities.PlacesNearBy.Response;
+using GoogleMapsApi.Entities.TimeZone.Request;
+using GoogleMapsApi.Entities.TimeZone.Response;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Status = GoogleMapsApi.Entities.PlacesNearBy.Response.Status;
@@ -90,6 +92,28 @@ namespace RaidBattlesBot
         telemetry.ResultCode = response.Status.ToString();
       }, cancellationToken);
     }
-  }
 
+    public static async Task<TimeZoneResponse> QueryAsync(this IEngineFacade<TimeZoneRequest, TimeZoneResponse> engine, TimeZoneRequest request, TelemetryClient telemetryClient, CancellationToken cancellationToken = default)
+    {
+      request.Language = CultureInfo.CurrentUICulture.IetfLanguageTag;
+      return await QueryAsync(engine, request, telemetryClient, (telemetry, response) =>
+      {
+        telemetry.Name = nameof(GoogleMaps.TimeZone);
+        telemetry.Success = response.IsSuccess();
+        telemetry.ResultCode = response.Status.ToString();
+      }, cancellationToken);
+    }
+
+    public static bool IsSuccess(this TimeZoneResponse timeZoneResponse)
+    {
+      switch (timeZoneResponse.Status)
+      {
+        case GoogleMapsApi.Entities.TimeZone.Response.Status.OK:
+          return true;
+        
+        default:
+          return false;
+      }
+    }
+  }
 }

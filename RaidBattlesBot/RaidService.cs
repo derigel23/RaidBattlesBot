@@ -39,7 +39,7 @@ namespace RaidBattlesBot
       myMemoryCache = memoryCache;
       myLogChat = botOptions.Value?.LogChatId is { } chatId && chatId != default ? chatId : default(long?);
     }
-    
+
     private string this[int pollId] => $"poll:data:{pollId}";
 
     [CanBeNull] public Poll GetTemporaryPoll(int pollId) => myMemoryCache.Get<Poll>(this[pollId]);
@@ -47,12 +47,11 @@ namespace RaidBattlesBot
     public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
     {
       var nextId = poll.Id = await myContext.GetNextPollId(cancellationToken);
-      using (var entry = myMemoryCache.CreateEntry(this[nextId]))
-      {
-        entry.Value = poll;
-        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
-      }
       
+      using var entry = myMemoryCache.CreateEntry(this[nextId]);
+      entry.Value = poll;
+      entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
+
       return nextId;
     }
 
@@ -65,7 +64,7 @@ namespace RaidBattlesBot
         pollId = pollMessage.PollId = -pollId;
         exRaidGym = true;
       }
-      var poll = await myContext
+      var poll = pollMessage.Poll ?? await myContext
         .Set<Poll>()
         .Where(_ => _.Id == pollId)
         .IncludeRelatedData()
@@ -92,6 +91,7 @@ namespace RaidBattlesBot
         Owner = pollData.Owner,
         Portal = pollData.Portal,
         ExRaidGym = exRaidGym,
+        Time = pollData.Time,
         Votes = new List<Vote>()
       };
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
@@ -240,9 +240,7 @@ namespace RaidBattlesBot
       if (message.Chat is { } chat)
       {
         var postedMessage = await myBot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true,
-          
-          cancellationToken: cancellationToken);
+          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
         message.Chat = postedMessage.Chat;
         message.MesssageId = postedMessage.MessageId;
       }

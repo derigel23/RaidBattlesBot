@@ -80,6 +80,7 @@ namespace RaidBattlesBot
       services.AddMemoryCache();
       services.AddHttpClient();
       services.AddHttpClient<IngressClient>();
+      services.AddHttpClient<YandexMapsClient>();
       services.AddHttpClient<PoGoToolsClient>();
       services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>(nameof(ITelegramBotClient));
       services.AddHttpClient<ITelegramBotClientEx, PoGoTelegramBotClient>(nameof(ITelegramBotClientEx));

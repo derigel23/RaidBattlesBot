@@ -28,6 +28,7 @@ namespace RaidBattlesBot.Model
         pollEntity.ToTable("Polls");
         pollEntity.Property(poll => poll.Id).HasDefaultValueSql($"NEXT VALUE FOR {pollIdSequence.Metadata.Name}");
         pollEntity.HasIndex(poll => poll.Id).IsUnique();
+        pollEntity.HasIndex(poll => poll.Time);
         pollEntity.HasMany(poll => poll.Messages).WithOne(message => message.Poll).HasForeignKey(message => message.PollId);
         pollEntity.HasMany(poll => poll.Votes).WithOne().HasForeignKey(vote => vote.PollId);
         pollEntity.HasOne(poll => poll.Raid).WithMany(raid => raid.Polls).HasForeignKey(poll => poll.RaidId);
