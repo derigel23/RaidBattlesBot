@@ -1,15 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Telegram.Bot.Exceptions;
 
 namespace RaidBattlesBot
 {
@@ -82,7 +85,14 @@ namespace RaidBattlesBot
           }
           catch (Exception ex)
           {
-            myTelemetryClient.TrackException(ex);
+            if (ex is ChatNotInitiatedException)
+            {
+              var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
+              exceptionTelemetry.Properties.Add("UserId", pollVote.UserId.ToString());
+              myTelemetryClient.TrackException(exceptionTelemetry);
+            }
+            else
+              myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string> { { "UserId", pollVote.UserId.ToString() } });
           }
         }
       }
