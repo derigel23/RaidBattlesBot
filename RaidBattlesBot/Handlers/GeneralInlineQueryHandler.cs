@@ -88,7 +88,8 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var poll = new Poll(data) { Title = query, Portal = portal }.DetectRaidTime(myClock.InZone(await myGeoCoder.GetTimeZone(data, cancellationToken)));
+        var poll = await new Poll(data) { Title = query, Portal = portal }
+          .DetectRaidTime(async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         var pollId = await myRaidService.GetPollId(poll, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
         ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);

@@ -4,12 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using EnumsNET;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using NodaTime.Extensions;
 using NodaTime.Text;
 using RaidBattlesBot.Handlers;
  using Telegram.Bot.Types;
@@ -338,7 +339,7 @@ namespace RaidBattlesBot.Model
     
     private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[a-zA-Z0-9/_-]+)?(\b|\s|$)");
     
-    public static Poll DetectRaidTime(this Poll poll, ZonedClock clock)
+    public static async Task<Poll> DetectRaidTime(this Poll poll, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
       if (ourRaidTimeDetector.Matches(poll.Title) is {} matches && matches.LastOrDefault() is {} match)
       {
@@ -349,7 +350,8 @@ namespace RaidBattlesBot.Model
           {
             if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneMatch.Value) is {} timeZone)
             {
-              clock = clock.InZone(timeZone);
+              var prevDateTime = getDateTime;
+              getDateTime = async ct => (await prevDateTime(ct)).WithZone(timeZone);
             }
           }
           
@@ -358,7 +360,7 @@ namespace RaidBattlesBot.Model
             time = time.PlusHours(12);
           }
 
-          var ((date, _), dateTimeZone, _) = clock.GetCurrentZonedDateTime();
+          var ((date, _), dateTimeZone, _) = await getDateTime(cancellationToken);
           var localDateTime = time.On(date);
           var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
           poll.Time = detectedTime.ToDateTimeOffset();

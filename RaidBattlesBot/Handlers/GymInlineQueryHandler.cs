@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Google.OpenLocationCode;
 using Microsoft.AspNetCore.Mvc;
 using NodaTime;
-using NodaTime.Extensions;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -94,12 +93,12 @@ namespace RaidBattlesBot.Handlers
       if ((poll == null) && (pollQuery.Count != 0))
       {
         var voteFormat = await myDb.Set<Settings>().GetFormat(data.From.Id, cancellationToken);
-        poll = new Poll(data)
+        poll = await new Poll(data)
         {
           Title = string.Join("  ", pollQuery),
           AllowedVotes = voteFormat,
           ExRaidGym = false
-        }.DetectRaidTime(myClock.InZone(await myGeoCoder.GetTimeZone(data, cancellationToken)));
+        }.DetectRaidTime(async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
