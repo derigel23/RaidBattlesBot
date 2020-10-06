@@ -3,7 +3,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -59,32 +58,11 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<InlineQueryResultBase> GetResult(Poll poll, CancellationToken cancellationToken)
     {
-      if (!poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? true)
-        return null;
-
-      var inviteVotes = poll.Votes
-        .Where(vote => vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
-        .OrderBy(vote => vote.Modified)
-        .ToList();
-
-      var invitees = inviteVotes.Select(vote => vote.UserId).ToList();
-      var nicknames = (await myDB.Set<Player>()
-          .Where(player => invitees.Contains(player.UserId))
-          .ToListAsync(cancellationToken))
-        .ToDictionary(player => player.UserId, player => player.Nickname);
-
-      var resultNicknames = inviteVotes
-        .Select(vote => nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : vote.Username)
-        .Where(_ => !string.IsNullOrEmpty(_))
-        .ToList();
-
-      if (resultNicknames.Count > 0)
+      var inviteMessage = await poll.GetInviteMessage(myDB, cancellationToken);
+      
+      if (inviteMessage != null)
       {
-        return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(), "Invite",
-          new StringBuilder()
-            .Code((builder, mode) =>
-              builder.Sanitize(string.Join(",", resultNicknames), mode))
-            .ToTextMessageContent())
+        return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(), "Invite", inviteMessage)
         {
           ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
         };

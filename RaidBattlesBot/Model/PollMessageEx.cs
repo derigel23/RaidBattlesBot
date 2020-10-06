@@ -21,34 +21,44 @@ namespace RaidBattlesBot.Model
       if (messageChat == null) // inline message
         return pollReplyMarkup;
 
-      switch (messageChat.Type)
+      if (pollReplyMarkup == null) // cancelled poll
+        return null;
+
+      var inlineKeyboardButtons = pollReplyMarkup.InlineKeyboard.Select(_ => _.ToArray()).ToArray();
+
+      bool modified = false;
+      for (var i = 0; i < inlineKeyboardButtons.Length; i++)
+      for (var j = 0; j < inlineKeyboardButtons[i].Length; j++)
       {
-        case ChatType.Channel:
-          // channel, cancelled
-          if (pollReplyMarkup == null)
-            return null;
+        var inlineKeyboardButton = inlineKeyboardButtons[i][j];
 
-          var inlineKeyboardButtons = pollReplyMarkup.InlineKeyboard.Select(_ => _.ToArray()).ToArray();
-
-          // channel, not cancelled
-          // replace share button with clone button
-          for (var i = 0; i < inlineKeyboardButtons.Length; i++)
-          for (var j = 0; j < inlineKeyboardButtons[i].Length; j++)
-          {
-            if (inlineKeyboardButtons[i][j].CallbackData.StartsWith(ShareInlineQueryHandler.ID))
-              inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(VoteEnum.Share.AsString(EnumFormat.DisplayName), $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
-          }
-
-          return new InlineKeyboardMarkup(inlineKeyboardButtons);
+        // channel, not cancelled
+        // replace share button with clone button
+        if (messageChat.Type == ChatType.Channel && (inlineKeyboardButton.CallbackData?.StartsWith(ShareInlineQueryHandler.ID) ?? false))
+        {
+          modified = true;
+          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(VoteEnum.Share.AsString(EnumFormat.DisplayName), $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
+        }
         
-        case ChatType.Group:
-        case ChatType.Supergroup:
-          return pollReplyMarkup;
+        // For Invite button on direct messages - direct reply in the same chat
+        if ((inlineKeyboardButton.SwitchInlineQuery?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false) ||
+            (inlineKeyboardButton.SwitchInlineQueryCurrentChat?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false))
+        {
+          modified = true;
+          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(inlineKeyboardButton.Text, $"{InviteCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
+        }
       }
 
+      if (modified)
+      {
+        pollReplyMarkup = new InlineKeyboardMarkup(inlineKeyboardButtons);
+      }
+      
+      if (messageChat.Type != ChatType.Private) return pollReplyMarkup;
+
+      // TODO: Currently, no additional admin buttons
       return pollReplyMarkup;
       
-      // TODO: Currently, no additional admin buttons
       if (!await chatInfo.CandEditPoll(message.Poll.Owner, message.UserId, cancellationToken))
         return pollReplyMarkup;
 

@@ -261,10 +261,6 @@ namespace RaidBattlesBot.Model
         {
           InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}")
         });
-        buttons.Add(new[]
-        {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId} ")
-        });
       }
 
       return new InlineKeyboardMarkup(buttons);
@@ -367,6 +363,38 @@ namespace RaidBattlesBot.Model
         }
       }
       return poll;
+    }
+    
+    public static async Task<InputTextMessageContent> GetInviteMessage(this Poll poll, RaidBattlesContext db, CancellationToken cancellationToken = default)
+    {
+      if (!poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? true)
+        return null;
+
+      var inviteVotes = poll.Votes
+        .Where(vote => vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
+        .OrderBy(vote => vote.Modified)
+        .ToList();
+
+      var invitees = inviteVotes.Select(vote => vote.UserId).ToList();
+      var nicknames = (await db.Set<Player>()
+          .Where(player => invitees.Contains(player.UserId))
+          .ToListAsync(cancellationToken))
+        .ToDictionary(player => player.UserId, player => player.Nickname);
+
+      var resultNicknames = inviteVotes
+        .Select(vote => nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : vote.Username)
+        .Where(_ => !string.IsNullOrEmpty(_))
+        .ToList();
+
+      if (resultNicknames.Count > 0)
+      {
+        return
+          new StringBuilder()
+            .Code((builder, mode) => builder.Sanitize(string.Join(",", resultNicknames), mode))
+            .ToTextMessageContent();
+      }
+
+      return null;
     }
   }
 }

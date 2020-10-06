@@ -5,21 +5,21 @@ using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
 
 namespace RaidBattlesBot.Handlers
 {
   [CallbackQueryHandler(DataPrefix = ID)]
-  public class CloneCallbackQueryHandler : ICallbackQueryHandler
+  public class InviteCallbackQueryHandler : ICallbackQueryHandler
   {
-    public const string ID = "clone";
+    public const string ID = "invite";
 
     private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly ITelegramBotClient myBot;
 
-    public CloneCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ITelegramBotClient bot)
+    public InviteCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ITelegramBotClient bot)
     {
       myContext = context;
       myRaidService = raidService;
@@ -32,33 +32,30 @@ namespace RaidBattlesBot.Handlers
       var callback = data.Data.Split(':');
       if (callback[0] != ID)
         return (null, false, null);
+
+      if (!(data.Message.Chat is {} chat))
+        return ("Not supported", false, null);
       
-      PollMessage originalPollMessage;
+      PollMessage pollMessage;
       if (callback.ElementAtOrDefault(1) is var pollIdSegment && PollEx.TryGetPollId(pollIdSegment, out var pollId, out var format))
       {
-        originalPollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
+        pollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
       }
       else
       {
         return ("Poll is publishing. Try later.", true, null);
       }
 
-      if (originalPollMessage?.Poll is var poll && poll == null)
+      if (pollMessage?.Poll is var poll && poll == null)
         return ("Poll is not found", true, null);
-      
-      var clonedPollMessage = new PollMessage
-      {
-        ChatId =  data.From.Id,
-        ChatType = ChatType.Private,
-        UserId = data.From.Id,
-        InlineMesssageId = data.InlineMessageId,
-        Poll = poll
-      };
-      
-      await myRaidService.AddPollMessage(clonedPollMessage, myUrlHelper, cancellationToken);
 
-      var botUser = await myBot.GetMeAsync(cancellationToken);
-      return (null, false, $"https://t.me/{botUser.Username}?start={clonedPollMessage.GetExtendedPollId()}");
+      var inviteMessage = await poll.GetInviteMessage(myContext, cancellationToken);
+      inviteMessage ??= new InputTextMessageContent("Nobody to invite");
+
+      await myBot.SendTextMessageAsync(chat, inviteMessage.MessageText, inviteMessage.ParseMode,
+        inviteMessage.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
+      
+      return (null, false, null);
     }
   }
 }
