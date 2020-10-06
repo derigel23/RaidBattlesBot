@@ -63,38 +63,43 @@ namespace RaidBattlesBot
       var polls = await myDB.Set<Poll>()
         .Where(poll => poll.Time > previous && poll.Time <= nowWithLeadTime)
         .IncludeRelatedData()
+        .Include(poll => poll.Notifications)
         .ToListAsync(cancellationToken);
-      
+
       foreach (var poll in polls)
       {
+        var alreadyNotified = poll.Notifications.Select(notification => notification.ChatId).ToHashSet();
         foreach (var pollVote in poll.Votes)
         {
-          if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false))
-            continue;
-          
+          var userId = pollVote.UserId;
+          if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue;
+          if (alreadyNotified.Contains(userId)) continue;
           try
           {
             var pollMessage = new PollMessage
             {
-              UserId = pollVote.UserId,
-              ChatId = pollVote.UserId,
+              UserId = userId,
+              ChatId = userId,
               Poll = poll,
               PollId = poll.Id,
             };
-            await myRaidService.GetOrCreatePollAndMessage(pollMessage, null, poll.AllowedVotes, cancellationToken);
+            var notificationMessage = await myRaidService.GetOrCreatePollAndMessage(pollMessage, null, poll.AllowedVotes, cancellationToken);
+            poll.Notifications.Add(new Notification { PollId = pollMessage.Id, ChatId = userId, DateTime = notificationMessage.Modified});
           }
           catch (Exception ex)
           {
             if (ex is ChatNotInitiatedException)
             {
               var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
-              exceptionTelemetry.Properties.Add("UserId", pollVote.UserId.ToString());
+              exceptionTelemetry.Properties.Add("UserId", userId.ToString());
               myTelemetryClient.TrackException(exceptionTelemetry);
             }
             else
-              myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string> { { "UserId", pollVote.UserId.ToString() } });
+              myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string> { { "UserId", userId.ToString() } });
           }
         }
+
+        await myDB.SaveChangesAsync(cancellationToken);
       }
     }
   }

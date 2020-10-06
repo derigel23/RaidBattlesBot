@@ -65,5 +65,6 @@ namespace RaidBattlesBot.Model
 
     public List<PollMessage> Messages { get; set; }
     public List<Vote> Votes { get; set; }
+    public List<Notification> Notifications { get; set; }
   }
 }

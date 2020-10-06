@@ -74,6 +74,16 @@ namespace RaidBattlesBot.Model
         builder.HasKey(player => player.UserId);
         builder.Property(player => player.UserId).ValueGeneratedNever();
       });
+      
+      modelBuilder.Entity<Notification>(builder =>
+      {
+        builder.ToTable("Notifications");
+        builder.HasKey(notification => new { notification.PollId, notification.ChatId });
+        builder.HasOne(notification => notification.Poll)
+          .WithMany(poll => poll.Notifications)
+          .HasForeignKey(notification => notification.PollId);
+      });
+      
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
