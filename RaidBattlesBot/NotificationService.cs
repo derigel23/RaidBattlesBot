@@ -84,12 +84,14 @@ namespace RaidBattlesBot
               PollId = poll.Id,
             };
             var notificationMessage = await myRaidService.GetOrCreatePollAndMessage(pollMessage, null, poll.AllowedVotes, cancellationToken);
-            poll.Notifications.Add(new Notification { PollId = pollMessage.Id, ChatId = userId, DateTime = notificationMessage.Modified});
+            poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = notificationMessage.Modified});
           }
           catch (Exception ex)
           {
-            if (ex is ChatNotInitiatedException)
+            if (ex is ForbiddenException)
             {
+              // Do not try to notify the user again for this poll
+              poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = null});
               var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
               exceptionTelemetry.Properties.Add("UserId", userId.ToString());
               myTelemetryClient.TrackException(exceptionTelemetry);
