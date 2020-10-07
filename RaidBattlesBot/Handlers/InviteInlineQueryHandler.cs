@@ -64,6 +64,7 @@ namespace RaidBattlesBot.Handlers
       {
         return new InlineQueryResultArticle(PREFIX + poll.GetInlineId(), "Invite", inviteMessage)
         {
+          Description = "Generate invitation query",
           ThumbUrl = myUrlHelper.AssetsContent("static_assets/png/btn_new_party.png").ToString()
         };
       }
