@@ -27,17 +27,15 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly RaidService myRaidService;
-    private readonly NotifyInlineQueryHandler myNotifyInlineQueryHandler;
     private readonly InviteInlineQueryHandler myInviteInlineQueryHandler;
 
-    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClientEx bot, IUrlHelper urlHelper, IClock clock, RaidService raidService, NotifyInlineQueryHandler notifyInlineQueryHandler, InviteInlineQueryHandler inviteInlineQueryHandler)
+    public ShareInlineQueryHandler(RaidBattlesContext context, ITelegramBotClientEx bot, IUrlHelper urlHelper, IClock clock, RaidService raidService, InviteInlineQueryHandler inviteInlineQueryHandler)
     {
       myContext = context;
       myBot = bot;
       myUrlHelper = urlHelper;
       myClock = clock;
       myRaidService = raidService;
-      myNotifyInlineQueryHandler = notifyInlineQueryHandler;
       myInviteInlineQueryHandler = inviteInlineQueryHandler;
     }
 
@@ -64,11 +62,6 @@ namespace RaidBattlesBot.Handlers
           if (await myInviteInlineQueryHandler.GetResult(poll, cancellationToken) is {} inviteResult)
           {
             queryResults.Add(inviteResult);
-          }
-          
-          if (myNotifyInlineQueryHandler.GetResult(data, poll) is {} notifyResult)
-          {
-            queryResults.Add(notifyResult);
           }
           
           // clone the poll in invitation mode if possible
