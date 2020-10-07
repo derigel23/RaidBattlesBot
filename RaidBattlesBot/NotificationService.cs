@@ -68,7 +68,7 @@ namespace RaidBattlesBot
 
       foreach (var poll in polls)
       {
-        var defaultPollMode = poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false ? PollMode.Invitation : default;
+        var pollMode = poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false ? PollMode.Invitation : default;
         var alreadyNotified = poll.Notifications.Select(notification => notification.ChatId).ToHashSet();
         foreach (var pollVote in poll.Votes)
         {
@@ -83,7 +83,7 @@ namespace RaidBattlesBot
               ChatId = userId,
               Poll = poll,
               PollId = poll.Id,
-              PollMode = defaultPollMode.HasFlag(PollMode.Invitation) && !(pollVote.Team?.HasFlag(VoteEnum.Invitation) ?? false) ? PollMode.Invitation : defaultPollMode
+              PollMode = pollMode
             };
             var notificationMessage = await myRaidService.GetOrCreatePollAndMessage(pollMessage, null, poll.AllowedVotes, cancellationToken);
             poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = notificationMessage.Modified});
