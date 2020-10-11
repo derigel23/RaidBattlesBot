@@ -58,6 +58,7 @@ namespace RaidBattlesBot.Model
       new VoteGrouping(VoteEnum.ChangedMind, 3, 3, "bailed", "bailed"),
       new VoteGrouping(VoteEnum.ThumbsUp, 4, 4, "voted for", "votes for"),
       new VoteGrouping(VoteEnum.ThumbsDown, 5, 5, "vote against", "votes against"),
+      new VoteGrouping(VoteEnum.Thanks, 6, 6, "thanked", "thanked"),
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)

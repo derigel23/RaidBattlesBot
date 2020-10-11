@@ -65,11 +65,14 @@ namespace RaidBattlesBot.Model
     [Display(Name = "💌", Order = 12, Description = "You need an invitation")]
     Invitation = TeamHarmony << 1,
     
-    [Display(Name = "🆔", Order = 110, Description = "Show IGNs"), PollModeAttribute(Model.PollMode.Nicknames)]
+    [Display(Name = "🆔", Order = 107, Description = "Show IGNs"), PollModeAttribute(Model.PollMode.Nicknames)]
     PollModeNicknames = Invitation << 1,
-    [Display(Name = "🔠", Order = 110, Description = "Show Names"), PollModeAttribute(Model.PollMode.Names)]
+    [Display(Name = "🔠", Order = 107, Description = "Show Names"), PollModeAttribute(Model.PollMode.Names)]
     PollModeNames = PollModeNicknames << 1,
     
+    [Display(Name = "🙏", Order = 101, Description = "You've thanked!")]
+    Thanks = PollModeNames << 2,
+
     #region Plused votes
 
     [Display(Name = "❤", Order = 1)]
@@ -119,7 +122,7 @@ namespace RaidBattlesBot.Model
 
     Plus = Plus1 | Plus2 | Plus4 | Plus8,
     
-    [Display(Name = "🆔", Order = 101, Description = "Show IGNs / Names")]
+    [Display(Name = "🆔", Order = 106, Description = "Show IGNs / Names")]
     PollMode = PollModeNicknames | PollModeNames,
     
     Modifiers = Plus | Share | PollMode,

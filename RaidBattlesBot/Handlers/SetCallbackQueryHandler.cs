@@ -99,6 +99,7 @@ namespace RaidBattlesBot.Handlers
               VoteEnum.Yes,
               VoteEnum.Thumbs,
               VoteEnum.HarryPotter,
+              VoteEnum.Thanks,
               VoteEnum.PollMode,
               VoteEnum.Cancel,
               VoteEnum.Share
