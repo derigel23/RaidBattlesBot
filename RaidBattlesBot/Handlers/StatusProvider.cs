@@ -14,20 +14,19 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly IUrlHelper myUrlHelper;
     private readonly RaidBattlesContext myDB;
-    private readonly DateTimeZone myDateTimeZone;
-    private readonly IClock myClock;
+    private readonly ZonedClock myClock;
 
-    public StatusProvider(IUrlHelper urlHelper, RaidBattlesContext db, DateTimeZone dateTimeZone, IClock clock)
+    public StatusProvider(IUrlHelper urlHelper, RaidBattlesContext db, ZonedClock clock)
     {
       myUrlHelper = urlHelper;
       myDB = db;
-      myDateTimeZone = dateTimeZone;
       myClock = clock;
     }
     
     public async Task<IDictionary<string, object>> Handle(IDictionary<string, object> status, ControllerContext context, CancellationToken cancellationToken = default)
     {
-      status["defaultTimeZone"] = $"{myDateTimeZone.Id}, {myDateTimeZone.GetZoneInterval(myClock.GetCurrentInstant())}";
+      status["now"] = myClock.GetCurrentZonedDateTime().ToDateTimeOffset();
+      status["defaultTimeZone"] = $"{myClock.Zone.Id}, {myClock.Zone.GetZoneInterval(myClock.GetCurrentInstant())}";
       status["assetsRoot"] = myUrlHelper.AssetsContent("~");
       status["lastAppliedMigration"] = (await myDB.Database.GetAppliedMigrationsAsync(cancellationToken)).LastOrDefault();
       status["polls"] = await myDB.Set<Poll>().LongCountAsync(cancellationToken);
