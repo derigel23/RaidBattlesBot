@@ -251,7 +251,7 @@ namespace RaidBattlesBot.Model
             return vote switch
             {
               VoteEnum.Share => InlineKeyboardButton.WithSwitchInlineQuery(display,$"{ShareInlineQueryHandler.ID}:{pollId}"),
-              _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote}")
+              _ => InlineKeyboardButton.WithCallbackData(display, $"{VoteCallbackQueryHandler.ID}:{pollId}:{vote.AsString(EnumFormat.HexadecimalValue)}")
             };
           }))
       };
