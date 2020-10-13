@@ -66,7 +66,7 @@ namespace RaidBattlesBot.Handlers
       var user = data.From;
 
       var teamAbbr = callback.ElementAt(2);
-      if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team))
+      if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team, EnumFormat.HexadecimalValue, EnumFormat.Name))
         return ("Invalid vote", true, null);
 
       var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);
@@ -98,7 +98,7 @@ namespace RaidBattlesBot.Handlers
 
           var votedPollMode = votePollModes[++enabledFlag % votePollModes.Length];
           pollMessage.PollMode = pollMode.CombineFlags(votedPollMode.Value);
-          votedTeam = votedPollMode.Key;
+          votedTeam = votedPollMode.Key.RemoveFlags(VoteEnum.Modifiers);
           break;
       }
 
@@ -125,7 +125,14 @@ namespace RaidBattlesBot.Handlers
       var changed = await myDb.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {
-        await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
+        if (votedTeam != VoteEnum.None) // real vote
+        {
+          await myRaidService.UpdatePoll(poll, myUrlHelper, cancellationToken);
+        }
+        else // some action (switch poll mode usually)
+        {
+          await myRaidService.UpdatePollMessage(pollMessage, myUrlHelper, cancellationToken);
+        }
 
         if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
