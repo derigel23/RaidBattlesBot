@@ -83,7 +83,14 @@ namespace RaidBattlesBot.Model
           .WithMany(poll => poll.Notifications)
           .HasForeignKey(notification => notification.PollId);
       });
-      
+     
+      modelBuilder.Entity<UserSettings>(builder =>
+      {
+        builder.ToTable("UserSettings");
+        builder.HasKey(settings => settings.UserId);
+        builder.Property(settings => settings.UserId).ValueGeneratedNever();
+        builder.Property(settings => settings.TimeZoneId).HasMaxLength(32);
+      });
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
