@@ -85,7 +85,7 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        portals = await myIngressClient.Search(searchQuery, location, cancellationToken);
+        portals = await myIngressClient.Search(searchQuery, location, near: true, cancellationToken);
       }
 
       var results = new List<InlineQueryResultBase>(Math.Min(portals.Length, MAX_PORTALS_PER_RESPONSE) + 2);

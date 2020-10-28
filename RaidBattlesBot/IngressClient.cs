@@ -40,18 +40,18 @@ namespace RaidBattlesBot
 
     public async Task<Portal> Get(string guid, Location location = default, CancellationToken cancellationToken = default)
     {
-      if (string.IsNullOrEmpty(guid))
-        return null;
+      if (string.IsNullOrEmpty(guid)) return null;
+      
       var portalSet = myContext.Set<Portal>();
       var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
       if ((myClock.GetCurrentInstant().ToDateTimeOffset() - portal?.Modified)?.TotalDays < 1) // refresh every day 
         return portal;
       
-      var portals = await Search(guid, location ?? myDefaultLocation, cancellationToken);
+      var portals = await Search(guid, location ?? myDefaultLocation, near:false, cancellationToken);
       return portals.FirstOrDefault(p => p.Guid == guid);
     }
 
-    public async Task<Portal[]> Search(string query, Location location = default, CancellationToken cancellationToken = default)
+    public async Task<Portal[]> Search(string query, Location location = default, bool near = true, CancellationToken cancellationToken = default)
     {
       location ??= myDefaultLocation;
       var queryBuilder = new QueryBuilder
@@ -60,19 +60,23 @@ namespace RaidBattlesBot
         { "lng", location.Longitude.ToString(CultureInfo.InvariantCulture) },
         { "query", query }
       };
+      if (near)
+      {
+        queryBuilder.Add("near", 1.ToString());
+      }
 
       return await Execute("searchPortals.php", queryBuilder, cancellationToken);
     }
 
-    public async Task<Portal[]> Search(IReadOnlyCollection<string> query, Location location = default, CancellationToken cancellationToken = default)
+    public async Task<Portal[]> Search(IReadOnlyCollection<string> query, Location location = default, bool near = true, CancellationToken cancellationToken = default)
     {
-      var result = await Search(string.Join(' ', query), location, cancellationToken);
+      var result = await Search(string.Join(' ', query), location, near, cancellationToken);
       if (result.Length == 0)
       {
         // skip words with length less than 3 chars
         var filteredQuery = query.Where(part => part.Length > 2).ToArray();
         if (filteredQuery.Length != query.Count)
-          result = await Search(string.Join(' ', filteredQuery), location, cancellationToken);
+          result = await Search(string.Join(' ', filteredQuery), location, near, cancellationToken);
       }      
       return result;
     }
