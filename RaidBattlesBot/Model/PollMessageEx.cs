@@ -108,11 +108,13 @@ namespace RaidBattlesBot.Model
         .ThenInclude(raid => raid.PostEggRaid);
     }
 
-    public static IDictionary<string, string> GetTrackingProperties([CanBeNull] this PollMessage pollMessage)
+    private static readonly IDictionary<string, string> EmptyProperties = new Dictionary<string, string>(0);
+    
+    public static IDictionary<string, string> GetTrackingProperties([CanBeNull] this PollMessage pollMessage, IDictionary<string, string> properties = null)
     {
-      return new Dictionary<string, string>
+      return new Dictionary<string, string>(properties ?? EmptyProperties)
       {
-        { "messageId", pollMessage?.Id is int pollMessageId && pollMessageId > 0 ? pollMessageId.ToString() : null },
+        { "messageId", pollMessage?.Id is { } pollMessageId && pollMessageId > 0 ? pollMessageId.ToString() : null },
         { "pollId", pollMessage?.GetPollId()?.ToString() },
         { "raidId", pollMessage?.Poll.GetRaidId()?.ToString() }
       };

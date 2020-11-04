@@ -311,7 +311,7 @@ namespace RaidBattlesBot
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties());
+        myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties(new Dictionary<string, string>{ { nameof(myBot.BotId), myBot.BotId.ToString() } }));
       }
     }
   }

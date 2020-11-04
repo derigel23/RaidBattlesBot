@@ -27,11 +27,13 @@ namespace RaidBattlesBot
     private readonly TelemetryClient myTelemetryClient;
     private readonly IClock myClock;
     private readonly TimeSpan myNotificationLeadTime;
+    private readonly ITelegramBotClient myBot;
 
     public NotificationService(RaidBattlesContext db, IEnumerable<ITelegramBotClient> bots, Func<ITelegramBotClient, RaidService> raidServiceFunc, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
     {
       myDB = db;
-      myRaidService = raidServiceFunc(bots.First()); // TODO: Select bot based on original message
+      myBot = bots.First();
+      myRaidService = raidServiceFunc(myBot); // TODO: Select bot based on original message
       myTelemetryClient = telemetryClient;
       myClock = clock;
       myNotificationLeadTime = options.Value.NotificationLeadTime;
@@ -96,11 +98,16 @@ namespace RaidBattlesBot
               // Do not try to notify the user again for this poll
               poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = null});
               var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
+              exceptionTelemetry.Properties.Add(nameof(myBot.BotId), myBot.BotId.ToString());
               exceptionTelemetry.Properties.Add("UserId", userId.ToString());
               myTelemetryClient.TrackException(exceptionTelemetry);
             }
             else
-              myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string> { { "UserId", userId.ToString() } });
+              myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
+              {
+                { nameof(myBot.BotId), myBot.BotId.ToString() },
+                { "UserId", userId.ToString() }
+              });
           }
         }
 
