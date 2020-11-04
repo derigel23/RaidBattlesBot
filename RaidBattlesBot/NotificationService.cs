@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 
 namespace RaidBattlesBot
@@ -27,10 +28,10 @@ namespace RaidBattlesBot
     private readonly IClock myClock;
     private readonly TimeSpan myNotificationLeadTime;
 
-    public NotificationService(RaidBattlesContext db, RaidService raidService, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
+    public NotificationService(RaidBattlesContext db, IEnumerable<ITelegramBotClient> bots, Func<ITelegramBotClient, RaidService> raidServiceFunc, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
     {
       myDB = db;
-      myRaidService = raidService;
+      myRaidService = raidServiceFunc(bots.First()); // TODO: Select bot based on original message
       myTelemetryClient = telemetryClient;
       myClock = clock;
       myNotificationLeadTime = options.Value.NotificationLeadTime;

@@ -15,10 +15,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
-using Telegram.Bot;
 
 namespace RaidBattlesBot
 {
@@ -71,7 +71,9 @@ namespace RaidBattlesBot
           options.RequestCultureProviders = null;
         });
       }
+
       services
+        .AddHttpContextAccessor()
         .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
         .AddScoped(x => x
           .GetRequiredService<IUrlHelperFactory>()
@@ -82,8 +84,8 @@ namespace RaidBattlesBot
       services.AddHttpClient<IngressClient>();
       services.AddHttpClient<YandexMapsClient>();
       services.AddHttpClient<PoGoToolsClient>();
-      services.AddHttpClient<ITelegramBotClient, PoGoTelegramBotClient>(nameof(ITelegramBotClient));
-      services.AddHttpClient<ITelegramBotClientEx, PoGoTelegramBotClient>(nameof(ITelegramBotClientEx));
+      services.RegisterTelegramClients<PoGoTelegramBotClient>(provider => provider.GetService<IOptions<BotConfiguration>>().Value?.BotTokens);
+      
       services
         .AddMvc(options =>
         {

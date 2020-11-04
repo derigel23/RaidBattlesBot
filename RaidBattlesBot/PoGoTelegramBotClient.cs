@@ -8,8 +8,8 @@ namespace RaidBattlesBot
 {
   public class PoGoTelegramBotClient : TelegramBotClientEx
   {
-    public PoGoTelegramBotClient(TelemetryClient telemetryClient, IOptions<BotConfiguration> options, HttpClient httpClient)
-      : base(telemetryClient, options.Value.BotToken, httpClient)
+    public PoGoTelegramBotClient(TelemetryClient telemetryClient, string token, IOptions<BotConfiguration> options, HttpClient httpClient)
+      : base(telemetryClient, token, httpClient)
     {
       Timeout = options.Value.Timeout;
     }

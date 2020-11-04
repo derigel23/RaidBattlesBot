@@ -30,12 +30,12 @@ namespace RaidBattlesBot
     private readonly IMemoryCache myMemoryCache;
     private readonly long? myLogChat;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, ChatInfo chatInfo, IMemoryCache memoryCache, IOptions<BotConfiguration> botOptions)
+    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, IMemoryCache memoryCache, IOptions<BotConfiguration> botOptions)
     {
       myContext = context;
       myBot = bot;
       myTelemetryClient = telemetryClient;
-      myChatInfo = chatInfo;
+      myChatInfo = new ChatInfo(myMemoryCache, myBot);
       myMemoryCache = memoryCache;
       myLogChat = botOptions.Value?.LogChatId is { } chatId && chatId != default ? chatId : default(long?);
     }
