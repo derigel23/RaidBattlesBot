@@ -14,14 +14,12 @@ namespace RaidBattlesBot.Handlers
   {
     public const string ID = "clone";
 
-    private readonly RaidBattlesContext myContext;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly ITelegramBotClient myBot;
 
-    public CloneCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ITelegramBotClient bot)
+    public CloneCallbackQueryHandler(RaidService raidService, IUrlHelper urlHelper, ITelegramBotClient bot)
     {
-      myContext = context;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myBot = bot;
@@ -36,7 +34,7 @@ namespace RaidBattlesBot.Handlers
       PollMessage originalPollMessage;
       if (callback.ElementAtOrDefault(1) is var pollIdSegment && PollEx.TryGetPollId(pollIdSegment, out var pollId, out var format))
       {
-        originalPollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken);
+        originalPollMessage = await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { BotId = myBot.BotId, PollId = pollId }, myUrlHelper, format, cancellationToken);
       }
       else
       {
@@ -48,10 +46,11 @@ namespace RaidBattlesBot.Handlers
       
       var clonedPollMessage = new PollMessage
       {
+        BotId = myBot.BotId,
         ChatId =  data.From.Id,
         ChatType = ChatType.Private,
         UserId = data.From.Id,
-        InlineMesssageId = data.InlineMessageId,
+        InlineMessageId = data.InlineMessageId,
         Poll = poll
       };
       

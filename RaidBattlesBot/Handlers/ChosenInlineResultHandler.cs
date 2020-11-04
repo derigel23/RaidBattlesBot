@@ -5,20 +5,21 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
 {
   public class ChosenInlineResultHandler : IChosenInlineResultHandler
   {
-    private readonly RaidBattlesContext myContext;
+    private readonly ITelegramBotClient myBot;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly PoGoToolsClient myPoGoToolsClient;
 
-    public ChosenInlineResultHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, PoGoToolsClient poGoToolsClient)
+    public ChosenInlineResultHandler(ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, PoGoToolsClient poGoToolsClient)
     {
-      myContext = context;
+      myBot = bot;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myPoGoToolsClient = poGoToolsClient;
@@ -32,7 +33,7 @@ namespace RaidBattlesBot.Handlers
         case PollEx.InlineIdPrefix:
           if (!PollEx.TryGetPollId(resultParts.ElementAtOrDefault(1), out var pollId, out var format))
             return null;
-          var message = new PollMessage(data) { PollId = pollId };
+          var message = new PollMessage(data) { BotId = myBot.BotId, PollId = pollId };
           if (Enum.TryParse<PollMode>(resultParts.ElementAtOrDefault(3), out var pollMode))
           {
             message.PollMode = pollMode;

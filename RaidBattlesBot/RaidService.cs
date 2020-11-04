@@ -24,20 +24,24 @@ namespace RaidBattlesBot
   public class RaidService
   {
     private readonly RaidBattlesContext myContext;
-    private readonly ITelegramBotClient myBot;
+    private readonly Func<int?, ITelegramBotClient> myBot;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly ChatInfo myChatInfo;
+    private readonly Func<int?, ChatInfo> myChatInfo;
     private readonly IMemoryCache myMemoryCache;
     private readonly long? myLogChat;
 
-    public RaidService(RaidBattlesContext context, ITelegramBotClient bot, TelemetryClient telemetryClient, IMemoryCache memoryCache, IOptions<BotConfiguration> botOptions)
+    public RaidService(RaidBattlesContext context, IEnumerable<ITelegramBotClient> bots, TelemetryClient telemetryClient, IMemoryCache memoryCache, Func<ITelegramBotClient, ChatInfo> chatInfo, IOptions<BotConfiguration> botOptions)
     {
       myContext = context;
-      myBot = bot;
       myTelemetryClient = telemetryClient;
-      myChatInfo = new ChatInfo(myMemoryCache, myBot);
       myMemoryCache = memoryCache;
       myLogChat = botOptions.Value?.LogChatId is { } chatId && chatId != default ? chatId : default(long?);
+
+      var botsMap = bots.ToDictionary(bot => bot.BotId);
+      var fallbackBot = botOptions.Value?.DefaultBotId is {} defaultBotId ? botsMap[defaultBotId] : botsMap.Values.First(); // at least one bot, default
+      myBot = botId => botId.HasValue && botsMap.TryGetValue(botId.Value, out var bot) ? bot : fallbackBot;
+      
+      myChatInfo = botId => chatInfo(myBot(botId));
     }
 
     private string this[int pollId] => $"poll:data:{pollId}";
@@ -72,7 +76,7 @@ namespace RaidBattlesBot
 
       if (poll != null)
       {
-        var existingMessage = poll.Messages.FirstOrDefault(_ => _.InlineMesssageId == pollMessage.InlineMesssageId && _.ChatId == pollMessage.ChatId && _.MesssageId == pollMessage.MesssageId);
+        var existingMessage = poll.Messages.FirstOrDefault(_ => _.InlineMessageId == pollMessage.InlineMessageId && _.ChatId == pollMessage.ChatId && _.MessageId == pollMessage.MessageId);
         if (existingMessage != null)
           return existingMessage;
 
@@ -154,7 +158,7 @@ namespace RaidBattlesBot
               {
                 foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
                 {
-                  if (await myChatInfo.CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
+                  if (await myChatInfo(existingRaidPollMessage.BotId).CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
                     if ((existingRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
                     {
@@ -197,7 +201,7 @@ namespace RaidBattlesBot
                 // use existing poll if have rights for any prev message
                 foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
                 {
-                  if (await myChatInfo.CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
+                  if (await myChatInfo(eggRaidPollMessage.BotId).CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                   {
                     if ((eggRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
                     {
@@ -239,12 +243,12 @@ namespace RaidBattlesBot
       var content = message.Poll.GetMessageText(urlHelper, disableWebPreview: message.Poll.DisableWebPreview());
       if (message.Chat is { } chat)
       {
-        var postedMessage = await myBot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-          replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
+        var postedMessage = await myBot(message.BotId).SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+          replyMarkup: await message.GetReplyMarkup(myChatInfo(message.BotId), cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
         message.Chat = postedMessage.Chat;
-        message.MesssageId = postedMessage.MessageId;
+        message.MessageId = postedMessage.MessageId;
       }
-      else if (message.InlineMesssageId is { } inlineMessageId)
+      else if (message.InlineMessageId is { } inlineMessageId)
       {
         //await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
         //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
@@ -255,7 +259,7 @@ namespace RaidBattlesBot
       // log message
       if (withLog && myLogChat != null)
       {
-        await AddPollMessage(new PollMessage { ChatId = myLogChat, Poll = message.Poll } , urlHelper, cancellationToken);
+        await AddPollMessage(new PollMessage { BotId = message.BotId, ChatId = myLogChat, Poll = message.Poll } , urlHelper, cancellationToken);
       }
 
       return message;
@@ -297,21 +301,23 @@ namespace RaidBattlesBot
     {
       try
       {
+        var bot = myBot(message.BotId);
+        var chatInfo = myChatInfo(message.BotId);
         var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, disableWebPreview: message.Poll.DisableWebPreview());
-        if (message.InlineMesssageId is { } inlineMessageId)
+        if (message.InlineMessageId is { } inlineMessageId)
         {
-          await myBot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-            await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
+          await bot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+            await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
-        else if (message.ChatId is { } chatId && message.MesssageId is { } messageId)
+        else if (message.ChatId is { } chatId && message.MessageId is { } messageId)
         {
-          await myBot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-            await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken);
+          await bot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+            await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
       }
       catch (Exception ex)
       {
-        myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties(new Dictionary<string, string>{ { nameof(myBot.BotId), myBot.BotId.ToString() } }));
+        myTelemetryClient.TrackExceptionEx(ex, message.GetTrackingProperties(new Dictionary<string, string>{ { nameof(ITelegramBotClient.BotId), message.BotId?.ToString() } }));
       }
     }
   }

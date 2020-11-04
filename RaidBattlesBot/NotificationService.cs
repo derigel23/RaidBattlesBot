@@ -27,13 +27,11 @@ namespace RaidBattlesBot
     private readonly TelemetryClient myTelemetryClient;
     private readonly IClock myClock;
     private readonly TimeSpan myNotificationLeadTime;
-    private readonly ITelegramBotClient myBot;
 
-    public NotificationService(RaidBattlesContext db, IEnumerable<ITelegramBotClient> bots, Func<ITelegramBotClient, RaidService> raidServiceFunc, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
+    public NotificationService(RaidBattlesContext db, RaidService raidService, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
     {
       myDB = db;
-      myBot = bots.First();
-      myRaidService = raidServiceFunc(myBot); // TODO: Select bot based on original message
+      myRaidService = raidService;
       myTelemetryClient = telemetryClient;
       myClock = clock;
       myNotificationLeadTime = options.Value.NotificationLeadTime;
@@ -75,6 +73,7 @@ namespace RaidBattlesBot
         var alreadyNotified = poll.Notifications.Select(notification => notification.ChatId).ToHashSet();
         foreach (var pollVote in poll.Votes)
         {
+          var botId = pollVote.BotId;
           var userId = pollVote.UserId;
           if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue;
           if (alreadyNotified.Contains(userId)) continue;
@@ -82,6 +81,7 @@ namespace RaidBattlesBot
           {
             var pollMessage = new PollMessage
             {
+              BotId = botId,
               UserId = userId,
               ChatId = userId,
               Poll = poll,
@@ -98,14 +98,14 @@ namespace RaidBattlesBot
               // Do not try to notify the user again for this poll
               poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = null});
               var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
-              exceptionTelemetry.Properties.Add(nameof(myBot.BotId), myBot.BotId.ToString());
+              exceptionTelemetry.Properties.Add(nameof(ITelegramBotClient.BotId), botId?.ToString());
               exceptionTelemetry.Properties.Add("UserId", userId.ToString());
               myTelemetryClient.TrackException(exceptionTelemetry);
             }
             else
               myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
               {
-                { nameof(myBot.BotId), myBot.BotId.ToString() },
+                { nameof(ITelegramBotClient.BotId), botId?.ToString() },
                 { "UserId", userId.ToString() }
               });
           }

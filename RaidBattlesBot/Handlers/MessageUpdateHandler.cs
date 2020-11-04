@@ -31,7 +31,7 @@ namespace RaidBattlesBot.Handlers
       var pollMessage = new PollMessage(message);
 
       var result = await processor(message, pollMessage, pollMessage.GetTrackingProperties(), cancellationToken);
-      if (result is bool success)
+      if (result is { } success)
       {
         if (success)
         {
@@ -46,11 +46,11 @@ namespace RaidBattlesBot.Handlers
           switch (pollMessage.Poll?.Raid)
           {
             // regular pokemons in private chat
-            case Raid raid when raid.RaidBossLevel == null && message.Chat?.Type == ChatType.Private:
+            case { RaidBossLevel: null } when message.Chat?.Type == ChatType.Private:
               goto case null;
 
             // raid pokemons everywhere
-            case Raid raid when raid.RaidBossLevel != null:
+            case { RaidBossLevel: { } }:
               goto case null;
 
             // polls without raids
@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
           }
         }
       }
-      else if ((message.ForwardFrom == null) && (message.ForwardFromChat == null) && (message.Type == MessageType.Text) && ((message.Entities?.Length).GetValueOrDefault() == 0))
+      else if (message.ForwardFrom == null && message.ForwardFromChat == null && message.Type == MessageType.Text && (message.Entities?.Length).GetValueOrDefault() == 0)
       {
         myCache.Set(message.Chat.Id, message, TimeSpan.FromSeconds(15));
       }

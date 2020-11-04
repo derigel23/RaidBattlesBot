@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
+        var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { BotId = myBot.BotId, PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
         var queryResults = new List<InlineQueryResultBase>();
         if (poll != null)

@@ -5,6 +5,7 @@ namespace RaidBattlesBot.Model
 {
   public class Vote : ITrackable
   {
+    public int? BotId { get; set; }
     public int PollId { get; set; }
     public int UserId { get; set; }
     public string Username { get; set; }

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace RaidBattlesBot.Handlers
@@ -16,13 +17,15 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly ChatInfo myChatInfo;
+    private readonly ITelegramBotClient myBot;
 
-    public CancelCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ChatInfo chatInfo)
+    public CancelCallbackQueryHandler(RaidBattlesContext context, RaidService raidService, IUrlHelper urlHelper, ChatInfo chatInfo, ITelegramBotClient bot)
     {
       myContext = context;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myChatInfo = chatInfo;
+      myBot = bot;
     }
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -34,7 +37,7 @@ namespace RaidBattlesBot.Handlers
       if (!PollEx.TryGetPollId(callback.ElementAtOrDefault(1), out var pollId, out var format))
         return ("Poll is publishing. Try later.", true, null);
 
-      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
+      var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { BotId = myBot.BotId, PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
       if (poll == null)
         return ("Poll is not found.", true, null);

@@ -17,7 +17,7 @@ namespace RaidBattlesBot.Model
     public PollMessage(ChosenInlineResult inlineResult)
     {
       UserId = inlineResult.From?.Id;
-      InlineMesssageId = inlineResult.InlineMessageId;
+      InlineMessageId = inlineResult.InlineMessageId;
     }
 
     public PollMessage(InlineQuery inlineResult)
@@ -28,18 +28,19 @@ namespace RaidBattlesBot.Model
     public PollMessage(CallbackQuery callbackQuery)
     {
       UserId = callbackQuery.From?.Id;
-      InlineMesssageId = callbackQuery.InlineMessageId;
+      InlineMessageId = callbackQuery.InlineMessageId;
       Chat = callbackQuery.Message?.Chat;
-      MesssageId = callbackQuery.Message?.MessageId;
+      MessageId = callbackQuery.Message?.MessageId;
     }
 
     public int Id { get; set; }
+    public int? BotId { get; set; }
     public int PollId { get; set; }
     public int? UserId { get; set; }
     public long? ChatId { get; set; }
     public ChatType? ChatType { get; set; }
-    public int? MesssageId { get; set; }
-    public string InlineMesssageId { get; set; }
+    public int? MessageId { get; set; }
+    public string InlineMessageId { get; set; }
     public PollMode? PollMode { get; set; }
     public DateTimeOffset? Modified { get; set; }
 
