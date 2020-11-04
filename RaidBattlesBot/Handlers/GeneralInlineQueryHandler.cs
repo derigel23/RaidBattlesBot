@@ -63,7 +63,7 @@ namespace RaidBattlesBot.Handlers
               exRaidGym = true;
             }
             var portalGuid = PortalEx.DecodeGuid(guid);
-            portal = await myIngressClient.Get(portalGuid, data.Location, cancellationToken);
+            portal = await myIngressClient.Get(portalGuid, await myDb.Set<UserSettings>().GetLocation(data, cancellationToken), cancellationToken);
             break;
           default:
             query += (query == null ? default(char?) : ' ') + queryPart;

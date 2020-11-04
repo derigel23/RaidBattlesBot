@@ -1,7 +1,6 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DelegateDecompiler;
 using GeoTimeZone;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,23 +12,26 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using Location = GoogleMapsApi.Entities.Common.Location;
 
 namespace RaidBattlesBot.Handlers
 {
   [MessageEntityType(EntityType = MessageEntityType.BotCommand)]
-  public class TimezoneCommandHandler : IMessageEntityHandler
+  public class UserSettingsCommandHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly IMemoryCache myCache;
     private readonly IClock myClock;
+    private readonly GeoCoder myGeoCoder;
 
-    public TimezoneCommandHandler(RaidBattlesContext context, ITelegramBotClient bot, IMemoryCache cache, IClock clock)
+    public UserSettingsCommandHandler(RaidBattlesContext context, ITelegramBotClient bot, IMemoryCache cache, IClock clock, GeoCoder geoCoder)
     {
       myContext = context;
       myBot = bot;
       myCache = cache;
       myClock = clock;
+      myGeoCoder = geoCoder;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
@@ -41,16 +43,17 @@ namespace RaidBattlesBot.Handlers
       switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/timezone":
+        case "/location":
           var author = entity.Message.From;
           var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
 
-          var content = GetMessage(settings);
+          var content = await GetMessage(settings, cancellationToken);
           var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
-            replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send your location to determine time zone") },
+            replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") },
               resizeKeyboard: true, oneTimeKeyboard: true),
             cancellationToken: cancellationToken);
 
-          myCache.GetOrCreate($"timezone{sentMessage.MessageId}", entry => true);
+          myCache.GetOrCreate(this[sentMessage.MessageId], entry => true);
           return false; // processed, but not pollMessage
 
         default:
@@ -58,9 +61,22 @@ namespace RaidBattlesBot.Handlers
       }
     }
 
-    private InputTextMessageContent GetMessage(UserSettings settings)
+    private string this[int messageId] => $"timezone{messageId}";
+      
+    private async Task<InputTextMessageContent> GetMessage(UserSettings settings, CancellationToken cancellationToken = default)
     {
       var contentBuilder = new StringBuilder();
+      if (settings is { Lat: {} lat, Lon: {} lon })
+      {
+        if ((await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken)) is {} geoDescription && geoDescription.Length > 0)
+        {
+          contentBuilder
+            .Append("Your location is ")
+            .Bold((b, mode) => b.Append(geoDescription))
+            .AppendLine();
+        }
+      }
+      
       if (settings?.TimeZoneId is { } timeZoneId && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is { } timeZone)
       {
         var zoneInterval = timeZone.GetZoneInterval(myClock.GetCurrentInstant());
@@ -77,9 +93,9 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> ProcessLocation(Message message, CancellationToken cancellationToken = default)
     {
-      if (message.Location is {} location && (message.ReplyToMessage?.MessageId ?? message.MessageId - 1) is { } commandMessageId && myCache.TryGetValue($"timezone{commandMessageId}", out bool _))
+      if (message.Location is {} location && (message.ReplyToMessage?.MessageId ?? message.MessageId - 1) is { } commandMessageId && this[commandMessageId] is {} cacheId && myCache.TryGetValue(cacheId, out bool _))
       {
-        myCache.Remove($"timezone{commandMessageId}");  
+        myCache.Remove(cacheId);  
       }
       else
       {
@@ -102,9 +118,12 @@ namespace RaidBattlesBot.Handlers
         settings.TimeZoneId = null;
       }
 
+      settings.Lat = (decimal?) location.Latitude;      
+      settings.Lon = (decimal?) location.Longitude;
+      
       await myContext.SaveChangesAsync(cancellationToken);
 
-      var content = GetMessage(settings);
+      var content = await GetMessage(settings, cancellationToken);
       await myBot.SendTextMessageAsync(message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
         replyMarkup: new ReplyKeyboardRemove(), cancellationToken: cancellationToken);
       

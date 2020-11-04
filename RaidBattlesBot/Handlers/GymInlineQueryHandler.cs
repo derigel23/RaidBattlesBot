@@ -46,7 +46,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var location = data.Location;
+      var location = await myDb.Set<UserSettings>().GetLocation(data, cancellationToken);
       var queryParts = data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
       
       var poll = default(Poll);

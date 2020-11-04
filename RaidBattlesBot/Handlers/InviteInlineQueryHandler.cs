@@ -31,8 +31,7 @@ namespace RaidBattlesBot.Handlers
       myDB = db;
     }
 
-    public async Task<bool?> Handle(InlineQuery data, object context = default,
-      CancellationToken cancellationToken = default)
+    public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       var queryParts = new StringSegment(data.Query).Split(new[] {' '}).FirstOrDefault().Split(new[] {':'});
 

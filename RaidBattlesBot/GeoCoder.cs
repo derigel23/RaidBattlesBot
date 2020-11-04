@@ -35,7 +35,7 @@ namespace RaidBattlesBot
 
     public const string Delimeter = " ∙ ";
 
-    public async Task<StringBuilder> GeoCode(Location location, StringBuilder description, CancellationToken cancellationToken = default)
+    public async Task<StringBuilder> GeoCode(Location location, StringBuilder description, int? maxDistanceToMetro, CancellationToken cancellationToken = default)
     {
       try
       {
@@ -56,7 +56,7 @@ namespace RaidBattlesBot
 
           var distanceElement = distanceMatrixResponse.Rows.FirstOrDefault()?.Elements.FirstOrDefault();
 
-          if (distanceElement?.Distance.Value <= myGeoCoderOptions.MaxDistanceToMetro)
+          if (distanceElement?.Distance.Value <= (maxDistanceToMetro ?? myGeoCoderOptions.MaxDistanceToMetro))
           {
             postProcessor = descr =>
               descr.Append($"{Delimeter}{distanceElement.Distance.Text}{Delimeter}{distanceElement.Duration.Text}");
@@ -72,7 +72,7 @@ namespace RaidBattlesBot
           { "results", 1.ToString() }
         }, cancellationToken);
         
-        foreach (var featureMember in metroResponse.GeoObjectCollection.featureMember)
+        foreach (var featureMember in metroResponse?.GeoObjectCollection?.featureMember ?? Enumerable.Empty<YandexMapsClient.FeatureMember>())
         {
           var geoObject = featureMember.GeoObject;
           if ((geoObject.Point.pos.Split(' ', 2) is { } parts) &&

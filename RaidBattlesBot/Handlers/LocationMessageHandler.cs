@@ -9,16 +9,16 @@ namespace RaidBattlesBot.Handlers
   [MessageType(UpdateType.Message, MessageType = MessageType.Location)]
   public class LocationMessageHandler : IMessageHandler
   {
-    private readonly TimezoneCommandHandler myTimezoneCommandHandler;
+    private readonly UserSettingsCommandHandler myUserSettingsCommandHandler;
 
-    public LocationMessageHandler(TimezoneCommandHandler timezoneCommandHandler)
+    public LocationMessageHandler(UserSettingsCommandHandler userSettingsCommandHandler)
     {
-      myTimezoneCommandHandler = timezoneCommandHandler;
+      myUserSettingsCommandHandler = userSettingsCommandHandler;
     }
     
     public async Task<bool?> Handle(Message data, (UpdateType updateType, PollMessage context) context = default, CancellationToken cancellationToken = default)
     {
-      return await myTimezoneCommandHandler.ProcessLocation(data, cancellationToken);
+      return await myUserSettingsCommandHandler.ProcessLocation(data, cancellationToken);
     }
   }
 }
