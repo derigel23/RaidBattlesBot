@@ -8,7 +8,7 @@ using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -27,59 +27,93 @@ namespace RaidBattlesBot.Handlers
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
       if (entity.Message.Chat.Type != ChatType.Private)
-        return false;
+        return null; // do not process in public chats
       
-      var commandText = entity.AfterValue.Trim();
+      if (IsSupportedCommand(entity))
+      {
+          return await Process(entity.Message.From, entity.AfterValue.Trim().ToString(), cancellationToken);
+      }
+
+      return null;
+    }
+
+    public async Task<bool?> Process(User user, string nickname, CancellationToken cancellationToken = default)
+    {
+      var player = await myContext.Set<Player>().Where(p => p.UserId == user.Id).FirstOrDefaultAsync(cancellationToken);
+      if (!string.IsNullOrEmpty(nickname))
+      {
+        if (player == null)
+        {
+          player = new Player
+          {
+            UserId = user.Id
+          };
+          myContext.Add(player);
+        }
+
+        player.Nickname = nickname;
+        await myContext.SaveChangesAsync(cancellationToken);
+      }
+
+      IReplyMarkup replyMarkup = null;
+      var builder = new StringBuilder();
+      if (!string.IsNullOrEmpty(player?.Nickname))
+      {
+        builder
+          .Append("Your IGN is ")
+          .Bold((b, mode) => b.Sanitize(player.Nickname, mode))
+          .AppendLine()
+          .AppendLine();
+
+        replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Clear IGN", $"{PlayerCallbackQueryHandler.ID}:clear"));
+      }
+
+      builder
+        .AppendLine("To set up your in-game-name reply with it to this message.")
+        .Append("Or use /ign command ")
+          .Code((b, mode) => b.Append("/ign your-in-game-name"))
+        .AppendLine(".");
+      
+      var content = builder.ToTextMessageContent();
+
+      await myBot.SendTextMessageAsync(user.Id, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+        replyMarkup: replyMarkup ?? new ForceReplyMarkup(), cancellationToken: cancellationToken);
+        
+      return false; // processed, but not pollMessage
+    }
+    
+    private static bool IsSupportedCommand(MessageEntityEx entity)
+    {
       switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/ign":
         case "/nick":
         case "/nickname":
-          var author = entity.Message.From;
-          var player = await myContext.Set<Player>().Where(p => p.UserId == author.Id).FirstOrDefaultAsync(cancellationToken);
-          var nickname = commandText.ToString();
-          if (string.IsNullOrEmpty(nickname))
-          {
-            if (player != null)
-            {
-              myContext.Remove(player);
-            }
-          }
-          else
-          {
-            if (player == null)
-            {
-              player = new Player
-              {
-                UserId = author.Id
-              };
-              myContext.Add(player);
-            }
-
-            player.Nickname = nickname;
-          }
-          await myContext.SaveChangesAsync(cancellationToken);
-          
-          InputTextMessageContent content;
-          if (string.IsNullOrEmpty(nickname))
-          {
-            content = new StringBuilder()
-              .Append("Your IGN is cleared.\r\nUse ")
-              .Code((b, m) => b.Append("/ign your-in-game-name"))
-              .Append(" command to set it up.")
-              .ToTextMessageContent();
-          }
-          else
-          {
-            content = new StringBuilder("Your IGN ").Code((b, mode) => b.Sanitize(nickname, mode)).Append(" is recorded.").ToTextMessageContent();
-          }
-          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, cancellationToken: cancellationToken);
-          
-          return false; // processed, but not pollMessage
+          return true;
 
         default:
-          return null;
+          return false;
       }
+    }
+
+    public async Task<bool?> HandleReply(Message message, CancellationToken cancellationToken = default)
+    {
+      if (message.Chat.Type != ChatType.Private)
+        return null; // do not check replies in public chats
+
+      if (message.ReplyToMessage is { } parentMessage)
+      {
+        foreach (var entity in parentMessage.Entities ?? Enumerable.Empty<MessageEntity>())
+        {
+          if (entity.Type != MessageEntityType.BotCommand) continue;
+          if (IsSupportedCommand(new MessageEntityEx(parentMessage, entity)))
+          {
+            return await Process(message.From, message.Text, cancellationToken);
+          }
+        }
+      }
+
+      return null;
     }
   }
 }

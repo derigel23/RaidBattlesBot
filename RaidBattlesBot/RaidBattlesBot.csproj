@@ -5,6 +5,7 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/8a362cd9-4d3b-411e-98e9-aac3d5107bcf/resourcegroups/team23/providers/microsoft.insights/components/RaidBattles</ApplicationInsightsAnnotationResourceId>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>448d0104-9efa-4624-8407-7e4c786927dd</UserSecretsId>
+    <DefaultItemExcludes>$(DefaultItemExcludes);PogoAssets\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="PogoAssets\**\*" />

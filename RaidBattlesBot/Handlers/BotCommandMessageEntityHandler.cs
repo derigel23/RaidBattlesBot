@@ -26,8 +26,9 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly SetCallbackQueryHandler mySetCallbackQueryHandler;
+    private readonly PlayerCommandsHandler myPlayerCommandsHandler;
 
-    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper, SetCallbackQueryHandler setCallbackQueryHandler)
+    public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper, SetCallbackQueryHandler setCallbackQueryHandler, PlayerCommandsHandler playerCommandsHandler)
     {
       myContext = context;
       myMessage = message;
@@ -35,6 +36,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       mySetCallbackQueryHandler = setCallbackQueryHandler;
+      myPlayerCommandsHandler = playerCommandsHandler;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage pollMessage, CancellationToken cancellationToken = default)
@@ -100,13 +102,7 @@ namespace RaidBattlesBot.Handlers
 
         // deep linking with IGN
         case "/start" when commandText.Equals("ign", StringComparison.Ordinal):
-          content = new StringBuilder()
-            .Append("To set up your in-game name use command ")
-            .Code((b, m) => b.Append("/ign your-in-game-name"))
-            .Append(".")
-            .ToTextMessageContent();
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
-          return false;
+          return await myPlayerCommandsHandler.Process(myMessage.From, null, cancellationToken);
 
         case "/p" when int.TryParse(commandText, out var pollId):
           var poll = await myContext

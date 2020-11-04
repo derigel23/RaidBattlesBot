@@ -16,11 +16,13 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.Text)]
   public class TextMessageHandler : TextMessageHandler<PollMessage, bool?, MessageEntityTypeAttribute>, IMessageHandler
   {
+    private readonly PlayerCommandsHandler myPlayerCommandsHandler;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(ITelegramBotClient bot, IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+    public TextMessageHandler(ITelegramBotClient bot, PlayerCommandsHandler playerCommandsHandler, IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
       : base(bot, messageEntityHandlers)
     {
+      myPlayerCommandsHandler = playerCommandsHandler;
       myDb = db;
     }
 
@@ -30,7 +32,7 @@ namespace RaidBattlesBot.Handlers
         return false;
 
       var (_, pollMessage) = _;
-      if (message.ForwardFromChat is Chat forwarderFromChat)
+      if (message.ForwardFromChat is { } forwarderFromChat)
       {
         var forwardedPollMessage = await myDb
           .Set<PollMessage>()
@@ -45,6 +47,11 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
+      if (await myPlayerCommandsHandler.HandleReply(message, cancellationToken) is {} replyProcessed)
+      {
+        return replyProcessed;
+      }
+      
       return await base.Handle(message, _, cancellationToken);
     }
   }
