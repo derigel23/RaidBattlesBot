@@ -256,16 +256,12 @@ namespace RaidBattlesBot.Model
           }))
       };
 
-      if (pollMode?.HasFlag(PollMode.Notification) ?? false)
+      if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
       {
         buttons.Add(new[]
         {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId} ")
+          InlineKeyboardButton.WithCallbackData("Notify", $"{NotifyCallbackQueryHandler.ID}:{pollId}")
         });
-      }
-
-      if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
-      {
         buttons.Add(new[]
         {
           InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}")

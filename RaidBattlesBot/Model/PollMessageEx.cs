@@ -15,14 +15,9 @@ namespace RaidBattlesBot.Model
   {
     public static async Task<InlineKeyboardMarkup> GetReplyMarkup(this PollMessage message, ChatInfo chatInfo, CancellationToken cancellationToken = default)
     {
+      var pollReplyMarkup = message.Poll.GetReplyMarkup(message.PollMode);
+      
       var messageChat = message.Chat;
-
-      var targetPollMode = message.PollMode;
-      if (messageChat?.Type == ChatType.Private && (targetPollMode?.HasFlag(PollMode.Invitation) ?? false))
-        targetPollMode |= PollMode.Notification;
-      
-      var pollReplyMarkup = message.Poll.GetReplyMarkup(targetPollMode);
-      
       if (messageChat == null) // inline message
         return pollReplyMarkup;
 
@@ -45,14 +40,6 @@ namespace RaidBattlesBot.Model
           inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(VoteEnum.Share.AsString(EnumFormat.DisplayName), $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
         }
         
-        // For Notify button on direct messages - direct notification in the same chat
-        if ((inlineKeyboardButton.SwitchInlineQuery?.StartsWith(NotifyInlineQueryHandler.PREFIX) ?? false) ||
-            (inlineKeyboardButton.SwitchInlineQueryCurrentChat?.StartsWith(NotifyInlineQueryHandler.PREFIX) ?? false))
-        {
-          modified = true;
-          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(inlineKeyboardButton.Text, $"{NotifyCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
-        }
-
         // For Invite button on direct messages - direct reply in the same chat
         if ((inlineKeyboardButton.SwitchInlineQuery?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false) ||
             (inlineKeyboardButton.SwitchInlineQueryCurrentChat?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false))

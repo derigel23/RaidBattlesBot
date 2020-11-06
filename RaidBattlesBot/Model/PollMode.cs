@@ -9,7 +9,6 @@ namespace RaidBattlesBot.Model
     Invitation = 1,
     Nicknames = 2,
     Names = 4,
-    Notification = 8,
     
     Default = Names
   }
