@@ -101,6 +101,9 @@ namespace RaidBattlesBot.Handlers
       if (message.Chat.Type != ChatType.Private)
         return null; // do not check replies in public chats
 
+      if (string.IsNullOrEmpty(message.Text) || message.Entities?.Length > 0)
+        return null; // just plain text messages
+      
       if (message.ReplyToMessage is { } parentMessage)
       {
         foreach (var entity in parentMessage.Entities ?? Enumerable.Empty<MessageEntity>())
