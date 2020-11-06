@@ -256,6 +256,14 @@ namespace RaidBattlesBot.Model
           }))
       };
 
+      if (pollMode?.HasFlag(PollMode.Notification) ?? false)
+      {
+        buttons.Add(new[]
+        {
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Notify", $"{NotifyInlineQueryHandler.PREFIX}{pollId} ")
+        });
+      }
+
       if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
       {
         buttons.Add(new[]
