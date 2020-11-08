@@ -71,9 +71,9 @@ namespace RaidBattlesBot.Model
       return thumbnail ?? poll.Raid().GetThumbUrl(urlHelper);
     }
 
-    private static StringBuilder GetTitleBase(this Poll poll, ParseMode mode)
+    private static StringBuilder GetTitleBase(this Poll poll, StringBuilder builder, ParseMode mode)
     {
-      var result = poll.Raid()?.GetDescription(mode) ?? new StringBuilder();
+      var result = poll.Raid()?.GetDescription(builder, mode) ?? builder;
       // if (poll.Time != null)
       // {
       //   if (result.Length > 0)
@@ -86,23 +86,29 @@ namespace RaidBattlesBot.Model
 
     public static string GetTitle(this Poll poll, ParseMode mode = ParseMode.Default)
     {
-      var title = poll.GetTitleBase(mode) ?? new StringBuilder();
-      if (title.Length == 0)
+      return GetTitle(poll, new StringBuilder(), mode).ToString();
+    }
+
+    public static StringBuilder GetTitle(this Poll poll, StringBuilder builder, ParseMode mode = Helpers.DefaultParseMode)
+    {
+      var initialLength = builder.Length;
+      var title = poll.GetTitleBase(builder, mode);
+      if (title.Length == initialLength)
       {
-        title.Bold((builder, m) => builder.Sanitize(poll.Title ?? $"Poll{poll.Id}", m), mode);
-        if (poll.Portal != null)
+        title.Bold((b, m) => b.Sanitize(poll.Title ?? $"Poll{poll.Id}", m), mode);
+        if (poll.Portal is { } portal)
         {
           title.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0", mode);
-          title.Bold((builder, m) => builder.Sanitize(poll.Portal.Name, m), mode);
+          title.Link(portal.Name, $"https://pogo.tools/{portal.Guid}", mode);
         }
       }
 
-      return title.ToString();
+      return title;
     }
 
     public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = Helpers.DefaultParseMode)
     {
-      var description = poll.GetTitleBase(mode);
+      var description = poll.GetTitleBase(new StringBuilder(), mode);
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)

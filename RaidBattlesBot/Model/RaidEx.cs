@@ -17,9 +17,9 @@ namespace RaidBattlesBot.Model
   {
     public const string Delimeter = " ∙ ";
     
-    public static StringBuilder GetDescription(this Raid raid, ParseMode mode = Helpers.DefaultParseMode)
+    public static StringBuilder GetDescription(this Raid raid, StringBuilder description, ParseMode mode = Helpers.DefaultParseMode)
     {
-      var description = new StringBuilder();
+      var initialLength = description.Length;
 
       description.Bold((builder, m) =>
       {
@@ -44,7 +44,7 @@ namespace RaidBattlesBot.Model
           .Bold((builder, m) => builder.Sanitize(raid.NearByAddress, m), mode);
       }
 
-      if (description.Length == 0)
+      if (description.Length == initialLength)
         description
           .Bold((builder, m) => builder.Sanitize(raid.Title, m), mode);
       
