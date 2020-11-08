@@ -30,16 +30,15 @@ namespace RaidBattlesBot
     private readonly IMemoryCache myMemoryCache;
     private readonly long? myLogChat;
 
-    public RaidService(RaidBattlesContext context, IEnumerable<ITelegramBotClient> bots, TelemetryClient telemetryClient, IMemoryCache memoryCache, Func<ITelegramBotClient, ChatInfo> chatInfo, IOptions<BotConfiguration> botOptions)
+    public RaidService(RaidBattlesContext context, IDictionary<int, ITelegramBotClient> bots, TelemetryClient telemetryClient, IMemoryCache memoryCache, Func<ITelegramBotClient, ChatInfo> chatInfo, IOptions<BotConfiguration> botOptions)
     {
       myContext = context;
       myTelemetryClient = telemetryClient;
       myMemoryCache = memoryCache;
       myLogChat = botOptions.Value?.LogChatId is { } chatId && chatId != default ? chatId : default(long?);
 
-      var botsMap = bots.ToDictionary(bot => bot.BotId);
-      var fallbackBot = botOptions.Value?.DefaultBotId is {} defaultBotId ? botsMap[defaultBotId] : botsMap.Values.First(); // at least one bot, default
-      myBot = botId => botId.HasValue && botsMap.TryGetValue(botId.Value, out var bot) ? bot : fallbackBot;
+      var fallbackBot = botOptions.Value?.DefaultBotId is {} defaultBotId ? bots[defaultBotId] : bots.Values.First(); // at least one bot, default
+      myBot = botId => botId.HasValue && bots.TryGetValue(botId.Value, out var bot) ? bot : fallbackBot;
       
       myChatInfo = botId => chatInfo(myBot(botId));
     }
