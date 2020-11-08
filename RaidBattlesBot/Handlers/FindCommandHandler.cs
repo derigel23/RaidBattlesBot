@@ -40,7 +40,7 @@ namespace RaidBattlesBot.Handlers
                 .FromSqlRaw(@"
                   SELECT P.UserId, {1} AS BotId, COALESCE(VV.Username, {0}) AS Username, VV.FirstName, VV.LastName, VV.Team, VV.Modified, -1 AS PollId FROM Players P
                   OUTER APPLY (SELECT TOP 1 * FROM Votes V WHERE V.UserId = P.UserId ORDER BY Modified DESC) VV
-                  WHERE UPPER(P.Nickname) = UPPER({0})", nickname, myBot.BotId)
+                  WHERE UPPER({0}) IN (SELECT UPPER(RTRIM(LTRIM(value))) FROM STRING_SPLIT(P.Nickname,','))", nickname, myBot.BotId)
                 .ToListAsync(cancellationToken))
               .Aggregate(builder, (sb, vote) => sb.Append(vote.User.GetLink()).NewLine());
 
