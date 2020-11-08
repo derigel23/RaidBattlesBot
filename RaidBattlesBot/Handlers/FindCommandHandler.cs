@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("find - find user by IGN", EntityType = MessageEntityType.BotCommand)]
+  [MessageEntityType("find - find user by IGN", EntityType = MessageEntityType.BotCommand, Order = -19)]
   public class FindCommandHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;

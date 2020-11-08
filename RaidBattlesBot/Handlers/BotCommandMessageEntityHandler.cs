@@ -17,7 +17,7 @@ using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("set - set custom poll formats\r\nhelp - show help", EntityType = MessageEntityType.BotCommand)]
+  [MessageEntityType("set - set custom poll formats\r\nhelp - show help", EntityType = MessageEntityType.BotCommand, Order = 50)]
   public class BotCommandMessageEntityHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;

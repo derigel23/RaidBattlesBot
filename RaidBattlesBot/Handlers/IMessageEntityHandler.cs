@@ -23,6 +23,8 @@ namespace RaidBattlesBot.Handlers
       return messageEntity.Type == EntityType;
     }
 
-    public int Order => (int) EntityType;
+    public int Order { get; set; }
+    
+    int IHandlerAttribute<MessageEntityEx, PollMessage>.Order => (int)EntityType * 100 + Order;
   }
 }
