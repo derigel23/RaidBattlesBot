@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac.Features.Metadata;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -19,7 +18,7 @@ namespace RaidBattlesBot.Handlers
     private readonly PlayerCommandsHandler myPlayerCommandsHandler;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(ITelegramBotClient bot, PlayerCommandsHandler playerCommandsHandler, IEnumerable<Meta<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
+    public TextMessageHandler(ITelegramBotClient bot, PlayerCommandsHandler playerCommandsHandler, IEnumerable<Lazy<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers, RaidBattlesContext db)
       : base(bot, messageEntityHandlers)
     {
       myPlayerCommandsHandler = playerCommandsHandler;

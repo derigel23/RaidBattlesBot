@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -10,8 +11,11 @@ namespace RaidBattlesBot.Handlers
   
   [MeansImplicitUse]
   [BaseTypeRequired(typeof(IMessageEntityHandler))]
-  public class MessageEntityTypeAttribute : Attribute, IHandlerAttribute<MessageEntityEx, PollMessage>
+  public class MessageEntityTypeAttribute : DescriptionAttribute, IHandlerAttribute<MessageEntityEx, PollMessage>
   {
+    public MessageEntityTypeAttribute() { }
+    public MessageEntityTypeAttribute(string description) : base(description) { }
+    
     public MessageEntityType EntityType { get; set; }
 
     public bool ShouldProcess(MessageEntityEx messageEntity, PollMessage context)

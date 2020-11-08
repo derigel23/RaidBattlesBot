@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac.Features.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using RaidBattlesBot.Model;
@@ -18,7 +17,7 @@ namespace RaidBattlesBot.Handlers
     private readonly IMemoryCache myCache;
     private readonly IUrlHelper myUrlHelper;
 
-    public MessageUpdateHandler(RaidService raidService, IMemoryCache cache, IUrlHelper urlHelper, IEnumerable<Meta<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers)
+    public MessageUpdateHandler(RaidService raidService, IMemoryCache cache, IUrlHelper urlHelper, IEnumerable<Lazy<Func<Message, IMessageHandler>, MessageTypeAttribute>> messageHandlers)
       : base(messageHandlers)
     {
       myRaidService = raidService;

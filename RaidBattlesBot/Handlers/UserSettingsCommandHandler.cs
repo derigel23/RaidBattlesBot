@@ -16,7 +16,7 @@ using Location = GoogleMapsApi.Entities.Common.Location;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType(EntityType = MessageEntityType.BotCommand)]
+  [MessageEntityType("location - set user's home location", EntityType = MessageEntityType.BotCommand)]
   public class UserSettingsCommandHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
