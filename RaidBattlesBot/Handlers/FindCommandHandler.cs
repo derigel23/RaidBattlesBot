@@ -38,9 +38,9 @@ namespace RaidBattlesBot.Handlers
             builder = (await myContext
                 .Set<Vote>()
                 .FromSqlRaw(@"
-                  SELECT P.UserId, COALESCE(VV.Username, {0}) AS Username, VV.FirstName, VV.LastName, VV.Team, VV.Modified, -1 AS PollId FROM Players P
+                  SELECT P.UserId, {1} AS BotId, COALESCE(VV.Username, {0}) AS Username, VV.FirstName, VV.LastName, VV.Team, VV.Modified, -1 AS PollId FROM Players P
                   OUTER APPLY (SELECT TOP 1 * FROM Votes V WHERE V.UserId = P.UserId ORDER BY Modified DESC) VV
-                  WHERE UPPER(P.Nickname) = UPPER({0})", nickname)
+                  WHERE UPPER(P.Nickname) = UPPER({0})", nickname, myBot.BotId)
                 .ToListAsync(cancellationToken))
               .Aggregate(builder, (sb, vote) => sb.Append(vote.User.GetLink()).NewLine());
 
