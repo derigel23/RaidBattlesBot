@@ -12,7 +12,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("ign - set in-game-name", EntityType = MessageEntityType.BotCommand)]
+  [MessageEntityType("ign - set in-game-name (IGN)", EntityType = MessageEntityType.BotCommand)]
   public class PlayerCommandsHandler : IMessageEntityHandler
   {
     private readonly RaidBattlesContext myContext;
