@@ -90,6 +90,8 @@ namespace RaidBattlesBot.Model
         builder.HasKey(settings => settings.UserId);
         builder.Property(settings => settings.UserId).ValueGeneratedNever();
         builder.Property(settings => settings.TimeZoneId).HasMaxLength(32);
+        builder.Property(p => p.Lat).HasColumnType("decimal(18,15)");
+        builder.Property(p => p.Lon).HasColumnType("decimal(18,15)");
       });
     }
 
