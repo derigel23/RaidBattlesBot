@@ -87,7 +87,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      return ("You must copy notification message and post it by yourself", true, null);
+      return ("You must copy a notification message and post it by yourself", true, null);
     }
   }
 }
