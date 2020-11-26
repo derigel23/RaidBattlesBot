@@ -144,7 +144,9 @@ namespace RaidBattlesBot.Handlers
           }
         }
         
-        return (votedTeam.GetAttributes()?.Get<DisplayAttribute>()?.Description ?? "You've voted", false, null);
+        return (votedTeam.GetAttributes()?.Get<DisplayAttribute>()?.Description ??
+                team.GetAttributes()?.Get<DisplayAttribute>()?.Description ??
+                "You've voted", false, null);
       }
 
       return ("You've already voted.", false, null);

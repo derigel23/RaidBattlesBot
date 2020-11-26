@@ -266,22 +266,38 @@ namespace RaidBattlesBot
 
     public async Task UpdatePoll(Poll poll, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      static bool NeedNickname(PollMessage message) => message.PollMode?.HasFlag(PollMode.Nicknames) ?? false;
-      Func<User, StringBuilder, ParseMode, StringBuilder> nicknamesUserFormatter = null;
-      if (poll.Messages.Any(NeedNickname))
-      {
-        nicknamesUserFormatter = await GetNicknamesUserFormatter(poll, cancellationToken);
-      }
       foreach (var message in poll.Messages)
       {
-        await UpdatePollMessage(message, urlHelper, NeedNickname(message) ? nicknamesUserFormatter : null, cancellationToken);
+        await UpdatePollMessage(message, urlHelper, cancellationToken);
       }
     }
 
     public async Task UpdatePollMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      var nicknamesUserFormatter = pollMessage.PollMode?.HasFlag(PollMode.Nicknames) ?? false ? await GetNicknamesUserFormatter(pollMessage.Poll, cancellationToken) : null;
-      await UpdatePollMessage(pollMessage, urlHelper, nicknamesUserFormatter, cancellationToken);
+      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null;
+      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null;
+      
+      switch (pollMessage.PollMode)
+      {
+        case { } mode when mode.HasFlag(PollMode.Nicknames):
+          userFormatter = await GetNicknamesUserFormatter(pollMessage.Poll, cancellationToken);
+          break;
+          
+        case { } mode when mode.HasFlag(PollMode.Usernames):
+          userGroupFormatter = (vote, compactMode, builder, parseMode) =>
+            builder
+              .Sanitize(vote.Key?.Description()).Append('\x00A0')
+              .Code((b, m) =>
+              {
+                var initial = b.Length;
+                return vote.OrderBy(v => v.Modified).Aggregate(b, (bb, v) =>
+                  (string.IsNullOrEmpty(v.Username) ? UserEx.DefaultUserExtractor(v.User, bb, m) : bb.Append('@').Append(v.Username)).Append(" "));
+              })
+              .NewLine();
+          break;
+      }
+      
+      await UpdatePollMessage(pollMessage, urlHelper, userFormatter, userGroupFormatter, cancellationToken);
     }
 
     private async Task<Func<User, StringBuilder, ParseMode, StringBuilder>> GetNicknamesUserFormatter(Poll poll, CancellationToken cancellationToken = default)
@@ -295,14 +311,21 @@ namespace RaidBattlesBot
         nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname, mode) : 
           builder.Italic((b, m) => _ = user.Username is {} username ? b.Sanitize(username, m) : UserEx.DefaultUserExtractor(user, b, m), mode);
     }
+    
+    private Func<User, StringBuilder, ParseMode, StringBuilder> GetUsernamesUserFormatter()
+    {
+      return (user, builder, mode) => 
+        string.IsNullOrEmpty(user.Username) ? builder.Append(user.GetLink()) : builder.Append('@').Append(user.Username);
+    }
 
-    private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, CancellationToken cancellationToken = default)
+    private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null,
+      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null, CancellationToken cancellationToken = default)
     {
       try
       {
         var bot = myBot(message.BotId);
         var chatInfo = myChatInfo(message.BotId);
-        var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, disableWebPreview: message.Poll.DisableWebPreview());
+        var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, userGroupFormatter: userGroupFormatter, disableWebPreview: message.Poll.DisableWebPreview());
         if (message.InlineMessageId is { } inlineMessageId)
         {
           await bot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,

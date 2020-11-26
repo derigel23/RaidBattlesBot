@@ -146,7 +146,8 @@ namespace RaidBattlesBot.Model
       return description;
     }
 
-    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode parseMode = Helpers.DefaultParseMode, bool disableWebPreview = false, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null)
+    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode parseMode = Helpers.DefaultParseMode, bool disableWebPreview = false,
+      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null)
     {
       var text = poll.GetDescription(urlHelper, parseMode).NewLine();
       text.Append(" "); // for better presentation in telegram pins & notifications
@@ -203,6 +204,12 @@ namespace RaidBattlesBot.Model
 
           foreach (var vote in voteGroup.GroupBy(_ => _.Team?.RemoveFlags(VoteEnum.Modifiers)).OrderBy(_ => _.Key))
           {
+            if (userGroupFormatter != null)
+            {
+              userGroupFormatter(vote, compactMode, result, parseMode);
+              continue;
+            }
+            
             var votes = vote.OrderBy(v => v.Modified);
             if (compactMode)
             {
@@ -264,10 +271,6 @@ namespace RaidBattlesBot.Model
 
       if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
       {
-        buttons.Add(new[]
-        {
-          InlineKeyboardButton.WithCallbackData("Notify", $"{NotifyCallbackQueryHandler.ID}:{pollId}")
-        });
         buttons.Add(new[]
         {
           InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}")

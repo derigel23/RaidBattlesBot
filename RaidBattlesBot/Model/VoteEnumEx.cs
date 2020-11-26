@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using EnumsNET;
@@ -34,9 +35,11 @@ namespace RaidBattlesBot.Model
 
         public static KeyValuePair<VoteEnum, PollMode>[] GetPollModes(this VoteEnum vote) =>
             vote
-                .GetFlags().Select(v => KeyValuePair.Create(v, v.GetPollMode())).Where(_ => _.Value != null)
+                .GetFlags()
+                .Select(v => KeyValuePair.Create(v, v.GetPollMode())).Where(_ => _.Value != null)
                 .DefaultIfEmpty(KeyValuePair.Create(vote, vote.GetPollMode())).Where(_ => _.Value != null)
                 .Select(pair => KeyValuePair.Create(pair.Key, pair.Value.Value))
+                .OrderBy(pair => pair.Key.GetAttributes()?.Get<DisplayAttribute>()?.GetOrder())
                 .ToArray();
     
         public static readonly ICollection<VoteEnum> DefaultVoteFormats = new []
