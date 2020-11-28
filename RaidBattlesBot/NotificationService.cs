@@ -97,10 +97,6 @@ namespace RaidBattlesBot
             {
               // Do not try to notify the user again for this poll
               poll.Notifications.Add(new Notification { PollId = poll.Id, ChatId = userId, DateTime = null});
-              var exceptionTelemetry = new ExceptionTelemetry(ex) { SeverityLevel = SeverityLevel.Warning };
-              exceptionTelemetry.Properties.Add(nameof(ITelegramBotClient.BotId), botId?.ToString());
-              exceptionTelemetry.Properties.Add("UserId", userId.ToString());
-              myTelemetryClient.TrackException(exceptionTelemetry);
             }
             else
               myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
