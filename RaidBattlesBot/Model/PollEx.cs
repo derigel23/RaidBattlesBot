@@ -251,13 +251,16 @@ namespace RaidBattlesBot.Model
                 int enabledFlag = -1;
                 for (var i = 0; i < votePollModes.Length; i++)
                 {
-                  if (enabledFlag < 0 && (pollMode?.HasFlag(votePollModes[i].Value) ?? false))
+                  if (enabledFlag < 0 && (pollMode ?? PollMode.Default).HasFlag(votePollModes[i].Value))
                   {
                     enabledFlag = i;
                   }
                 }
 
-                display = votePollModes[++enabledFlag % votePollModes.Length].Key.AsString(EnumFormat.DisplayName);
+                if (enabledFlag >= 0)
+                {
+                  display = votePollModes[++enabledFlag % votePollModes.Length].Key.AsString(EnumFormat.DisplayName);
+                }
             }
 
             display ??= vote.AsString(EnumFormat.DisplayName);

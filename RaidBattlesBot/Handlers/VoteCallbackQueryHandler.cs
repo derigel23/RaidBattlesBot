@@ -96,9 +96,12 @@ namespace RaidBattlesBot.Handlers
             pollMode = pollMode.RemoveFlags(votePollModes[i].Value);
           }
 
-          var votedPollMode = votePollModes[++enabledFlag % votePollModes.Length];
-          pollMessage.PollMode = pollMode.CombineFlags(votedPollMode.Value);
-          votedTeam = votedPollMode.Key.RemoveFlags(VoteEnum.Modifiers);
+          if (enabledFlag >= 0)
+          {
+            var votedPollMode = votePollModes[++enabledFlag % votePollModes.Length];
+            pollMessage.PollMode = pollMode.CombineFlags(votedPollMode.Value);
+            votedTeam = votedPollMode.Key.RemoveFlags(VoteEnum.Modifiers);
+          }
           break;
       }
 
