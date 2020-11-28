@@ -274,50 +274,67 @@ namespace RaidBattlesBot
 
     public async Task UpdatePollMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null;
-      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null;
-      
+      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter;
+
+      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> UserGroupFormatter(string delimiter, Func<StringBuilder, StringBuilder> postAction = null) =>
+        (vote, compactMode, builder, parseMode) =>
+          builder.Sanitize(vote.Key?.Description())
+            .Append('\x00A0')
+            .Code((b, m) =>
+            {
+              var initialLength = b.Length;
+              b = vote.OrderBy(v => v.Modified).Aggregate(b, (bb, v) =>
+                  (userFormatter ?? UserEx.DefaultUserExtractor)(v.User, bb.Append(bb.Length == initialLength ? null : delimiter), m));
+              return postAction != null ? postAction(b) : b;
+            })
+            .NewLine();
+
       switch (pollMessage.PollMode)
       {
         case { } mode when mode.HasFlag(PollMode.Nicknames):
           userFormatter = await GetNicknamesUserFormatter(pollMessage.Poll, cancellationToken);
+          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, UserGroupFormatter(", "), cancellationToken);
           break;
           
         case { } mode when mode.HasFlag(PollMode.Usernames):
-          userGroupFormatter = (vote, compactMode, builder, parseMode) =>
-            builder
-              .Sanitize(vote.Key?.Description()).Append('\x00A0')
-              .Code((b, m) =>
-              {
-                var initial = b.Length;
-                return vote.OrderBy(v => v.Modified).Aggregate(b, (bb, v) =>
-                  (string.IsNullOrEmpty(v.Username) ? UserEx.DefaultUserExtractor(v.User, bb, m) : bb.Append('@').Append(v.Username)).Append(" "));
-              })
-              .NewLine();
+          userFormatter = (user, b, m) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b, m) : b.Append('@').Append(user.Username);
+          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, UserGroupFormatter(" ", b => b.Append(" ")), cancellationToken);
+          break;
+        
+        default:
+          var nicknames = await GetNicknames(pollMessage.Poll, cancellationToken);
+          userFormatter = (user, b, m) => nicknames.ContainsKey(user.Id) ?
+            UserEx.DefaultUserExtractor(user, b, m) :
+            b.Italic((bb, mm) => UserEx.DefaultUserExtractor(user, bb, mm));
+          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, null, cancellationToken);
           break;
       }
       
-      await UpdatePollMessage(pollMessage, urlHelper, userFormatter, userGroupFormatter, cancellationToken);
+    }
+
+    private async Task<Dictionary<int, string>> GetNicknames(Poll poll, CancellationToken cancellationToken = default)
+    {
+      return await myMemoryCache.GetOrCreateAsync($"Nicknames:{poll.Id}",
+        async entry =>
+        {
+          entry.SlidingExpiration = TimeSpan.FromSeconds(3);
+
+          var userIDs = poll.Votes.Select(_ => _.UserId).ToList();
+          return (await myContext.Set<Player>()
+              .Where(player => userIDs.Contains(player.UserId)).ToListAsync(cancellationToken))
+            .ToDictionary(player => player.UserId, player => player.Nickname);
+        });
     }
 
     private async Task<Func<User, StringBuilder, ParseMode, StringBuilder>> GetNicknamesUserFormatter(Poll poll, CancellationToken cancellationToken = default)
     {
-      var userIDs = poll.Votes.Select(_ => _.UserId).ToList();
-      var nicknames = (await myContext.Set<Player>()
-        .Where(player => userIDs.Contains(player.UserId)).ToListAsync(cancellationToken))
-        .ToDictionary(player => player.UserId, player => player.Nickname);
+      var nicknames = await GetNicknames(poll, cancellationToken);
 
       return (user, builder, mode) => 
         nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname, mode) : 
           builder.Italic((b, m) => _ = user.Username is {} username ? b.Sanitize(username, m) : UserEx.DefaultUserExtractor(user, b, m), mode);
     }
     
-    private Func<User, StringBuilder, ParseMode, StringBuilder> GetUsernamesUserFormatter()
-    {
-      return (user, builder, mode) => 
-        string.IsNullOrEmpty(user.Username) ? builder.Append(user.GetLink()) : builder.Append('@').Append(user.Username);
-    }
-
     private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null,
       Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null, CancellationToken cancellationToken = default)
     {
