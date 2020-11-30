@@ -274,7 +274,8 @@ namespace RaidBattlesBot
 
     public async Task UpdatePollMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter;
+      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null;
+      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null;
 
       Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> UserGroupFormatter(string delimiter, Func<StringBuilder, StringBuilder> postAction = null) =>
         (vote, compactMode, builder, parseMode) =>
@@ -293,23 +294,25 @@ namespace RaidBattlesBot
       {
         case { } mode when mode.HasFlag(PollMode.Nicknames):
           userFormatter = await GetNicknamesUserFormatter(pollMessage.Poll, cancellationToken);
-          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, UserGroupFormatter(", "), cancellationToken);
-          break;
+          userGroupFormatter = UserGroupFormatter(", ");
+          goto default;
           
         case { } mode when mode.HasFlag(PollMode.Usernames):
           userFormatter = (user, b, m) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b, m) : b.Append('@').Append(user.Username);
-          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, UserGroupFormatter(" ", b => b.Append(" ")), cancellationToken);
-          break;
+          userGroupFormatter = UserGroupFormatter(" ", b => b.Append(" "));
+          goto default;
         
-        default:
+        case { } mode when mode.HasFlag(PollMode.Invitation) || (pollMessage.Poll.AllowedVotes ?? VoteEnum.Standard).HasFlag(VoteEnum.Invitation):
           var nicknames = await GetNicknames(pollMessage.Poll, cancellationToken);
           userFormatter = (user, b, m) => nicknames.ContainsKey(user.Id) ?
             UserEx.DefaultUserExtractor(user, b, m) :
             b.Italic((bb, mm) => UserEx.DefaultUserExtractor(user, bb, mm));
-          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, null, cancellationToken);
+          goto default;
+          
+        default:
+          await UpdatePollMessage(pollMessage, urlHelper, userFormatter, userGroupFormatter, cancellationToken);
           break;
       }
-      
     }
 
     private async Task<Dictionary<int, string>> GetNicknames(Poll poll, CancellationToken cancellationToken = default)
