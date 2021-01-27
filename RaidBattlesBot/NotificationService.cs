@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
