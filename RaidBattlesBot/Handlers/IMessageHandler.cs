@@ -17,6 +17,8 @@ namespace RaidBattlesBot.Handlers
     // by default only for new messages
     public MessageTypeAttribute() : this(UpdateType.Message, UpdateType.ChannelPost) { }
 
+    public const MessageType AllMessageTypes = (MessageType) Int32.MaxValue;
+    
     public MessageTypeAttribute(params UpdateType[] updateTypes)
     {
       UpdateTypes = updateTypes;
@@ -28,7 +30,7 @@ namespace RaidBattlesBot.Handlers
     
     public bool ShouldProcess(Message message, (UpdateType updateType, PollMessage pollMessage) context)
     {
-      return UpdateTypes.Contains(context.updateType) && message.Type == MessageType;
+      return UpdateTypes.Contains(context.updateType) && (MessageType == AllMessageTypes || message.Type == MessageType);
     }
 
     public int Order => (int) MessageType;
