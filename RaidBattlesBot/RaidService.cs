@@ -242,8 +242,10 @@ namespace RaidBattlesBot
       var content = message.Poll.GetMessageText(urlHelper, disableWebPreview: message.Poll.DisableWebPreview());
       if (message.Chat is { } chat)
       {
-        var postedMessage = await myBot(message.BotId).SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+        var bot = myBot(message.BotId);
+        var postedMessage = await bot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
           replyMarkup: await message.GetReplyMarkup(myChatInfo(message.BotId), cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
+        message.BotId = bot.BotId;
         message.Chat = postedMessage.Chat;
         message.MessageId = postedMessage.MessageId;
       }
