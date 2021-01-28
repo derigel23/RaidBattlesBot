@@ -19,12 +19,14 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myBot;
+    private readonly IDictionary<int, ITelegramBotClient> myBots;
     private readonly RaidBattlesContext myDB;
 
-    public ReplyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, RaidBattlesContext db)
+    public ReplyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, IDictionary<int, ITelegramBotClient> bots, RaidBattlesContext db)
     {
       myTelemetryClient = telemetryClient;
       myBot = bot;
+      myBots = bots;
       myDB = db;
     }
     
@@ -35,11 +37,11 @@ namespace RaidBattlesBot.Handlers
         foreach (var buttons in parentInlineKeyboard)
         foreach (var button in buttons)
         {
-          if (button.CallbackData is { } buttonCallbackData)
+          if (button.CallbackData is { } buttonCallbackData && buttonCallbackData.Split(":", 3) is {} callbackDataParts)
           {
-            foreach (var part in buttonCallbackData.Split(':'))
+            if (callbackDataParts.Length > 1 && callbackDataParts[0] == VoteCallbackQueryHandler.ID)
             {
-              if (PollEx.TryGetPollId(part, out var pollId, out var format))
+              if (PollEx.TryGetPollId(callbackDataParts[1], out var pollId, out _))
               {
                 var poll = await myDB
                   .Set<Model.Poll>()
@@ -64,7 +66,11 @@ namespace RaidBattlesBot.Handlers
                   if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue; // do not notify bailed people
                   try
                   {
-                    await myBot.ForwardMessageAsync(userId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
+                    if (!(botId is { } pollBotId && myBots.TryGetValue(pollBotId, out var bot)))
+                    {
+                      bot = myBot;
+                    }
+                    await bot.ForwardMessageAsync(userId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
                   }
                   catch (Exception ex)
                   {
