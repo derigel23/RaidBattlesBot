@@ -50,6 +50,8 @@ namespace RaidBattlesBot.Handlers
                   .FirstOrDefaultAsync(cancellationToken);
 
                 if (poll == null) return default;
+
+                var replyNotifications = myDB.Set<ReplyNotification>();
                 
                 context.context = new PollMessage(message)
                 {
@@ -58,19 +60,29 @@ namespace RaidBattlesBot.Handlers
                   PollId = pollId,
                   Poll = poll
                 };
+                ITelegramBotClient bot = null;
                 foreach (var pollVote in poll.Votes)
                 {
-                  var botId = pollVote.BotId;
                   var userId = pollVote.UserId;
                   if (userId == message.From.Id) continue; // do not notify itself
                   if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue; // do not notify bailed people
                   try
                   {
-                    if (!(botId is { } pollBotId && myBots.TryGetValue(pollBotId, out var bot)))
+                    if (!(pollVote.BotId is { } botId && myBots.TryGetValue(botId, out bot)))
                     {
                       bot = myBot;
                     }
-                    await bot.ForwardMessageAsync(userId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
+                    var fm = await bot.ForwardMessageAsync(userId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
+                    replyNotifications.Add(new ReplyNotification
+                    {
+                      BotId = bot.BotId,
+                      ChatId = fm.Chat.Id,
+                      MessageId = fm.MessageId,
+                      FromChatId = message.Chat.Id,
+                      FromMessageId = message.MessageId,
+                      PollId = pollId,
+                      Poll = poll
+                    });
                   }
                   catch (Exception ex)
                   {
@@ -80,11 +92,14 @@ namespace RaidBattlesBot.Handlers
                     else
                       myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
                       {
-                        { nameof(ITelegramBotClient.BotId), botId?.ToString() },
+                        { nameof(ITelegramBotClient.BotId), bot?.BotId .ToString() },
                         { "UserId", userId.ToString() }
                       });
                   }
                 }
+
+                await myDB.SaveChangesAsync(cancellationToken);
+                
                 return true;
               }
             }

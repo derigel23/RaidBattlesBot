@@ -83,6 +83,15 @@ namespace RaidBattlesBot.Model
           .WithMany(poll => poll.Notifications)
           .HasForeignKey(notification => notification.PollId);
       });
+      
+      modelBuilder.Entity<ReplyNotification>(builder =>
+      {
+        builder.ToTable("ReplyNotifications");
+        builder.HasKey(notification => new { notification.ChatId, notification.MessageId });
+        builder.HasOne(notification => notification.Poll)
+          .WithMany()
+          .HasForeignKey(notification => notification.PollId);
+      });
      
       modelBuilder.Entity<UserSettings>(builder =>
       {
