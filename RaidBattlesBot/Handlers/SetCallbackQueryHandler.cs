@@ -90,7 +90,9 @@ namespace RaidBattlesBot.Handlers
         default:
           var buttons = new []
             {
-              VoteEnum.Team,
+              VoteEnum.Valor,
+              VoteEnum.Instinct,
+              VoteEnum.Mystic,
               VoteEnum.TeamHarmony,
               VoteEnum.Plus1,
               VoteEnum.Remotely,
