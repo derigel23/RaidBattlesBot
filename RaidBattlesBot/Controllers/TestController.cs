@@ -1,10 +1,22 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
+using Telegram.Bot;
 
 namespace RaidBattlesBot.Controllers
 {
   public class TestController : Controller
   {
+    private readonly ITelegramBotClient myBot;
+
+    public TestController(IEnumerable<ITelegramBotClient> bots)
+    {
+      myBot = bots.FirstOrDefault();
+    }
+    
     [Route("/decode/{id}")]
     public IActionResult Index(string id)
     {
@@ -18,6 +30,12 @@ namespace RaidBattlesBot.Controllers
         });
 
       return UnprocessableEntity();
+    }
+  
+    [Route("/info/{id}")]
+    public async Task<IActionResult> Info(int id, CancellationToken cancellationToken = default)
+    {
+      return Json(await myBot.GetChatAsync(id, cancellationToken));
     }
   }
 }
