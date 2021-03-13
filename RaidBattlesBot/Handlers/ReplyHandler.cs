@@ -80,6 +80,7 @@ namespace RaidBattlesBot.Handlers
                       MessageId = fm.MessageId,
                       FromChatId = message.Chat.Id,
                       FromMessageId = message.MessageId,
+                      FromUserId = message.From.Id,
                       PollId = pollId,
                       Poll = poll
                     });

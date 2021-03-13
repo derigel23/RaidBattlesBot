@@ -10,6 +10,7 @@ namespace RaidBattlesBot.Model
     public int MessageId { get; set; }
     public long FromChatId { get; set; }
     public int FromMessageId { get; set; }
+    public int? FromUserId { get; set; }
     public DateTimeOffset? Modified { get; set; }
     
     public Poll Poll { get; set; }
