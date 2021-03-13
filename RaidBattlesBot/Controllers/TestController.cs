@@ -33,7 +33,7 @@ namespace RaidBattlesBot.Controllers
     }
   
     [Route("/info/{id}")]
-    public async Task<IActionResult> Info(int id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Info(long id, CancellationToken cancellationToken = default)
     {
       return Json(await myBot.GetChatAsync(id, cancellationToken));
     }
