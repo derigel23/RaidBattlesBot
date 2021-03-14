@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,10 +33,16 @@ namespace RaidBattlesBot.Controllers
       return UnprocessableEntity();
     }
   
-    [Route("/info/{id}")]
-    public async Task<IActionResult> Info(long id, CancellationToken cancellationToken = default)
+    [Route("/info/{chatId}/{userId?}")]
+    public async Task<IActionResult> Info(long chatId, int? userId, CancellationToken cancellationToken = default)
     {
-      return Json(await myBot.GetChatAsync(id, cancellationToken));
+      dynamic result = new ExpandoObject();
+      result["chat"]  = await myBot.GetChatAsync(chatId, cancellationToken);
+      if (userId is {} uid)
+      {
+        result["user"] = await myBot.GetChatMemberAsync(chatId, uid, cancellationToken);
+      }
+      return Json(result);
     }
   }
 }
