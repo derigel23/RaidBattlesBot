@@ -16,19 +16,19 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="Autofac" Version="6.1.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
-    <PackageReference Include="DelegateDecompiler.EntityFrameworkCore" Version="0.28.2" />
-    <PackageReference Include="Enums.NET" Version="3.0.3" />
+    <PackageReference Include="DelegateDecompiler.EntityFrameworkCore" Version="0.29.1" />
+    <PackageReference Include="Enums.NET" Version="4.0.0" />
     <PackageReference Include="Geolocation" Version="1.2.1" />
     <PackageReference Include="GoogleMapsApi" Version="0.80.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.16.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.17.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NodaTime" Version="3.0.3" />
-    <PackageReference Include="NodaTime.Testing" Version="3.0.3" />
+    <PackageReference Include="NodaTime" Version="3.0.5" />
+    <PackageReference Include="NodaTime.Testing" Version="3.0.5" />
     <PackageReference Include="OpenLocationCode" Version="2.1.1" />
     <PackageReference Include="SimpleBase" Version="3.0.2" />
     <PackageReference Include="Telegram.Bot" Version="15.7.1" />

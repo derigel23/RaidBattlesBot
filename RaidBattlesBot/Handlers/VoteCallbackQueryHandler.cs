@@ -66,7 +66,7 @@ namespace RaidBattlesBot.Handlers
       var user = data.From;
 
       var teamAbbr = callback.ElementAt(2);
-      if (!FlagEnums.TryParseFlags(teamAbbr.Value, out VoteEnum team, EnumFormat.HexadecimalValue, EnumFormat.Name))
+      if (!FlagEnums.TryParseFlags(teamAbbr.Value, true, null, out VoteEnum team, EnumFormat.HexadecimalValue, EnumFormat.Name))
         return ("Invalid vote", true, null);
 
       var clearTeam = team.RemoveFlags(VoteEnum.Modifiers);

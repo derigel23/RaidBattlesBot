@@ -73,7 +73,7 @@ namespace RaidBattlesBot.Handlers
           await myContext.SaveChangesAsync(cancellationToken);
           return await Return(await SettingsList(chatId, cancellationToken), "Poll format is deleted.");
         
-        case var format when FlagEnums.TryParseFlags(format, out VoteEnum toggleVotes, EnumFormat.DecimalValue):
+        case var format when FlagEnums.TryParseFlags(format, true, null, out VoteEnum toggleVotes, EnumFormat.DecimalValue):
           settings.Format = FlagEnums.ToggleFlags(settings.Format, toggleVotes);
           // adjust ⁺¹
           if (settings.Format.HasAnyFlags(VoteEnum.Plus) && !settings.Format.HasAnyFlags(VoteEnum.Countable))

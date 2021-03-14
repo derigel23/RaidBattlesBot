@@ -26,7 +26,7 @@ namespace RaidBattlesBot
       var parameters = new QueryBuilder
       {
         {"id", guid},
-        {"type", Enums.Format(type, EnumFormat.UnderlyingValue)}
+        {"type", type.AsString(EnumFormat.UnderlyingValue)}
       };
 
       const string importWayspot = "import/wayspot";
