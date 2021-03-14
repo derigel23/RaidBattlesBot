@@ -36,11 +36,11 @@ namespace RaidBattlesBot.Controllers
     [Route("/info/{chatId}/{userId?}")]
     public async Task<IActionResult> Info(long chatId, int? userId, CancellationToken cancellationToken = default)
     {
-      dynamic result = new ExpandoObject();
+      IDictionary<string, object> result = new ExpandoObject();
       result["chat"]  = await myBot.GetChatAsync(chatId, cancellationToken);
       if (userId is {} uid)
       {
-        result["user"] = await myBot.GetChatMemberAsync(chatId, uid, cancellationToken);
+        result["member"] = await myBot.GetChatMemberAsync(chatId, uid, cancellationToken);
       }
       return Json(result);
     }
