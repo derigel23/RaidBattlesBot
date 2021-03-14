@@ -51,6 +51,9 @@ namespace RaidBattlesBot.Handlers
 
                 if (poll == null) return default;
 
+                var participants = poll.Votes.Select(_ => _.UserId).ToHashSet();
+                if (!participants.Contains(message.From.Id)) return false; // do not process replies from strangers
+                
                 var replyNotifications = myDB.Set<ReplyNotification>();
                 
                 context.context = new PollMessage(message)
