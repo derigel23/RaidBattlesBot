@@ -20,7 +20,7 @@ namespace RaidBattlesBot.Migrations
               nullable: true,
               defaultValueSql: "NEXT VALUE FOR PollId");
 
-            migrationBuilder.Sql("UPDATE Polls SET Id2 = Id");
+            migrationBuilder.Sql("EXEC (N'UPDATE Polls SET Id2 = Id')");
 
             migrationBuilder.DropForeignKey(name: "FK_Messages_Polls_PollId", table: "Messages");
 

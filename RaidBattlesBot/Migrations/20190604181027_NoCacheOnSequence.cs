@@ -6,7 +6,7 @@ namespace RaidBattlesBot.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("ALTER SEQUENCE PollId NO CYCLE NO CACHE; ");
+            migrationBuilder.Sql("EXEC (N'ALTER SEQUENCE PollId NO CYCLE NO CACHE')");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

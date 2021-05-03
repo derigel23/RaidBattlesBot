@@ -13,7 +13,7 @@ namespace RaidBattlesBot.Migrations
         table: "Polls",
         nullable: true);
 
-      migrationBuilder.Sql("UPDATE Votes SET [Team] = CASE [Team] WHEN 1 THEN 2 WHEN 2 THEN 4 WHEN 3 THEN 8 ELSE [Team] END");
+      migrationBuilder.Sql("EXEC (N'UPDATE Votes SET [Team] = CASE [Team] WHEN 1 THEN 2 WHEN 2 THEN 4 WHEN 3 THEN 8 ELSE [Team] END')");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)

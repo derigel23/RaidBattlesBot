@@ -12,7 +12,7 @@ namespace RaidBattlesBot.Migrations
                 table: "Portals",
                 nullable: true);
             
-            migrationBuilder.Sql("UPDATE Portals SET Modified = GetUtcDate() WHERE Modified IS NULL");
+            migrationBuilder.Sql("EXEC (N'UPDATE Portals SET Modified = GetUtcDate() WHERE Modified IS NULL')");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
