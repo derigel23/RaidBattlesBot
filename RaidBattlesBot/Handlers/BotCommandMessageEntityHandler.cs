@@ -74,7 +74,7 @@ namespace RaidBattlesBot.Handlers
 
           var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(myMessage.Chat.Id, cancellationToken);
 
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, setContent.MessageText, setContent.ParseMode, setContent.DisableWebPagePreview, 
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, setContent.MessageText, setContent.ParseMode, setContent.Entities, setContent.DisableWebPagePreview, 
             disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
@@ -96,7 +96,7 @@ namespace RaidBattlesBot.Handlers
           }
 
           var content = pollTitle.ToTextMessageContent();
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, disableNotification: true, 
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview, disableNotification: true, 
             replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Choose a Gym", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
           return false;
 
@@ -136,7 +136,7 @@ namespace RaidBattlesBot.Handlers
               (builder, user) => builder.Append(user.GetLink()).NewLine())
             .ToTextMessageContent(disableWebPreview: true);
 
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info.MessageText, info.ParseMode, info.DisableWebPagePreview, disableNotification: true,
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info.MessageText, info.ParseMode, info.Entities, info.DisableWebPagePreview, disableNotification: true,
             replyToMessageId: myMessage.MessageId, cancellationToken: cancellationToken);
 
           return false;

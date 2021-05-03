@@ -19,10 +19,10 @@ namespace RaidBattlesBot.Handlers
   {
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myBot;
-    private readonly IDictionary<int, ITelegramBotClient> myBots;
+    private readonly IDictionary<long, ITelegramBotClient> myBots;
     private readonly RaidBattlesContext myDB;
 
-    public ReplyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, IDictionary<int, ITelegramBotClient> bots, RaidBattlesContext db)
+    public ReplyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, IDictionary<long, ITelegramBotClient> bots, RaidBattlesContext db)
     {
       myTelemetryClient = telemetryClient;
       myBot = bot;

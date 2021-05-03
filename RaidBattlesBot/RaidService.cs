@@ -24,13 +24,13 @@ namespace RaidBattlesBot
   public class RaidService
   {
     private readonly RaidBattlesContext myContext;
-    private readonly Func<int?, ITelegramBotClient> myBot;
+    private readonly Func<long?, ITelegramBotClient> myBot;
     private readonly TelemetryClient myTelemetryClient;
-    private readonly Func<int?, ChatInfo> myChatInfo;
+    private readonly Func<long?, ChatInfo> myChatInfo;
     private readonly IMemoryCache myMemoryCache;
     private readonly long? myLogChat;
 
-    public RaidService(RaidBattlesContext context, IDictionary<int, ITelegramBotClient> bots, TelemetryClient telemetryClient, IMemoryCache memoryCache, Func<ITelegramBotClient, ChatInfo> chatInfo, IOptions<BotConfiguration> botOptions)
+    public RaidService(RaidBattlesContext context, IDictionary<long, ITelegramBotClient> bots, TelemetryClient telemetryClient, IMemoryCache memoryCache, Func<ITelegramBotClient, ChatInfo> chatInfo, IOptions<BotConfiguration> botOptions)
     {
       myContext = context;
       myTelemetryClient = telemetryClient;
@@ -243,7 +243,7 @@ namespace RaidBattlesBot
       if (message.Chat is { } chat)
       {
         var bot = myBot(message.BotId);
-        var postedMessage = await bot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+        var postedMessage = await bot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
           replyMarkup: await message.GetReplyMarkup(myChatInfo(message.BotId), cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
         message.BotId = bot.BotId;
         message.Chat = postedMessage.Chat;
@@ -317,7 +317,7 @@ namespace RaidBattlesBot
       }
     }
 
-    private async Task<Dictionary<int, string>> GetNicknames(Poll poll, CancellationToken cancellationToken = default)
+    private async Task<Dictionary<long, string>> GetNicknames(Poll poll, CancellationToken cancellationToken = default)
     {
       return await myMemoryCache.GetOrCreateAsync($"Nicknames:{poll.Id}",
         async entry =>
@@ -350,12 +350,12 @@ namespace RaidBattlesBot
         var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, userGroupFormatter: userGroupFormatter, disableWebPreview: message.Poll.DisableWebPreview());
         if (message.InlineMessageId is { } inlineMessageId)
         {
-          await bot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+          await bot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
             await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
         else if (message.ChatId is { } chatId && message.MessageId is { } messageId)
         {
-          await bot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+          await bot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
             await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
       }

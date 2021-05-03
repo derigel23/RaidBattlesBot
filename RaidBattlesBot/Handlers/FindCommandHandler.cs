@@ -51,7 +51,7 @@ namespace RaidBattlesBot.Handlers
             builder.Append("No one was found.");
           }
           var content = builder.ToTextMessageContent();
-          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, cancellationToken: cancellationToken);
+          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview, cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
 

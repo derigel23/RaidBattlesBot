@@ -52,7 +52,7 @@ namespace RaidBattlesBot.Handlers
       var inviteMessage = await poll.GetInviteMessage(myContext, cancellationToken);
       inviteMessage ??= new InputTextMessageContent("Nobody to invite");
 
-      await myBot.SendTextMessageAsync(chat, inviteMessage.MessageText, inviteMessage.ParseMode,
+      await myBot.SendTextMessageAsync(chat, inviteMessage.MessageText, inviteMessage.ParseMode, inviteMessage.Entities,
         inviteMessage.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
       
       return (null, false, null);

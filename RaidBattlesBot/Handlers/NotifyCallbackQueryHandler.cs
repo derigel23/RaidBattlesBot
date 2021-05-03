@@ -76,7 +76,7 @@ namespace RaidBattlesBot.Handlers
       {
         try
         {
-          await myBot.SendTextMessageAsync(targetChat, message.MessageText, message.ParseMode, message.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
+          await myBot.SendTextMessageAsync(targetChat, message.MessageText, message.ParseMode, message.Entities, message.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {

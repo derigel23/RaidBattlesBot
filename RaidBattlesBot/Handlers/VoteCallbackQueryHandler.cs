@@ -28,7 +28,7 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly TimeSpan myVoteTimeout;
-    private readonly HashSet<int> myBlackList;
+    private readonly HashSet<long> myBlackList;
 
     public VoteCallbackQueryHandler(RaidBattlesContext db, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
     {
@@ -38,7 +38,7 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
       myClock = clock;
       myVoteTimeout = options.Value.VoteTimeout;
-      myBlackList = options.Value.BlackList ?? new HashSet<int>(0);
+      myBlackList = options.Value.BlackList ?? new HashSet<long>(0);
     }
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)

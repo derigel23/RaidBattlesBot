@@ -76,7 +76,7 @@ namespace RaidBattlesBot.Handlers
       
       var content = builder.ToTextMessageContent();
 
-      await myBot.SendTextMessageAsync(user.Id, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+      await myBot.SendTextMessageAsync(user.Id, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
         replyMarkup: replyMarkup ?? new ForceReplyMarkup(), cancellationToken: cancellationToken);
         
       return false; // processed, but not pollMessage

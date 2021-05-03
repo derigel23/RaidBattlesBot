@@ -34,9 +34,9 @@ namespace RaidBattlesBot.Model
     }
 
     public int Id { get; set; }
-    public int? BotId { get; set; }
+    public long? BotId { get; set; }
     public int PollId { get; set; }
-    public int? UserId { get; set; }
+    public long? UserId { get; set; }
     public long? ChatId { get; set; }
     public ChatType? ChatType { get; set; }
     public int? MessageId { get; set; }

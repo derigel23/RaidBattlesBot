@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
           var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
 
           var content = await GetMessage(settings, cancellationToken);
-          var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+          var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
             replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") },
               resizeKeyboard: true, oneTimeKeyboard: true),
             cancellationToken: cancellationToken);
@@ -124,7 +124,7 @@ namespace RaidBattlesBot.Handlers
       await myContext.SaveChangesAsync(cancellationToken);
 
       var content = await GetMessage(settings, cancellationToken);
-      await myBot.SendTextMessageAsync(message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview,
+      await myBot.SendTextMessageAsync(message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
         replyMarkup: new ReplyKeyboardRemove(), cancellationToken: cancellationToken);
       
       return false;

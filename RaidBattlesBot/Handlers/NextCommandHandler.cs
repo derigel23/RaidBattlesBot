@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
           }
 
           var content = builder.ToTextMessageContent(disableWebPreview: true);
-          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.DisableWebPagePreview, true, cancellationToken: cancellationToken);
+          await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview, true, cancellationToken: cancellationToken);
 
           return false;
       }
