@@ -25,7 +25,7 @@ namespace RaidBattlesBot.Handlers
       switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/" + COMMAND:
-          await myTelegramBotClient.SendTextMessageAsync(entity.Message.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
+          await myTelegramBotClient.SendTextMessageAsync(entity.Message.Chat, "https://telegra.ph/Kak-polzovatsya-Raid-Battles-Bot-07-31", cancellationToken: cancellationToken);
           
           return false; // processed, but not pollMessage
       }
