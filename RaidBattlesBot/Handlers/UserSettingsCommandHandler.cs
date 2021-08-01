@@ -16,9 +16,11 @@ using Location = GoogleMapsApi.Entities.Common.Location;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("location - set user's home location", EntityType = MessageEntityType.BotCommand, Order = 23)]
-  public class UserSettingsCommandHandler : IMessageEntityHandler
+  [BotBotCommand(LOCATION_COMMAND, "Set user's home location", BotCommandScopeType.AllPrivateChats, Order = 23)]
+  public class UserSettingsCommandHandler : IBotCommandHandler
   {
+    private const string LOCATION_COMMAND = "location";
+    
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly IMemoryCache myCache;
@@ -39,11 +41,10 @@ namespace RaidBattlesBot.Handlers
       if (entity.Message.Chat.Type != ChatType.Private)
         return false;
       
-      var commandText = entity.AfterValue.Trim();
       switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/timezone":
-        case "/location":
+        case "/" + LOCATION_COMMAND:
           var author = entity.Message.From;
           var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
 
@@ -53,7 +54,7 @@ namespace RaidBattlesBot.Handlers
               { ResizeKeyboard = true, OneTimeKeyboard = true},
             cancellationToken: cancellationToken);
 
-          myCache.GetOrCreate(this[sentMessage.MessageId], entry => true);
+          myCache.GetOrCreate(this[sentMessage.MessageId], _ => true);
           return false; // processed, but not pollMessage
 
         default:

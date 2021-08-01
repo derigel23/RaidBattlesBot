@@ -12,9 +12,11 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("next - show upcoming raids", EntityType = MessageEntityType.BotCommand)]
-  public class NextCommandHandler : IMessageEntityHandler
+  [BotBotCommand( COMMAND ,"Show upcoming raids", BotCommandScopeType.AllPrivateChats)]
+  public class NextCommandHandler : IBotCommandHandler
   {
+    private const string COMMAND = "next";
+    
     private readonly RaidBattlesContext myDB;
     private readonly IClock myClock;
     private readonly ITelegramBotClient myBot;
@@ -35,7 +37,7 @@ namespace RaidBattlesBot.Handlers
       
       switch (entity.Command.ToString().ToLowerInvariant())
       {
-        case "/next":
+        case "/" + COMMAND:
           var from = myClock.GetCurrentInstant().ToDateTimeOffset() - myJitterOffset;
           var polls = await myDB.Set<Poll>()
             .Where(poll => poll.Time >= from)

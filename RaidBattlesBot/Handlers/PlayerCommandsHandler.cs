@@ -12,9 +12,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [MessageEntityType("ign - set in-game-name (IGN)", EntityType = MessageEntityType.BotCommand, Order = -20)]
-  public class PlayerCommandsHandler : IMessageEntityHandler
+  [BotBotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, Order = -20)]
+  public class PlayerCommandsHandler : IBotCommandHandler
   {
+    private const string COMMAND = "ign";
+    
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
 
@@ -86,7 +88,7 @@ namespace RaidBattlesBot.Handlers
     {
       switch (entity.Command.ToString().ToLowerInvariant())
       {
-        case "/ign":
+        case "/" + COMMAND:
         case "/nick":
         case "/nickname":
           return true;
