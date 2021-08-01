@@ -4,7 +4,6 @@ using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
