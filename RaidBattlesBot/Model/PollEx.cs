@@ -84,7 +84,7 @@ namespace RaidBattlesBot.Model
       return result;
     }
 
-    public static string GetTitle(this Poll poll, ParseMode mode = Helpers.DefaultParseMode)
+    public static string GetTitle(this Poll poll, ParseMode mode = 0) // by default no formatting at all
     {
       return GetTitle(poll, new StringBuilder(), mode).ToString();
     }
