@@ -49,8 +49,8 @@ namespace RaidBattlesBot.Handlers
 
           var content = await GetMessage(settings, cancellationToken);
           var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-            replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") },
-              resizeKeyboard: true, oneTimeKeyboard: true),
+            replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") })
+              { ResizeKeyboard = true, OneTimeKeyboard = true},
             cancellationToken: cancellationToken);
 
           myCache.GetOrCreate(this[sentMessage.MessageId], entry => true);

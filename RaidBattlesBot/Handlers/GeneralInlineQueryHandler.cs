@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      IReadOnlyCollection<InlineQueryResultBase> inlineQueryResults;
+      IReadOnlyCollection<InlineQueryResult> inlineQueryResults;
 
       string query = null;
       Portal portal = null;

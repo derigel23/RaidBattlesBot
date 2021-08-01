@@ -90,7 +90,7 @@ namespace RaidBattlesBot.Handlers
                   }
                   catch (Exception ex)
                   {
-                    if (ex is ForbiddenException)
+                    if (ex is ApiRequestException { ErrorCode: 403 })
                     {
                     }
                     else

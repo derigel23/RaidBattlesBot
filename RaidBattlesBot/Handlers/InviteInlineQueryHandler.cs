@@ -55,7 +55,7 @@ namespace RaidBattlesBot.Handlers
       return true;
     }
 
-    public async Task<InlineQueryResultBase> GetResult(Poll poll, CancellationToken cancellationToken)
+    public async Task<InlineQueryResult> GetResult(Poll poll, CancellationToken cancellationToken)
     {
       var inviteMessage = await poll.GetInviteMessage(myDB, cancellationToken);
       

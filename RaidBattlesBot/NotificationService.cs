@@ -92,7 +92,7 @@ namespace RaidBattlesBot
           }
           catch (Exception ex)
           {
-            if (ex is ForbiddenException)
+            if (ex is ApiRequestException { ErrorCode: 403 })
             {
               // Do not try to notify the user again for this poll
               poll.Notifications.Add(new Notification { PollId = poll.Id, BotId = botId, ChatId = userId, DateTime = null});

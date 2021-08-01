@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
       if (queryParts.First() != ID)
         return null;
 
-      var inlineQueryResults = Enumerable.Empty<InlineQueryResultBase>();
+      var inlineQueryResults = Enumerable.Empty<InlineQueryResult>();
       if (!PollEx.TryGetPollId(queryParts.ElementAtOrDefault(1), out var pollId, out var format))
       {
         inlineQueryResults = await GetActivePolls(data.From, cancellationToken);
@@ -54,7 +54,7 @@ namespace RaidBattlesBot.Handlers
       {
         var poll = (await myRaidService.GetOrCreatePollAndMessage(new PollMessage(data) { BotId = myBot.BotId, PollId = pollId }, myUrlHelper, format, cancellationToken))?.Poll;
 
-        var queryResults = new List<InlineQueryResultBase>();
+        var queryResults = new List<InlineQueryResult>();
         if (poll != null)
         {
           queryResults.Add(poll.ClonePoll(myUrlHelper));
