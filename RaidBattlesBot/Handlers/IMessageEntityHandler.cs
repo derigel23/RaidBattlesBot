@@ -14,7 +14,7 @@ namespace RaidBattlesBot.Handlers
   {
     public MessageEntityType EntityType { get; set; }
 
-    public bool ShouldProcess(MessageEntityEx messageEntity, PollMessage context)
+    public virtual bool ShouldProcess(MessageEntityEx messageEntity, PollMessage context)
     {
       return messageEntity.Type == EntityType;
     }

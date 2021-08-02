@@ -21,6 +21,9 @@ namespace RaidBattlesBot.Handlers
     
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
+      if (!this.ShouldProcess(entity, context))
+        return null;
+
       switch (entity.Command.ToString().ToLowerInvariant())
       {
         case "/" + COMMAND:

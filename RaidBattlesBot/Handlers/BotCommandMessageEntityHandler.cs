@@ -17,17 +17,14 @@ using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(SET_COMMAND, "Set custom poll formats", BotCommandScopeType.AllPrivateChats, Order = 50)]
-  public class BotCommandMessageEntityHandler : IBotCommandHandler
+  [MessageEntityType(EntityType = MessageEntityType.BotCommand, Order = 50)]
+  public class BotCommandMessageEntityHandler : IMessageEntityHandler
   {
-    private const string SET_COMMAND = "set";
-    
     private readonly RaidBattlesContext myContext;
     private readonly Message myMessage;
     private readonly ITelegramBotClient myTelegramBotClient;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
-    private readonly SetCallbackQueryHandler mySetCallbackQueryHandler;
     private readonly PlayerCommandsHandler myPlayerCommandsHandler;
 
     public BotCommandMessageEntityHandler(RaidBattlesContext context, Message message, ITelegramBotClient telegramBotClient, RaidService raidService, IUrlHelper urlHelper, SetCallbackQueryHandler setCallbackQueryHandler, PlayerCommandsHandler playerCommandsHandler)
@@ -37,7 +34,6 @@ namespace RaidBattlesBot.Handlers
       myTelegramBotClient = telegramBotClient;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
-      mySetCallbackQueryHandler = setCallbackQueryHandler;
       myPlayerCommandsHandler = playerCommandsHandler;
     }
 
@@ -71,20 +67,6 @@ namespace RaidBattlesBot.Handlers
 
           pollMessage.Poll = existingPoll;
           return true;
-
-        case "/" + SET_COMMAND:
-
-          var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(myMessage.Chat.Id, cancellationToken);
-
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, setContent.MessageText, setContent.ParseMode, setContent.Entities, setContent.DisableWebPagePreview, 
-            disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
-          
-          return false; // processed, but not pollMessage
-
-        // case "/help" when myMessage.Chat.Type == ChatType.Private:
-        //   await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, "http://telegra.ph/Raid-Battles-Bot-Help-02-18", cancellationToken: cancellationToken);
-        //   
-        //   return false; // processed, but not pollMessage
         
         // deep linking to gym
         case "/start" when commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):

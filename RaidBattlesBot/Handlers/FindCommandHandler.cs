@@ -26,9 +26,9 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
-      if (entity.Message.Chat.Type != ChatType.Private)
-        return null; // do not process in public chats
-      
+      if (!this.ShouldProcess(entity, context))
+        return null;
+
       var commandText = entity.AfterValue.Trim();
       switch (entity.Command.ToString().ToLowerInvariant())
       {

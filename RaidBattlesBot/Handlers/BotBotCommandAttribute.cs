@@ -1,4 +1,3 @@
-using System;
 using JetBrains.Annotations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -26,7 +25,12 @@ namespace RaidBattlesBot.Handlers
     {
       Scope = BotCommandHandler.GetScope(commandScopeType);
     }
-    
+
+    public override bool ShouldProcess(MessageEntityEx data, PollMessage context)
+    {
+      return BotCommandHandler.ShouldProcess(Scope, data, context);
+    }
+
     public BotCommandScope Scope { get; set; }
     public BotCommand Command { get; set; }
   }
