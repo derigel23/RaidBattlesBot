@@ -20,18 +20,21 @@ namespace RaidBattlesBot.Handlers
       Command = new BotCommand { Command = command, Description = description };
     }
 
-    public BotBotCommandAttribute(string command, string description, BotCommandScopeType commandScopeType)
+    public BotBotCommandAttribute(string command, string description, BotCommandScopeType commandScopeType, params string[] aliases)
       : this(command, description)
     {
       Scope = BotCommandHandler.GetScope(commandScopeType);
+      Aliases = aliases;
     }
 
     public override bool ShouldProcess(MessageEntityEx data, PollMessage context)
     {
-      return BotCommandHandler.ShouldProcess(Scope, data, context);
+      return BotCommandHandler.ShouldProcess(this, data, context);
     }
 
     public BotCommandScope Scope { get; set; }
     public BotCommand Command { get; set; }
+
+    public string[] Aliases { get; set; }
   }
 }

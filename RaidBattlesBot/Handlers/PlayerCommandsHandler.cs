@@ -12,10 +12,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, Order = -20)]
+  [BotBotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, "nick", "nickname", Order = -20)]
   public class PlayerCommandsHandler : IBotCommandHandler
   {
-    private const string COMMAND = "ign";
+    public const string COMMAND = "ign";
     
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
@@ -28,9 +28,9 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
-      if (this.ShouldProcess(entity, context) && IsSupportedCommand(entity))
+      if (this.ShouldProcess(entity, context))
       {
-          return await Process(entity.Message.From, entity.AfterValue.Trim().ToString(), cancellationToken);
+        return await Process(entity.Message.From, entity.AfterValue.Trim().ToString(), cancellationToken);
       }
 
       return null;
@@ -81,25 +81,8 @@ namespace RaidBattlesBot.Handlers
       return false; // processed, but not pollMessage
     }
     
-    private static bool IsSupportedCommand(MessageEntityEx entity)
+    public async Task<bool?> HandleReply(Message message, PollMessage context, CancellationToken cancellationToken = default)
     {
-      switch (entity.Command.ToString().ToLowerInvariant())
-      {
-        case "/" + COMMAND:
-        case "/nick":
-        case "/nickname":
-          return true;
-
-        default:
-          return false;
-      }
-    }
-
-    public async Task<bool?> HandleReply(Message message, CancellationToken cancellationToken = default)
-    {
-      if (message.Chat.Type != ChatType.Private)
-        return null; // do not check replies in public chats
-
       if (string.IsNullOrEmpty(message.Text) || message.Entities?.Length > 0)
         return null; // just plain text messages
       
@@ -108,7 +91,7 @@ namespace RaidBattlesBot.Handlers
         foreach (var entity in parentMessage.Entities ?? Enumerable.Empty<MessageEntity>())
         {
           if (entity.Type != MessageEntityType.BotCommand) continue;
-          if (IsSupportedCommand(new MessageEntityEx(parentMessage, entity)))
+          if (this.ShouldProcess(new MessageEntityEx(parentMessage, entity), context))
           {
             return await Process(message.From, message.Text, cancellationToken);
           }

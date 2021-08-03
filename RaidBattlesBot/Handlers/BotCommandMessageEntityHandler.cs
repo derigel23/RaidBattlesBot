@@ -85,7 +85,7 @@ namespace RaidBattlesBot.Handlers
           return false;
 
         // deep linking with IGN
-        case "/start" when commandText.Equals("ign", StringComparison.Ordinal):
+        case "/start" when commandText.Equals(PlayerCommandsHandler.COMMAND, StringComparison.OrdinalIgnoreCase):
           return await myPlayerCommandsHandler.Process(myMessage.From, null, cancellationToken);
 
         case "/p" when int.TryParse(commandText, out var pollId):

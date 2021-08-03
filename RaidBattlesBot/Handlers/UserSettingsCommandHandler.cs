@@ -16,7 +16,7 @@ using Location = GoogleMapsApi.Entities.Common.Location;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(LOCATION_COMMAND, "Set user's home location", BotCommandScopeType.AllPrivateChats, Order = 23)]
+  [BotBotCommand(LOCATION_COMMAND, "Set user's home location", BotCommandScopeType.AllPrivateChats, "timezone", Order = 23)]
   public class UserSettingsCommandHandler : IBotCommandHandler
   {
     private const string LOCATION_COMMAND = "location";
@@ -38,28 +38,21 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
-      if (!this.ShouldProcess(entity, context))
-        return null;
+      if (!this.ShouldProcess(entity, context)) return null;
 
-      switch (entity.Command.ToString().ToLowerInvariant())
-      {
-        case "/timezone":
-        case "/" + LOCATION_COMMAND:
-          var author = entity.Message.From;
-          var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
+      var author = entity.Message.From;
+      var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
 
-          var content = await GetMessage(settings, cancellationToken);
-          var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-            replyMarkup: new ReplyKeyboardMarkup(new []{ KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") })
-              { ResizeKeyboard = true, OneTimeKeyboard = true},
-            cancellationToken: cancellationToken);
+      var content = await GetMessage(settings, cancellationToken);
+      var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities,
+        content.DisableWebPagePreview,
+        replyMarkup: new ReplyKeyboardMarkup(new[]
+            { KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") })
+          { ResizeKeyboard = true, OneTimeKeyboard = true },
+        cancellationToken: cancellationToken);
 
-          myCache.GetOrCreate(this[sentMessage.MessageId], _ => true);
-          return false; // processed, but not pollMessage
-
-        default:
-          return null;
-      }
+      myCache.GetOrCreate(this[sentMessage.MessageId], _ => true);
+      return false; // processed, but not pollMessage
     }
 
     private string this[int messageId] => $"timezone{messageId}";

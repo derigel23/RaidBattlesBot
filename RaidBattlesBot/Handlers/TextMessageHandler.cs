@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      if (await myPlayerCommandsHandler.HandleReply(message, cancellationToken) is {} replyProcessed)
+      if (await myPlayerCommandsHandler.HandleReply(message, _.context, cancellationToken) is {} replyProcessed)
       {
         return replyProcessed;
       }

@@ -23,23 +23,16 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
-      if (!this.ShouldProcess(entity, context))
-        return null;
+      if (!this.ShouldProcess(entity, context)) return null;
 
-      switch (entity.Command.ToString().ToLowerInvariant())
-      {
-        case "/" + COMMAND:
+      var messageChat = entity.Message.Chat;
+      var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(messageChat.Id, cancellationToken);
 
-          var messageChat = entity.Message.Chat;
-          var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(messageChat.Id, cancellationToken);
+      await myTelegramBotClient.SendTextMessageAsync(messageChat, setContent.MessageText, setContent.ParseMode, setContent.Entities,
+        setContent.DisableWebPagePreview,
+        disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
 
-          await myTelegramBotClient.SendTextMessageAsync(messageChat, setContent.MessageText, setContent.ParseMode, setContent.Entities, setContent.DisableWebPagePreview, 
-            disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
-          
-          return false; // processed, but not pollMessage
-      }
-
-      return null;
+      return false; // processed, but not pollMessage
     }
   }
 }
