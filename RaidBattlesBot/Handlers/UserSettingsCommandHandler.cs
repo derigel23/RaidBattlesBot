@@ -16,7 +16,7 @@ using Location = GoogleMapsApi.Entities.Common.Location;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(LOCATION_COMMAND, "Set user's home location", BotCommandScopeType.AllPrivateChats, "timezone", Order = 23)]
+  [BotCommand(LOCATION_COMMAND, "Set user's home location", BotCommandScopeType.AllPrivateChats, Aliases = new[] { "timezone" }, Order = 23)]
   public class UserSettingsCommandHandler : IBotCommandHandler
   {
     private const string LOCATION_COMMAND = "location";

@@ -12,7 +12,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand("next" ,"Show upcoming raids", BotCommandScopeType.AllPrivateChats)]
+  [BotCommand("next" ,"Show upcoming raids", BotCommandScopeType.AllPrivateChats)]
   public class NextCommandHandler : IBotCommandHandler
   {
     private readonly RaidBattlesContext myDB;

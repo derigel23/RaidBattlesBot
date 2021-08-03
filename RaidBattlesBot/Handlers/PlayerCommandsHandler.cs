@@ -12,7 +12,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, "nick", "nickname", Order = -20)]
+  [BotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, Aliases = new[] { "nick" , "nickname" }, Order = -20)]
   public class PlayerCommandsHandler : IBotCommandHandler
   {
     public const string COMMAND = "ign";

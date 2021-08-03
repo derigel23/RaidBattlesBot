@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand("find", "Find user by IGN", BotCommandScopeType.AllPrivateChats, Order = -19)]
+  [BotCommand("find", "Find user by IGN", BotCommandScopeType.AllPrivateChats, Order = -19)]
   public class FindCommandHandler : IBotCommandHandler
   {
     private readonly RaidBattlesContext myContext;

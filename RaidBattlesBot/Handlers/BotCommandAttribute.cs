@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -10,21 +11,20 @@ namespace RaidBattlesBot.Handlers
   
   [MeansImplicitUse]
   [BaseTypeRequired(typeof(IBotCommandHandler))]
-  public class BotBotCommandAttribute : MessageEntityTypeAttribute, IBotCommandHandlerAttribute<PollMessage>
+  public class BotCommandAttribute : MessageEntityTypeAttribute, IBotCommandHandlerAttribute<PollMessage>
   {
-    [UsedImplicitly] public BotBotCommandAttribute() { }
+    [UsedImplicitly] public BotCommandAttribute() { }
 
-    public BotBotCommandAttribute(string command, string description)
+    public BotCommandAttribute(string command, string description, params BotCommandScopeType[] commandScopeTypes)
     {
       EntityType = MessageEntityType.BotCommand;
       Command = new BotCommand { Command = command, Description = description };
+      Scopes = Array.ConvertAll(commandScopeTypes, BotCommandHandler.GetScope);
     }
 
-    public BotBotCommandAttribute(string command, string description, BotCommandScopeType commandScopeType, params string[] aliases)
-      : this(command, description)
+    public BotCommandAttribute(string command, string description)
+      : this(command, description, BotCommandHandler.SupportedBotCommandScopeTypes)
     {
-      Scope = BotCommandHandler.GetScope(commandScopeType);
-      Aliases = aliases;
     }
 
     public override bool ShouldProcess(MessageEntityEx data, PollMessage context)
@@ -32,9 +32,8 @@ namespace RaidBattlesBot.Handlers
       return BotCommandHandler.ShouldProcess(this, data, context);
     }
 
-    public BotCommandScope Scope { get; set; }
+    public BotCommandScope[] Scopes { get; set; }
     public BotCommand Command { get; set; }
-
     public string[] Aliases { get; set; }
   }
 }

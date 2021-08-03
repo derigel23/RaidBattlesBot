@@ -6,7 +6,7 @@ using Telegram.Bot;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand("help", "Show help", Order = 51)]
+  [BotCommand("help", "Show help", Order = 51)]
   public class HelpCommandHandler : IBotCommandHandler
   {
     private readonly ITelegramBotClient myTelegramBotClient;

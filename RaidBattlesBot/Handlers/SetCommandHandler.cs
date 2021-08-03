@@ -7,7 +7,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers
 {
-  [BotBotCommand(COMMAND, "Set custom poll formats", BotCommandScopeType.AllPrivateChats, Order = 50)]
+  [BotCommand(COMMAND, "Set custom poll formats", BotCommandScopeType.AllPrivateChats, Order = 50)]
   public class SetCommandHandler : IBotCommandHandler
   {
     private const string COMMAND = "set";
