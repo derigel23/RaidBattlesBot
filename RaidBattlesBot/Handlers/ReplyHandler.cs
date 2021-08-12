@@ -32,7 +32,7 @@ namespace RaidBattlesBot.Handlers
     
     public async Task<bool?> Handle(Message message, (UpdateType updateType, PollMessage context) context = default, CancellationToken cancellationToken = default)
     {
-      if (message.ReplyToMessage is { ReplyMarkup: { InlineKeyboard: {} parentInlineKeyboard} } parentMessage)
+      if (message.ReplyToMessage is { ReplyMarkup: { InlineKeyboard: {} parentInlineKeyboard} })
       {
         foreach (var buttons in parentInlineKeyboard)
         foreach (var button in buttons)
@@ -51,9 +51,10 @@ namespace RaidBattlesBot.Handlers
 
                 if (poll == null) return default;
 
+                var fromUserId = message.From?.Id;
                 var participants = poll.Votes.Select(_ => _.UserId).ToHashSet();
-                if (!participants.Contains(message.From.Id)) return false; // do not process replies from strangers
-                
+                if (fromUserId is not {} userId || !participants.Contains(userId)) return false; // do not process replies from strangers
+
                 var replyNotifications = myDB.Set<ReplyNotification>();
                 
                 context.context = new PollMessage(message)
@@ -66,16 +67,16 @@ namespace RaidBattlesBot.Handlers
                 ITelegramBotClient bot = null;
                 foreach (var pollVote in poll.Votes)
                 {
-                  var userId = pollVote.UserId;
-                  if (userId == message.From.Id) continue; // do not notify itself
+                  var voteUserId = pollVote.UserId;
+                  if (voteUserId == fromUserId) continue; // do not notify itself
                   if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue; // do not notify bailed people
                   try
                   {
-                    if (!(pollVote.BotId is { } botId && myBots.TryGetValue(botId, out bot)))
+                    if (pollVote.BotId is not {} botId || !myBots.TryGetValue(botId, out bot))
                     {
                       bot = myBot;
                     }
-                    var fm = await bot.ForwardMessageAsync(userId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
+                    var fm = await bot.ForwardMessageAsync(voteUserId, message.Chat, message.MessageId, cancellationToken: cancellationToken);
                     replyNotifications.Add(new ReplyNotification
                     {
                       BotId = bot.BotId,
@@ -83,7 +84,7 @@ namespace RaidBattlesBot.Handlers
                       MessageId = fm.MessageId,
                       FromChatId = message.Chat.Id,
                       FromMessageId = message.MessageId,
-                      FromUserId = message.From.Id,
+                      FromUserId = fromUserId,
                       PollId = pollId,
                       Poll = poll
                     });
@@ -97,7 +98,7 @@ namespace RaidBattlesBot.Handlers
                       myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
                       {
                         { nameof(ITelegramBotClient.BotId), bot?.BotId .ToString() },
-                        { "UserId", userId.ToString() }
+                        { "UserId", voteUserId.ToString() }
                       });
                   }
                 }
