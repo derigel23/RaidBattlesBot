@@ -14,9 +14,10 @@ SELECT DISTINCT
        1 As Type,
        GETDATE() AS Modified
 FROM Votes v1, Votes v2
-WHERE v1.PollId = v2.PollId AND
+WHERE v1.PollId = v2.PollId AND v1.UserId != v2.UserId AND
       v1.Team & {Model.VoteEnum.Yes | Model.VoteEnum.Remotely:D} != 0 AND
-      v2.Team & {Model.VoteEnum.Invitation:D} != 0");
+      v2.Team & {Model.VoteEnum.Invitation:D} != 0
+ORDER BY Id, FriendId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
