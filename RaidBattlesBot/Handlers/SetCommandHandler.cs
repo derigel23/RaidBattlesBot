@@ -28,8 +28,7 @@ namespace RaidBattlesBot.Handlers
       var messageChat = entity.Message.Chat;
       var (setContent, setReplyMarkup) = await mySetCallbackQueryHandler.SettingsList(messageChat.Id, cancellationToken);
 
-      await myTelegramBotClient.SendTextMessageAsync(messageChat, setContent.MessageText, setContent.ParseMode, setContent.Entities,
-        setContent.DisableWebPagePreview,
+      await myTelegramBotClient.SendTextMessageAsync(messageChat, setContent,
         disableNotification: true, replyMarkup: setReplyMarkup, cancellationToken: cancellationToken);
 
       return false; // processed, but not pollMessage

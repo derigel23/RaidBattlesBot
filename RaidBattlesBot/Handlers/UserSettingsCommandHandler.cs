@@ -44,12 +44,9 @@ namespace RaidBattlesBot.Handlers
       var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
 
       var content = await GetMessage(settings, cancellationToken);
-      var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content.MessageText, content.ParseMode, content.Entities,
-        content.DisableWebPagePreview,
-        replyMarkup: new ReplyKeyboardMarkup(new[]
-            { KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone") })
-          { ResizeKeyboard = true, OneTimeKeyboard = true },
-        cancellationToken: cancellationToken);
+      var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content, cancellationToken: cancellationToken,
+        replyMarkup: new ReplyKeyboardMarkup(KeyboardButton.WithRequestLocation("Send a location to set up your home place and timezone"))
+          { ResizeKeyboard = true, OneTimeKeyboard = true });
 
       myCache.GetOrCreate(this[sentMessage.MessageId], _ => true);
       return false; // processed, but not pollMessage
@@ -62,7 +59,7 @@ namespace RaidBattlesBot.Handlers
       var contentBuilder = new StringBuilder();
       if (settings is { Lat: {} lat, Lon: {} lon })
       {
-        if ((await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken)) is {} geoDescription && geoDescription.Length > 0)
+        if ((await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken)) is { Length: > 0 } geoDescription)
         {
           contentBuilder
             .Append("Your location is ")
@@ -119,8 +116,7 @@ namespace RaidBattlesBot.Handlers
       await myContext.SaveChangesAsync(cancellationToken);
 
       var content = await GetMessage(settings, cancellationToken);
-      await myBot.SendTextMessageAsync(message.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-        replyMarkup: new ReplyKeyboardRemove(), cancellationToken: cancellationToken);
+      await myBot.SendTextMessageAsync(message.Chat, content, replyMarkup: new ReplyKeyboardRemove(), cancellationToken: cancellationToken);
       
       return false;
     }

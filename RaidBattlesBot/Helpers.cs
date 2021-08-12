@@ -219,7 +219,7 @@ namespace RaidBattlesBot
       builder.Append(content.Sanitize(parseMode));
     
     public static InputTextMessageContent ToTextMessageContent(this StringBuilder builder, ParseMode parseMode = DefaultParseMode, bool disableWebPreview = false) =>
-      new InputTextMessageContent(builder.ToString())
+      new(builder.ToString())
       {
         ParseMode = parseMode,
         DisableWebPagePreview = disableWebPreview

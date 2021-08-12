@@ -16,6 +16,7 @@ using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Team23.TelegramSkeleton;
 using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot
@@ -130,90 +131,87 @@ namespace RaidBattlesBot
 
       var raidUpdated = false;
       var eggRaidUpdated = false;
-      if (message.Poll?.Raid is { } raid)
+      if (message.Poll?.Raid is { Id: 0 } raid)
       {
-        if (raid.Id == 0)
+        var sameRaids = myContext
+          .Set<Raid>()
+          .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
+        var existingRaid = await sameRaids
+          .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
+          .Include(_ => _.EggRaid)
+          .IncludeRelatedData()
+          .FirstOrDefaultAsync(cancellationToken);
+        if (existingRaid != null)
         {
-          var sameRaids = myContext
-            .Set<Raid>()
-            .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
-          var existingRaid = await sameRaids
-            .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
-            .Include(_ => _.EggRaid)
-            .IncludeRelatedData()
-            .FirstOrDefaultAsync(cancellationToken);
-          if (existingRaid != null)
+          if (((existingRaid.Gym ?? existingRaid.PossibleGym) == null) && ((raid.Gym ?? raid.PossibleGym) != null))
           {
-            if (((existingRaid.Gym ?? existingRaid.PossibleGym) == null) && ((raid.Gym ?? raid.PossibleGym) != null))
-            {
-              existingRaid.PossibleGym = raid.Gym ?? raid.PossibleGym;
-              raidUpdated = true;
-            }
-
-            if (string.IsNullOrEmpty(message.Poll.Title))
-            {
-              // use existing poll if have rights for any prev message
-              foreach (var existingRaidPoll in existingRaid.Polls)
-              {
-                foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
-                {
-                  if (await myChatInfo(existingRaidPollMessage.BotId).CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
-                  {
-                    if ((existingRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
-                    {
-                      message.Poll = existingRaidPoll;
-                      break;
-                    }
-                  }
-                }
-
-                if (message.Poll == existingRaidPoll)
-                  break;
-              }
-            }
-
-            raid = message.Poll.Raid = existingRaid;
+            existingRaid.PossibleGym = raid.Gym ?? raid.PossibleGym;
+            raidUpdated = true;
           }
 
-          if ((raid.Pokemon != null) && (raid.EggRaid == null)) // check for egg raid
+          if (string.IsNullOrEmpty(message.Poll.Title))
           {
-            var eggRaid = await sameRaids
-              .Where(_ => _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
-              .IncludeRelatedData()
-              .DecompileAsync()
-              .FirstOrDefaultAsync(cancellationToken);
-            if ((eggRaid != null) && (raid.Id != eggRaid.Id))
+            // use existing poll if have rights for any prev message
+            foreach (var existingRaidPoll in existingRaid.Polls)
             {
-              var eggRaidPolls = eggRaid.Polls ??= new List<Poll>(0);
-              var raidPolls = raid.Polls ??= new List<Poll>(eggRaidPolls.Count);
-              // on post egg raid creation update all existing polls to new raid
-              foreach (var eggRaidPoll in new List<Poll>(eggRaidPolls))
+              foreach (var existingRaidPollMessage in existingRaidPoll.Messages)
               {
-                eggRaidPolls.Remove(eggRaidPoll);
-                raidPolls.Add(eggRaidPoll);
-                eggRaidPoll.Raid = raid;
-                raidUpdated = true;
-                
-                if (!string.IsNullOrEmpty(message.Poll.Title))
-                  continue;
-                
-                // use existing poll if have rights for any prev message
-                foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
+                if (await myChatInfo(existingRaidPollMessage.BotId).CanReadPoll(existingRaidPollMessage.ChatId ?? existingRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
                 {
-                  if (await myChatInfo(eggRaidPollMessage.BotId).CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
+                  if ((existingRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
                   {
-                    if ((eggRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
-                    {
-                      message.Poll = eggRaidPoll;
-                      break;
-                    }
+                    message.Poll = existingRaidPoll;
+                    break;
                   }
                 }
               }
-              message.Poll.Raid = raid;
-              raid.EggRaid = eggRaid;
-              eggRaidUpdated = true;
+
+              if (message.Poll == existingRaidPoll)
+                break;
             }
+          }
+
+          raid = message.Poll.Raid = existingRaid;
+        }
+
+        if ((raid.Pokemon != null) && (raid.EggRaid == null)) // check for egg raid
+        {
+          var eggRaid = await sameRaids
+            .Where(_ => _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
+            .IncludeRelatedData()
+            .DecompileAsync()
+            .FirstOrDefaultAsync(cancellationToken);
+          if ((eggRaid != null) && (raid.Id != eggRaid.Id))
+          {
+            var eggRaidPolls = eggRaid.Polls ??= new List<Poll>(0);
+            var raidPolls = raid.Polls ??= new List<Poll>(eggRaidPolls.Count);
+            // on post egg raid creation update all existing polls to new raid
+            foreach (var eggRaidPoll in new List<Poll>(eggRaidPolls))
+            {
+              eggRaidPolls.Remove(eggRaidPoll);
+              raidPolls.Add(eggRaidPoll);
+              eggRaidPoll.Raid = raid;
+              raidUpdated = true;
+                
+              if (!string.IsNullOrEmpty(message.Poll.Title))
+                continue;
+                
+              // use existing poll if have rights for any prev message
+              foreach (var eggRaidPollMessage in eggRaidPoll.Messages)
+              {
+                if (await myChatInfo(eggRaidPollMessage.BotId).CanReadPoll(eggRaidPollMessage.ChatId ?? eggRaidPollMessage.Poll.Owner, message.UserId ?? message.ChatId, cancellationToken))
+                {
+                  if ((eggRaidPoll.Votes?.Count ?? 0) >= (message.Poll.Messages?.Count ?? 0))
+                  {
+                    message.Poll = eggRaidPoll;
+                    break;
+                  }
+                }
+              }
+            }
+            message.Poll.Raid = raid;
+            raid.EggRaid = eggRaid;
+            eggRaidUpdated = true;
           }
         }
       }
@@ -243,8 +241,8 @@ namespace RaidBattlesBot
       if (message.Chat is { } chat)
       {
         var bot = myBot(message.BotId);
-        var postedMessage = await bot.SendTextMessageAsync(chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-          replyMarkup: await message.GetReplyMarkup(myChatInfo(message.BotId), cancellationToken), disableNotification: true, cancellationToken: cancellationToken);
+        var postedMessage = await bot.SendTextMessageAsync(chat, content, cancellationToken: cancellationToken,
+          replyMarkup: await message.GetReplyMarkup(myChatInfo(message.BotId), cancellationToken), disableNotification: true);
         message.BotId = bot.BotId;
         message.Chat = postedMessage.Chat;
         message.MessageId = postedMessage.MessageId;
@@ -350,13 +348,11 @@ namespace RaidBattlesBot
         var content = message.Poll.GetMessageText(urlHelper, userFormatter: userFormatter, userGroupFormatter: userGroupFormatter, disableWebPreview: message.Poll.DisableWebPreview());
         if (message.InlineMessageId is { } inlineMessageId)
         {
-          await bot.EditMessageTextAsync(inlineMessageId, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-            await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
+          await bot.EditMessageTextAsync(inlineMessageId, content, await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
         else if (message.ChatId is { } chatId && message.MessageId is { } messageId)
         {
-          await bot.EditMessageTextAsync(chatId, messageId, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-            await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
+          await bot.EditMessageTextAsync(chatId, messageId, content, await message.GetReplyMarkup(chatInfo, cancellationToken), cancellationToken);
         }
       }
       catch (Exception ex)

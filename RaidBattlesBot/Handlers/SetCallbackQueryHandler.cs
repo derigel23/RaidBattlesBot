@@ -9,6 +9,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -30,8 +31,8 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var callback = data.Data.Split(':');
-      if (callback[0] != ID)
+      var callback = data.Data?.Split(':');
+      if (callback?[0] != ID)
         return (null, false, null);
 
       if (!await myChatInfo.CandEditPoll(data.Message.Chat, data.From?.Id ,cancellationToken))
@@ -131,7 +132,7 @@ namespace RaidBattlesBot.Handlers
       async Task<(string, bool, string)> Return((InputTextMessageContent content, InlineKeyboardMarkup replyMarkup) pass, string notification = "")
       {
         await myTelegramBotClient.EditMessageTextAsync(data.Message.Chat, data.Message.MessageId,
-          pass.content.MessageText, pass.content.ParseMode, pass.content.Entities, pass.content.DisableWebPagePreview, pass.replyMarkup, cancellationToken);
+          pass.content, pass.replyMarkup, cancellationToken);
 
         return (notification, false, null);
       }

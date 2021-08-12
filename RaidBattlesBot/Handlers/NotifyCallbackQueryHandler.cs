@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -76,7 +77,7 @@ namespace RaidBattlesBot.Handlers
       {
         try
         {
-          await myBot.SendTextMessageAsync(targetChat, message.MessageText, message.ParseMode, message.Entities, message.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
+          await myBot.SendTextMessageAsync(targetChat, message, disableNotification: true, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {

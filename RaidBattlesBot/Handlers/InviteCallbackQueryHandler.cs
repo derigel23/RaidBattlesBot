@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -29,11 +30,11 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<(string, bool, string)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var callback = data.Data.Split(':');
-      if (callback[0] != ID)
+      var callback = data.Data?.Split(':');
+      if (callback?[0] != ID)
         return (null, false, null);
 
-      if (!(data.Message.Chat is {} chat))
+      if (!(data.Message?.Chat is {} chat))
         return ("Not supported", false, null);
       
       PollMessage pollMessage;
@@ -52,8 +53,7 @@ namespace RaidBattlesBot.Handlers
       var inviteMessage = await poll.GetInviteMessage(myContext, cancellationToken);
       inviteMessage ??= new InputTextMessageContent("Nobody to invite");
 
-      await myBot.SendTextMessageAsync(chat, inviteMessage.MessageText, inviteMessage.ParseMode, inviteMessage.Entities,
-        inviteMessage.DisableWebPagePreview, disableNotification: true, cancellationToken: cancellationToken);
+      await myBot.SendTextMessageAsync(chat, inviteMessage, disableNotification: true, cancellationToken: cancellationToken);
       
       return (null, false, null);
     }

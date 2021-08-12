@@ -18,6 +18,7 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -193,8 +194,7 @@ namespace RaidBattlesBot.Handlers
                   var pollMarkup = new InlineKeyboardMarkup(
                     new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", 
                       callbackData: FriendshipCallbackQueryHandler.Commands.AutoApprove(poll)) });
-                  await bot.SendTextMessageAsync(host.UserId, pollContent.MessageText, pollContent.ParseMode, pollContent.Entities, pollContent.DisableWebPagePreview,
-                    replyMarkup: pollMarkup, cancellationToken: cancellationToken);
+                  await bot.SendTextMessageAsync(host.UserId, pollContent, replyMarkup: pollMarkup, cancellationToken: cancellationToken);
                   host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
                 }
 
@@ -204,8 +204,7 @@ namespace RaidBattlesBot.Handlers
                 var userMarkup = new InlineKeyboardMarkup(
                   InlineKeyboardButton.WithCallbackData("Send him/her your Friend Code",
                     callbackData: FriendshipCallbackQueryHandler.Commands.SendCode(user, myBot)));
-                await bot.SendTextMessageAsync(host.UserId, userContent.MessageText, userContent.ParseMode, userContent.Entities, userContent.DisableWebPagePreview,
-                  replyMarkup: userMarkup, cancellationToken: cancellationToken);
+                await bot.SendTextMessageAsync(host.UserId, userContent, replyMarkup: userMarkup, cancellationToken: cancellationToken);
               }
               catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
               {

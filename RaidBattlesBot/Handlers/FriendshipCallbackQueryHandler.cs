@@ -124,8 +124,7 @@ namespace RaidBattlesBot.Handlers
         .AppendLine()
         .Append("Please, add him/her to your friends")
         .ToTextMessageContent();
-      await bot.SendTextMessageAsync(userId, content.MessageText, content.ParseMode, content.Entities,
-        content.DisableWebPagePreview, cancellationToken: cancellationToken);
+      await bot.SendTextMessageAsync(userId, content, cancellationToken: cancellationToken);
       var friendshipDB = myDB.Set<Friendship>();
       var friendship = await friendshipDB.SingleOrDefaultAsync(friendship =>
                          friendship.Id == host.Id && friendship.FriendId == userId ||

@@ -80,8 +80,8 @@ namespace RaidBattlesBot.Handlers
           }
 
           var content = pollTitle.ToTextMessageContent();
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview, disableNotification: true, 
-            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Choose a Gym", $"{GymInlineQueryHandler.PREFIX}{query} ")), cancellationToken: cancellationToken);
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, content, disableNotification: true, cancellationToken: cancellationToken, 
+            replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Choose a Gym", $"{GymInlineQueryHandler.PREFIX}{query} ")));
           return false;
 
         // deep linking with IGN
@@ -120,7 +120,7 @@ namespace RaidBattlesBot.Handlers
               (builder, user) => builder.Append(user.GetLink()).NewLine())
             .ToTextMessageContent(disableWebPreview: true);
 
-          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info.MessageText, info.ParseMode, info.Entities, info.DisableWebPagePreview, disableNotification: true,
+          await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info, disableNotification: true,
             replyToMessageId: myMessage.MessageId, cancellationToken: cancellationToken);
 
           return false;
