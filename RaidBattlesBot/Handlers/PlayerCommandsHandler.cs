@@ -13,24 +13,31 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace RaidBattlesBot.Handlers
 {
   [BotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, Aliases = new[] { "nick" , "nickname" }, Order = -20)]
-  public class PlayerCommandsHandler : IBotCommandHandler
+  public class PlayerCommandsHandler : IReplyBotCommandHandler
   {
     public const string COMMAND = "ign";
     
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
+    private readonly Message myMessage;
 
-    public PlayerCommandsHandler(RaidBattlesContext context, ITelegramBotClient bot)
+    public PlayerCommandsHandler(RaidBattlesContext context, ITelegramBotClient bot, Message message)
     {
       myContext = context;
       myBot = bot;
+      myMessage = message;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
     {
       if (this.ShouldProcess(entity, context))
       {
-        return await Process(entity.Message.From, entity.AfterValue.Trim().ToString(), cancellationToken);
+        var nickname = entity.AfterValue.Trim();
+        if (entity.Message != myMessage) // reply mode
+        {
+          nickname = myMessage.Text;
+        }
+        return await Process(myMessage.From, nickname.ToString(), cancellationToken);
       }
 
       return null;
@@ -79,26 +86,6 @@ namespace RaidBattlesBot.Handlers
         replyMarkup: replyMarkup ?? new ForceReplyMarkup(), cancellationToken: cancellationToken);
         
       return false; // processed, but not pollMessage
-    }
-    
-    public async Task<bool?> HandleReply(Message message, PollMessage context, CancellationToken cancellationToken = default)
-    {
-      if (string.IsNullOrEmpty(message.Text) || message.Entities?.Length > 0)
-        return null; // just plain text messages
-      
-      if (message.ReplyToMessage is { } parentMessage)
-      {
-        foreach (var entity in parentMessage.Entities ?? Enumerable.Empty<MessageEntity>())
-        {
-          if (entity.Type != MessageEntityType.BotCommand) continue;
-          if (this.ShouldProcess(new MessageEntityEx(parentMessage, entity), context))
-          {
-            return await Process(message.From, message.Text, cancellationToken);
-          }
-        }
-      }
-
-      return null;
     }
   }
 }

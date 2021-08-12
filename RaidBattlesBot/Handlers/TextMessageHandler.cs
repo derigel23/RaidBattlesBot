@@ -15,15 +15,15 @@ namespace RaidBattlesBot.Handlers
   [MessageType(MessageType = MessageType.Text)]
   public class TextMessageHandler : TextMessageHandler<PollMessage, bool?, MessageEntityTypeAttribute>, IMessageHandler
   {
-    private readonly PlayerCommandsHandler myPlayerCommandsHandler;
+    private readonly IEnumerable<Lazy<Func<Message, IReplyBotCommandHandler>, BotCommandAttribute>> myReplyCommandHandlers;
     private readonly RaidBattlesContext myDb;
 
-    public TextMessageHandler(ITelegramBotClient bot, PlayerCommandsHandler playerCommandsHandler,
+    public TextMessageHandler(ITelegramBotClient bot, IEnumerable<Lazy<Func<Message, IReplyBotCommandHandler>, BotCommandAttribute>> replyCommandHandlers,
         IEnumerable<Lazy<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers,
         RaidBattlesContext db)
       : base(bot, messageEntityHandlers)
     {
-      myPlayerCommandsHandler = playerCommandsHandler;
+      myReplyCommandHandlers = replyCommandHandlers;
       myDb = db;
     }
 
@@ -48,11 +48,17 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-      if (await myPlayerCommandsHandler.HandleReply(message, _.context, cancellationToken) is {} replyProcessed)
-      {
-        return replyProcessed;
-      }
+
+      // check for reply commands
       
+      if (message.ReplyToMessage is { } parentMessage && message.Entities is null or { Length: 0 } ) // handle only plain text replies
+      {
+        if (await Handle(message, parentMessage, pollMessage, myReplyCommandHandlers, cancellationToken) is {} replyProcessed)
+        {
+          return replyProcessed;
+        }
+      }
+
       return await base.Handle(message, _, cancellationToken);
     }
   }
