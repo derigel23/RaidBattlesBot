@@ -122,7 +122,7 @@ namespace RaidBattlesBot.Handlers
         .AppendFormat("{0} Friend Code is ", host.GetLink())
         .Code((b, mode) => b.AppendFormat("{0:0000 0000 0000}", player.FriendCode))
         .AppendLine()
-        .Append("Please, add him/her to your friends")
+        .Append("Please, add him/her to your friends.")
         .ToTextMessageContent();
       await bot.SendTextMessageAsync(userId, content, cancellationToken: cancellationToken);
       var friendshipDB = myDB.Set<Friendship>();
