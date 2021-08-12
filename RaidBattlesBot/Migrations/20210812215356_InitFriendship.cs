@@ -22,7 +22,7 @@ ORDER BY Id, FriendId");
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-          migrationBuilder.Sql("DELETE * FROM Friendship");
+          migrationBuilder.Sql("DELETE FROM Friendship");
         }
     }
 }
