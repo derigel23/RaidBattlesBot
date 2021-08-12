@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -13,7 +15,9 @@ using NodaTime;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -21,22 +25,29 @@ namespace RaidBattlesBot.Handlers
   public class VoteCallbackQueryHandler : ICallbackQueryHandler
   {
     public const string ID = "vote";
-    
+
+    private readonly TelemetryClient myTelemetryClient;
     private readonly RaidBattlesContext myDb;
+    private readonly IDictionary<long, ITelegramBotClient> myBots;
     private readonly ITelegramBotClient myBot;
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
+    private readonly Lazy<FriendshipCallbackQueryHandler> myFriendshipCallbackQueryFactory;
     private readonly TimeSpan myVoteTimeout;
     private readonly HashSet<long> myBlackList;
 
-    public VoteCallbackQueryHandler(RaidBattlesContext db, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options)
+    public VoteCallbackQueryHandler(TelemetryClient telemetryClient, RaidBattlesContext db, IDictionary<long, ITelegramBotClient> bots, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options,
+      Lazy<FriendshipCallbackQueryHandler> friendshipCallbackQueryFactory)
     {
+      myTelemetryClient = telemetryClient;
       myDb = db;
+      myBots = bots;
       myBot = bot;
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myClock = clock;
+      myFriendshipCallbackQueryFactory = friendshipCallbackQueryFactory;
       myVoteTimeout = options.Value.VoteTimeout;
       myBlackList = options.Value.BlackList ?? new HashSet<long>(0);
     }
@@ -137,8 +148,82 @@ namespace RaidBattlesBot.Handlers
           await myRaidService.UpdatePollMessage(pollMessage, myUrlHelper, cancellationToken);
         }
 
+        // Handling invitation request
         if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
+          // request friendship from host(s)
+          var hosts = poll.Votes.Where(_ => _.Team?.HasAnyFlags(VoteEnum.Host) ?? false).ToList();
+          if (hosts.Count > 0)
+          {
+            var hostIds = hosts.ConvertAll(_ => _.UserId);
+            var friendshipDB = myDb.Set<Friendship>();
+            var friendships = await friendshipDB.Where(_ => hostIds.Contains(_.Id) || hostIds.Contains(_.FriendId)).ToListAsync(cancellationToken);
+            var directFriendMap = friendships.ToLookup(_ => _.Id);
+            var reverseFriendMap = friendships.ToLookup(_ => _.FriendId);
+            var friends = directFriendMap[user.Id].Concat(reverseFriendMap[user.Id]).ToList();
+            foreach (var host in hosts)
+            {
+              var friendship = friends.FirstOrDefault(fr => fr.Id == host.UserId || fr.FriendId == host.UserId);
+              if (friendship is { Type: FriendshipType.Approved or FriendshipType.Denied }) continue;
+              if (friendship == null)
+              {
+                friendship = new Friendship { Id = host.UserId, FriendId = user.Id, Type = FriendshipType.Awaiting };
+                friendshipDB.Add(friendship);
+              }
+              friendship.PollId = poll.Id;
+
+              if (host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
+              {
+                await myFriendshipCallbackQueryFactory.Value.SendCode(myBot, user.Id, host.User, cancellationToken: cancellationToken);
+                continue;
+              }
+              
+              if (host.BotId is not { } botId || !myBots.TryGetValue(botId, out var bot))
+              {
+                bot = myBot;
+              }
+
+              try
+              {
+                if (!(host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) ?? false))
+                {
+                  var pollContent = new StringBuilder("Poll ")
+                    .Bold((b, m) => b.Sanitize(poll.Title, m))
+                    .ToTextMessageContent();
+                  var pollMarkup = new InlineKeyboardMarkup(
+                    new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", 
+                      callbackData: FriendshipCallbackQueryHandler.Commands.AutoApprove(poll)) });
+                  await bot.SendTextMessageAsync(host.UserId, pollContent.MessageText, pollContent.ParseMode, pollContent.Entities, pollContent.DisableWebPagePreview,
+                    replyMarkup: pollMarkup, cancellationToken: cancellationToken);
+                  host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
+                }
+
+                var userContent = new StringBuilder()
+                  .AppendFormat("{0} is asking for an invitation but he/she is not your friend.", user.GetLink())
+                  .ToTextMessageContent();
+                var userMarkup = new InlineKeyboardMarkup(
+                  InlineKeyboardButton.WithCallbackData("Send him/her your Friend Code",
+                    callbackData: FriendshipCallbackQueryHandler.Commands.SendCode(user, myBot)));
+                await bot.SendTextMessageAsync(host.UserId, userContent.MessageText, userContent.ParseMode, userContent.Entities, userContent.DisableWebPagePreview,
+                  replyMarkup: userMarkup, cancellationToken: cancellationToken);
+              }
+              catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
+              {
+                // personal messages banned for host - propose user to ask for FC manually
+              }
+              catch (Exception ex)
+              {
+                myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
+                {
+                  { nameof(ITelegramBotClient.BotId), bot?.BotId .ToString() },
+                  { "UserId", host.UserId.ToString() }
+                });
+              }
+            }
+            await myDb.SaveChangesAsync(cancellationToken);
+          }
+          
+          // check user's nickname
           var player = await myDb.Set<Player>().SingleOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
           if (string.IsNullOrEmpty(player?.Nickname))
           {

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -23,8 +22,7 @@ namespace RaidBattlesBot.Pages
       {
         Raid = await myDbContext
           .Set<Raid>()
-          .Where(_ => _.Id == raidId)
-          .FirstOrDefaultAsync(cancellationToken);
+          .FirstOrDefaultAsync(_ => _.Id == raidId, cancellationToken);
         if (Raid == null)
           return NotFound($"Raid {raidId} not found.");
 

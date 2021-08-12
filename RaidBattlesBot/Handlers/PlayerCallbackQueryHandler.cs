@@ -36,7 +36,7 @@ namespace RaidBattlesBot.Handlers
       if (callback?[0] != ID)
         return (null, false, null);
 
-      var player = await myDb.Set<Player>().Where(p => p.UserId == data.From.Id).FirstOrDefaultAsync(cancellationToken);
+      var player = await myDb.Set<Player>().FirstOrDefaultAsync(p => p.UserId == data.From.Id, cancellationToken);
       
       switch (callback.Skip(1).FirstOrDefault()?.ToLowerInvariant())
       {

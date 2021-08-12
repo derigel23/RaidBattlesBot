@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +44,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Process(User user, string nickname, CancellationToken cancellationToken = default)
     {
-      var player = await myContext.Set<Player>().Where(p => p.UserId == user.Id).FirstOrDefaultAsync(cancellationToken);
+      var player = await myContext.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
       if (!string.IsNullOrEmpty(nickname))
       {
         if (player == null)

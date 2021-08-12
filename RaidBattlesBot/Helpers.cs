@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NodaTime;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -252,6 +253,9 @@ namespace RaidBattlesBot
 
     public static void TrackExceptionEx(this TelemetryClient telemetryClient, Exception exception, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null)
     {
+      if (exception is ApiRequestTimeoutException)
+        return; // do not track timeout exceptions
+      
       if (exception is AggregateException aggregateException)
       {
         aggregateException.Handle(ex => !(ex is TaskCanceledException));

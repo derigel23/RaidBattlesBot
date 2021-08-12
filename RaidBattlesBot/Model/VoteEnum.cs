@@ -74,6 +74,11 @@ namespace RaidBattlesBot.Model
     
     [Display(Name = "🙏", Order = 101, Description = "You've thanked!")]
     Thanks = PollModeUsernames << 1,
+    
+    [Display(Name = "🤝", Order = 9998, Description = "Automatically approve all friend requests for this poll")]
+    AutoApproveFriend = Thanks << 1,
+    [Display(Name = "🔔", Order = 9999, Description = "Automatically approve all friend requests for this poll (notification sent)")]
+    AutoApproveFriendNotificationSent = AutoApproveFriend << 1,
 
     #region Plused votes
 
@@ -115,7 +120,8 @@ namespace RaidBattlesBot.Model
     Team = Valor | Instinct | Mystic,
     TeamPlusOne = Team | Plus1,
     HarryPotter = Auror | Magizoologist | Professor,
-    Going = Yes | Team | HarryPotter | TeamHarmony | Remotely | Invitation,
+    Host = Yes | Team | HarryPotter | TeamHarmony | Remotely,
+    Going = Host | Invitation,
     Thinking = MayBe,
     Countable = Going | Thumbs,
     Some = Countable | MayBe,
@@ -127,6 +133,6 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🆔", Order = 106, Description = "Show IGNs / Names / Usernames")]
     PollMode = PollModeNicknames | PollModeNames | PollModeUsernames,
     
-    Modifiers = Plus | Share | PollMode,
+    Modifiers = Plus | Share | PollMode | AutoApproveFriend | AutoApproveFriendNotificationSent,
   }
 }

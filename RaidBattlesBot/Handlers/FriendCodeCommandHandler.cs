@@ -48,9 +48,9 @@ namespace RaidBattlesBot.Handlers
       return null;
     }
 
-    private async Task<bool?> Process(User user, StringSegment text, CancellationToken cancellationToken = default)
+    public async Task<bool?> Process(User user, StringSegment text, CancellationToken cancellationToken = default)
     {
-      var player = await myContext.Set<Player>().Where(p => p.UserId == user.Id).FirstOrDefaultAsync(cancellationToken);
+      var player = await myContext.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
       long? friendCode = null;
       if (ourFriendCodeMatcher.Match(text.Buffer, text.Offset, text.Length) is { Success: true } match)
       {

@@ -51,7 +51,7 @@ namespace RaidBattlesBot.Model
     private static readonly VoteGrouping[] ourVoteGrouping =
     {
       new VoteGrouping(VoteEnum.Going, 1, 1, "is going", "are going", 
-        new VoteGrouping(VoteEnum.Going, 3, 1,  "on-site", "on-site"),
+        new VoteGrouping(VoteEnum.Host, 3, 1,  "on-site", "on-site"),
         new VoteGrouping(VoteEnum.Remotely, 2, 2, "remotely", "remotely"),
         new VoteGrouping(VoteEnum.Invitation, 1, 3, "by invitation", "by invitation")),
       new VoteGrouping(VoteEnum.Thinking, 2, 2, "maybe", "maybe"),

@@ -97,11 +97,12 @@ namespace RaidBattlesBot.Handlers
       }
 
       var userId = message.From.Id;
-      var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == userId, cancellationToken);
+      var settingsDB = myContext.Set<UserSettings>();
+      var settings = await settingsDB.SingleOrDefaultAsync(_ => _.UserId == userId, cancellationToken);
       if (settings == null)
       {
         settings = new UserSettings { UserId = userId };
-        myContext.Set<UserSettings>().Add(settings);
+        settingsDB.Add(settings);
       }
       if (TimeZoneLookup.GetTimeZone(location.Latitude, location.Longitude).Result is { } timeZoneId)
       {

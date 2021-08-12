@@ -102,6 +102,14 @@ namespace RaidBattlesBot.Model
         builder.Property(p => p.Lat).HasColumnType("decimal(18,15)");
         builder.Property(p => p.Lon).HasColumnType("decimal(18,15)");
       });
+      
+      modelBuilder.Entity<Friendship>(builder =>
+      {
+        builder.ToTable("Friendship");
+        builder.HasKey(friendship => new { friendship.Id, friendship.FriendId });
+        builder.HasIndex(friendship => friendship.PollId);
+      });
+
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
