@@ -143,7 +143,7 @@ namespace RaidBattlesBot.Handlers
           if (string.IsNullOrEmpty(player?.Nickname))
           {
             var botInfo = await myBot.GetMeAsync(cancellationToken);
-            return ("Please, set up your in-game name.", true, $"https://t.me/{botInfo.Username}?start=ign");
+            return ("Please, set up your in-game name.", true, $"https://t.me/{botInfo.Username}?start={PlayerCommandsHandler.COMMAND}");
           }
         }
         

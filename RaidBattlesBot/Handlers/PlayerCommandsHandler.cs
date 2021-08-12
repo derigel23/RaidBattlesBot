@@ -71,19 +71,19 @@ namespace RaidBattlesBot.Handlers
           .AppendLine()
           .AppendLine();
 
-        replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Clear IGN", $"{PlayerCallbackQueryHandler.ID}:clear"));
+        replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Clear IGN", 
+          $"{PlayerCallbackQueryHandler.ID}:{PlayerCallbackQueryHandler.Commands.ClearIGN}"));
       }
 
       builder
         .AppendLine("To set up your in-game-name reply with it to this message.")
-        .Append("Or use /ign command ")
-          .Code((b, mode) => b.Append("/ign your-in-game-name"))
-        .AppendLine(".");
+        .AppendLine($"Or use /{COMMAND} command.")
+        .Code((b, mode) => b.Append("/ign your-in-game-name"));
       
       var content = builder.ToTextMessageContent();
 
       await myBot.SendTextMessageAsync(user.Id, content.MessageText, content.ParseMode, content.Entities, content.DisableWebPagePreview,
-        replyMarkup: replyMarkup ?? new ForceReplyMarkup(), cancellationToken: cancellationToken);
+        replyMarkup: replyMarkup ?? new ForceReplyMarkup { InputFieldPlaceholder = "in-game-name" }, cancellationToken: cancellationToken);
         
       return false; // processed, but not pollMessage
     }

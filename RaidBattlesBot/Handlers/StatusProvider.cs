@@ -30,7 +30,8 @@ namespace RaidBattlesBot.Handlers
       status["assetsRoot"] = myUrlHelper.AssetsContent("~");
       status["lastAppliedMigration"] = (await myDB.Database.GetAppliedMigrationsAsync(cancellationToken)).LastOrDefault();
       status["polls"] = await myDB.Set<Poll>().LongCountAsync(cancellationToken);
-      status["IGNs"] = await myDB.Set<Player>().LongCountAsync(cancellationToken);
+      status["IGNs"] = await myDB.Set<Player>().Where(_ => _.Nickname != null).LongCountAsync(cancellationToken);
+      status["FCs"] = await myDB.Set<Player>().Where(_ => _.FriendCode != null).LongCountAsync(cancellationToken);
       return status;
     }
   }

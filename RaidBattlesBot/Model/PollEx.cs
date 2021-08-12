@@ -399,7 +399,7 @@ namespace RaidBattlesBot.Model
         .ToDictionary(player => player.UserId, player => player.Nickname);
 
       var resultNicknames = inviteVotes
-        .Select(vote => nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : vote.Username)
+        .Select(vote => (nicknames.TryGetValue(vote.UserId, out var nickname) ? nickname : null) ?? vote.Username)
         .Where(_ => !string.IsNullOrEmpty(_))
         .ToList();
 

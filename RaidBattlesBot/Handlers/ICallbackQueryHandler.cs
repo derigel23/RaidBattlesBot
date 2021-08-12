@@ -17,7 +17,7 @@ namespace RaidBattlesBot.Handlers
 
     public bool ShouldProcess(CallbackQuery callbackQuery, object context)
     {
-      return callbackQuery.Data.StartsWith(DataPrefix);
+      return callbackQuery.Data?.StartsWith(DataPrefix) ?? false;
     }
 
     public int Order => string.IsNullOrEmpty(DataPrefix) ? int.MaxValue : 0;
