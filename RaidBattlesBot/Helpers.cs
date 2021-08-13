@@ -253,8 +253,8 @@ namespace RaidBattlesBot
 
     public static void TrackExceptionEx(this TelemetryClient telemetryClient, Exception exception, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null)
     {
-      if (exception is ApiRequestTimeoutException)
-        return; // do not track timeout exceptions
+      if (exception is ApiRequestTimeoutException or ApiRequestNotFoundException)
+        return; // do not track not important exceptions
       
       if (exception is AggregateException aggregateException)
       {
