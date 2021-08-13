@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -253,20 +254,27 @@ namespace RaidBattlesBot
 
     public static void TrackExceptionEx(this TelemetryClient telemetryClient, Exception exception, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null)
     {
-      if (exception is ApiRequestTimeoutException or ApiRequestNotFoundException)
-        return; // do not track not important exceptions
-      
       if (exception is AggregateException aggregateException)
       {
         aggregateException.Handle(ex => !(ex is TaskCanceledException));
       }
+      var telemetry = new ExceptionTelemetry(exception);
       if (exception is ApiRequestException apiRequestException)
       {
         properties ??= new Dictionary<string, string>(1);
         properties["ErrorCode"] = apiRequestException.ErrorCode.ToString();
+        if (exception is ApiRequestTimeoutException or ApiRequestNotFoundException)
+        {
+          // just warning for non-critical exceptions
+          telemetry.SeverityLevel = SeverityLevel.Warning;
+        }
+      }
+      foreach (var (key, value) in properties ?? Enumerable.Empty<KeyValuePair<string, string>>())
+      {
+        telemetry.Properties[key] = value;
       }
 
-      telemetryClient.TrackException(exception, properties, metrics);
+      telemetryClient.TrackException(telemetry);
     }
   }
 }
