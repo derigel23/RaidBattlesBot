@@ -175,7 +175,14 @@ namespace RaidBattlesBot.Handlers
 
               if (host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
               {
-                await myFriendshipService.SendCode(myBot, user.Id, host.User, cancellationToken: cancellationToken);
+                try
+                {
+                  await myFriendshipService.SendCode(myBot, user, host.User, cancellationToken: cancellationToken);
+                }
+                catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
+                {
+                  // personal messages banned for host - propose user to ask for FC manually
+                }
                 continue;
               }
               
@@ -198,13 +205,7 @@ namespace RaidBattlesBot.Handlers
                   host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
                 }
 
-                var userContent = new StringBuilder()
-                  .AppendFormat("{0} is asking for an invitation but he/she is not your friend.", user.GetLink())
-                  .ToTextMessageContent();
-                var userMarkup = new InlineKeyboardMarkup(
-                  InlineKeyboardButton.WithCallbackData("Send him/her your Friend Code",
-                    callbackData: FriendshipCallbackQueryHandler.Commands.SendCode(user, myBot)));
-                await bot.SendTextMessageAsync(host.UserId, userContent, replyMarkup: userMarkup, cancellationToken: cancellationToken);
+                await myFriendshipService.AskCode(user, myBot, host.User, bot, cancellationToken);
               }
               catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
               {
@@ -223,7 +224,7 @@ namespace RaidBattlesBot.Handlers
           }
           
           // check user's nickname
-          var player = await myDb.Set<Player>().SingleOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+          var player = await myFriendshipService.GetPlayer(user, cancellationToken);
           if (string.IsNullOrEmpty(player?.Nickname))
           {
             var botInfo = await myBot.GetMeAsync(cancellationToken);

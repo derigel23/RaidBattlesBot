@@ -25,12 +25,27 @@ namespace RaidBattlesBot
       myDB = db;
     }
 
-    public async Task<Player> GetPlayer(User host, CancellationToken cancellationToken = default)
+    public async Task<Player> GetPlayer(User user, CancellationToken cancellationToken = default)
     {
-      return await myDB.Set<Player>().FirstOrDefaultAsync(p => p.UserId == host.Id, cancellationToken);
+      return await myDB.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
     }
 
-    public async Task SendCode(ITelegramBotClient bot, long userId, User host, Player player = null, CancellationToken cancellationToken = default)
+    public async Task ApproveFriendship(User host, User user, CancellationToken cancellationToken = default)
+    {
+      var friendshipDB = myDB.Set<Friendship>();
+      var friendship = await friendshipDB.SingleOrDefaultAsync(friendship =>
+        friendship.Id == host.Id && friendship.FriendId == user.Id ||
+        friendship.Id == user.Id && friendship.FriendId == host.Id, cancellationToken);
+      if (friendship == null)
+      {
+        friendship = new Friendship { Id = host.Id, FriendId = user.Id };
+        friendshipDB.Add(friendship);
+      }
+      friendship.Type = FriendshipType.Approved;
+      await myDB.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SendCode(ITelegramBotClient bot, User user, User host, Player player = null, CancellationToken cancellationToken = default)
     {
       player ??= await GetPlayer(host, cancellationToken);
       if (player?.FriendCode == null) return; // alarm, can't be
@@ -40,20 +55,37 @@ namespace RaidBattlesBot
         .AppendLine()
         .Append("Please, add him/her to your friends.")
         .ToTextMessageContent();
-      await bot.SendTextMessageAsync(userId, content, cancellationToken: cancellationToken);
-      var friendshipDB = myDB.Set<Friendship>();
-      var friendship = await friendshipDB.SingleOrDefaultAsync(friendship =>
-        friendship.Id == host.Id && friendship.FriendId == userId ||
-        friendship.Id == userId && friendship.FriendId == host.Id, cancellationToken);
-      if (friendship == null)
-      {
-        friendship = new Friendship { Id = host.Id, FriendId = userId };
-        friendshipDB.Add(friendship);
-      }
-      friendship.Type = FriendshipType.Approved;
-      await myDB.SaveChangesAsync(cancellationToken);
+      await bot.SendTextMessageAsync(user.Id, content, cancellationToken: cancellationToken);
+      await ApproveFriendship(host, user, cancellationToken);
     }
-    
+
+    public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, CancellationToken cancellationToken = default)
+    {
+      var userContent = new StringBuilder()
+        .AppendFormat("{0} is asking for an invitation but he/she is not your friend.", user.GetLink())
+        .ToTextMessageContent();
+      var userMarkup = new InlineKeyboardMarkup(new []
+      {
+        new []
+        {
+          InlineKeyboardButton.WithCallbackData("Send him/her your Friend Code",
+            callbackData: FriendshipCallbackQueryHandler.Commands.SendCode(user, userBot))
+        },
+        new []
+        {
+          InlineKeyboardButton.WithCallbackData("Ask his/her Friend Code instead",
+            callbackData: FriendshipCallbackQueryHandler.Commands.AskCode(user, userBot))
+        },
+        new []
+        {
+          InlineKeyboardButton.WithCallbackData("He/She is already Friend",
+            callbackData: FriendshipCallbackQueryHandler.Commands.Approve(user))
+        }
+      });
+      await hostBot.SendTextMessageAsync(host.Id, userContent, replyMarkup: userMarkup, cancellationToken: cancellationToken);
+
+    }
+
     private static readonly Regex ourFriendCodeMatcher = new(@"\d{4}\s?\d{4}\s?\d{4}", RegexOptions.Compiled); 
 
     public async Task SetupFriendCode(ITelegramBotClient bot, User user, StringSegment text, CancellationToken cancellationToken = default)
