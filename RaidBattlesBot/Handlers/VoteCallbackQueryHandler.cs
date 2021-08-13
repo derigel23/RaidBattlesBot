@@ -34,12 +34,12 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
-    private readonly Lazy<FriendshipCallbackQueryHandler> myFriendshipCallbackQueryFactory;
+    private readonly FriendshipService myFriendshipService;
     private readonly TimeSpan myVoteTimeout;
     private readonly HashSet<long> myBlackList;
 
     public VoteCallbackQueryHandler(TelemetryClient telemetryClient, RaidBattlesContext db, IDictionary<long, ITelegramBotClient> bots, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options,
-      Lazy<FriendshipCallbackQueryHandler> friendshipCallbackQueryFactory)
+      FriendshipService friendshipService)
     {
       myTelemetryClient = telemetryClient;
       myDb = db;
@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
       myUrlHelper = urlHelper;
       myClock = clock;
-      myFriendshipCallbackQueryFactory = friendshipCallbackQueryFactory;
+      myFriendshipService = friendshipService;
       myVoteTimeout = options.Value.VoteTimeout;
       myBlackList = options.Value.BlackList ?? new HashSet<long>(0);
     }
@@ -175,7 +175,7 @@ namespace RaidBattlesBot.Handlers
 
               if (host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
               {
-                await myFriendshipCallbackQueryFactory.Value.SendCode(myBot, user.Id, host.User, cancellationToken: cancellationToken);
+                await myFriendshipService.SendCode(myBot, user.Id, host.User, cancellationToken: cancellationToken);
                 continue;
               }
               

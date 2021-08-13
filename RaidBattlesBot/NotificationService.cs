@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
+using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -16,6 +17,7 @@ using Telegram.Bot.Exceptions;
 
 namespace RaidBattlesBot
 {
+  [UsedImplicitly]
   public class NotificationService : BackgroundService
   {
     private readonly TimeSpan myCheckPeriod = TimeSpan.FromSeconds(30);
