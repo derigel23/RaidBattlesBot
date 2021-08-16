@@ -53,15 +53,24 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
 
       var host = data.From;
-
-      var player = await myFriendshipService.GetPlayer(host, cancellationToken);
-      if (player?.FriendCode == null)
+      Player player = null;
+      
+      var command = callback.Skip(1).FirstOrDefault();
+      switch (command)
       {
-        await myFriendshipService.SetupFriendCode(myBot, host, StringSegment.Empty, cancellationToken);
-        return ("Please, specify your Friend Code first", true, null);
+        case Commands.SendCodeId:
+        case Commands.AutoApproveId:
+          player = await myFriendshipService.GetPlayer(host, cancellationToken);
+          if (player?.FriendCode == null)
+          {
+            await myFriendshipService.SetupFriendCode(myBot, host, StringSegment.Empty, cancellationToken);
+            return ("Please, specify your Friend Code first", true, null);
+          }
+          break;
       }
 
-      switch (callback.Skip(1).FirstOrDefault())
+
+      switch (command)
       {
         case Commands.SendCodeId
           when long.TryParse(callback.Skip(2).FirstOrDefault(), out var userId) &&
