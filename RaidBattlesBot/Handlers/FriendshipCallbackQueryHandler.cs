@@ -30,11 +30,13 @@ namespace RaidBattlesBot.Handlers
       internal const string AskCodeId = "askcode";
       internal const string ApproveId = "approve";
       internal const string AutoApproveId = "autoapprove";
+      internal const string ApproveSettingsId = "approveSettings";
 
       public static string SendCode(User user, ITelegramBotClient bot) => $"{ID}:{SendCodeId}:{user.Id}:{bot.BotId}";
       public static string AskCode(User user, ITelegramBotClient bot) => $"{ID}:{AskCodeId}:{user.Id}:{bot.BotId}";
       public static string Approve(User user) => $"{ID}:{ApproveId}:{user.Id}";
       public static string AutoApprove(Poll poll) => $"{ID}:{AutoApproveId}:{poll.Id}";
+      public static string ApproveSettings(bool? settings) => $"{ID}:{ApproveSettingsId}:{settings}";
     }
 
     public FriendshipCallbackQueryHandler(ITelegramBotClient bot, IDictionary<long, ITelegramBotClient> bots, RaidBattlesContext db,
@@ -53,14 +55,15 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
 
       var host = data.From;
-      Player player = null;
+      var player = await myFriendshipService.GetPlayer(host, cancellationToken);
       
       var command = callback.Skip(1).FirstOrDefault();
+      var commandParameter = callback.Skip(2).FirstOrDefault();
       switch (command)
       {
         case Commands.SendCodeId:
         case Commands.AutoApproveId:
-          player = await myFriendshipService.GetPlayer(host, cancellationToken);
+        case Commands.ApproveSettingsId when bool.TryParse(commandParameter, out var autoApprove) && autoApprove: 
           if (player?.FriendCode == null)
           {
             await myFriendshipService.SetupFriendCode(myBot, host, StringSegment.Empty, cancellationToken);
@@ -73,7 +76,7 @@ namespace RaidBattlesBot.Handlers
       switch (command)
       {
         case Commands.SendCodeId
-          when long.TryParse(callback.Skip(2).FirstOrDefault(), out var userId) &&
+          when long.TryParse(commandParameter, out var userId) &&
                long.TryParse(callback.Skip(3).FirstOrDefault(), out var botId):
           try
           {
@@ -88,12 +91,12 @@ namespace RaidBattlesBot.Handlers
           }
           
         case Commands.AskCodeId
-          when long.TryParse(callback.Skip(2).FirstOrDefault(), out var userId) &&
+          when long.TryParse(commandParameter, out var userId) &&
                long.TryParse(callback.Skip(3).FirstOrDefault(), out var botId):
           try
           {
             if (!myBots.TryGetValue(botId, out var bot)) bot = myBot;
-            await myFriendshipService.AskCode(host, myBot, new User { Id = userId }, bot, cancellationToken);
+            await myFriendshipService.AskCode(host, myBot, new User { Id = userId }, bot, player, cancellationToken);
             await myBot.EditMessageReplyMarkupAsync(data, InlineKeyboardMarkup.Empty(), cancellationToken);
             return ("Friend Code asked", false, null);
           }
@@ -103,14 +106,14 @@ namespace RaidBattlesBot.Handlers
           }
         
         case Commands.ApproveId
-          when int.TryParse(callback.Skip(2).FirstOrDefault(), out var userId):
+          when int.TryParse(commandParameter, out var userId):
 
           await myFriendshipService.ApproveFriendship(host, new User { Id = userId }, cancellationToken);
           await myBot.EditMessageReplyMarkupAsync(data, InlineKeyboardMarkup.Empty(), cancellationToken);
           return ("He/She marked as already Friend.", false, null);
         
         case Commands.AutoApproveId
-          when int.TryParse(callback.Skip(2).FirstOrDefault(), out var pollId):
+          when int.TryParse(commandParameter, out var pollId):
           
           var poll = await myDB
             .Set<Poll>()
@@ -151,6 +154,29 @@ namespace RaidBattlesBot.Handlers
           await myDB.SaveChangesAsync(cancellationToken);
           await myBot.EditMessageReplyMarkupAsync(data, InlineKeyboardMarkup.Empty(), cancellationToken);
           return ($"All invitees of `{poll.Title}` will be automatically approved.", false, null);
+        
+        case Commands.ApproveSettingsId:
+          if (player == null)
+          {
+            player = new Player
+            {
+              UserId = host.Id
+            };
+            myDB.Add(player);
+          }
+          if (bool.TryParse(commandParameter, out var autoApprove))
+          {
+            player.AutoApproveFriendship = autoApprove;
+          }
+          else
+          {
+            player.AutoApproveFriendship = null;
+          }
+
+          await myDB.SaveChangesAsync(cancellationToken);
+          await myBot.EditMessageReplyMarkupAsync(data, FriendshipCommandHandler.GetInlineKeyboardMarkup(player), cancellationToken);
+          return ("Friendship settings modified", false, null);
+
       }
 
       return (null, false, null);

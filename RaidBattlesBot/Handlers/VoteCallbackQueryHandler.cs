@@ -152,6 +152,8 @@ namespace RaidBattlesBot.Handlers
         // Handling invitation request
         if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
+          var player = await myFriendshipService.GetPlayer(user, cancellationToken);
+
           // request friendship from host(s)
           var hosts = poll.Votes.Where(_ => _.Team?.HasAnyFlags(VoteEnum.Host) ?? false).ToList();
           if (hosts.Count > 0)
@@ -173,7 +175,9 @@ namespace RaidBattlesBot.Handlers
               }
               friendship.PollId = poll.Id;
 
-              if (host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
+              var hostPlayer = await myFriendshipService.GetPlayer(host.User, cancellationToken);
+              // auto approve
+              if (hostPlayer?.AutoApproveFriendship ?? host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
               {
                 try
                 {
@@ -193,6 +197,13 @@ namespace RaidBattlesBot.Handlers
 
               try
               {
+                // ask invitee instead
+                if (hostPlayer?.AutoApproveFriendship is false)
+                {
+                  await myFriendshipService.AskCode(host.User, bot, user, myBot, hostPlayer, cancellationToken);
+                  continue;
+                }
+
                 if (!(host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) ?? false))
                 {
                   var pollContent = new StringBuilder("Poll ")
@@ -205,7 +216,7 @@ namespace RaidBattlesBot.Handlers
                   host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
                 }
 
-                await myFriendshipService.AskCode(user, myBot, host.User, bot, cancellationToken);
+                await myFriendshipService.AskCode(user, myBot, host.User, bot, player, cancellationToken);
               }
               catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
               {
@@ -224,7 +235,6 @@ namespace RaidBattlesBot.Handlers
           }
           
           // check user's nickname
-          var player = await myFriendshipService.GetPlayer(user, cancellationToken);
           if (string.IsNullOrEmpty(player?.Nickname))
           {
             var botInfo = await myBot.GetMeAsync(cancellationToken);

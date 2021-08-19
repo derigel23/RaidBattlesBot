@@ -25,6 +25,7 @@ namespace RaidBattlesBot
       myDB = db;
     }
 
+    [ItemCanBeNull]
     public async Task<Player> GetPlayer(User user, CancellationToken cancellationToken = default)
     {
       return await myDB.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
@@ -44,14 +45,28 @@ namespace RaidBattlesBot
       friendship.Type = FriendshipType.Approved;
       await myDB.SaveChangesAsync(cancellationToken);
     }
-    
-    public async Task SendCode(ITelegramBotClient bot, User user, User host, Player player = null, CancellationToken cancellationToken = default)
+
+    private static StringBuilder FormatUser(StringBuilder builder, User user, Player player = null)
     {
-      player ??= await GetPlayer(host, cancellationToken);
-      if (player?.FriendCode == null) return; // alarm, can't be
-      var content = new StringBuilder()
-        .AppendFormat("{0} Friend Code is ", host.GetLink())
-        .Code((b, mode) => b.AppendFormat("{0:0000 0000 0000}", player.FriendCode))
+      builder.Append(user.GetLink());
+      if (player?.Nickname is { } nickname)
+      {
+        builder
+          .Append(" (")
+          .Code((b, m) => b.Sanitize(nickname))
+          .Append(")");
+      }
+
+      return builder;
+    }
+    
+    public async Task SendCode(ITelegramBotClient bot, User user, User host, Player hostPlayer = null, CancellationToken cancellationToken = default)
+    {
+      hostPlayer ??= await GetPlayer(host, cancellationToken);
+      if (hostPlayer?.FriendCode == null) return; // alarm, can't be
+      var content = FormatUser(new StringBuilder(), host, hostPlayer)
+        .Append(" Friend Code is ")
+        .Code((b, mode) => b.AppendFormat("{0:0000 0000 0000}", hostPlayer.FriendCode))
         .AppendLine()
         .Append("Please, add him/her to your friends.")
         .ToTextMessageContent();
@@ -59,10 +74,11 @@ namespace RaidBattlesBot
       await ApproveFriendship(host, user, cancellationToken);
     }
 
-    public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, CancellationToken cancellationToken = default)
+    public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, Player userPlayer = null,  CancellationToken cancellationToken = default)
     {
-      var userContent = new StringBuilder()
-        .AppendFormat("{0} is asking for Friendship.", user.GetLink())
+      userPlayer ??= await GetPlayer(user, cancellationToken);
+      var userContent = FormatUser(new StringBuilder(), user, userPlayer)
+        .AppendFormat(" is asking for Friendship.")
         .ToTextMessageContent();
       var userMarkup = new InlineKeyboardMarkup(new []
       {
