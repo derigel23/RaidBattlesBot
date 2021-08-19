@@ -62,7 +62,7 @@ namespace RaidBattlesBot
     public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, CancellationToken cancellationToken = default)
     {
       var userContent = new StringBuilder()
-        .AppendFormat("{0} is asking for an invitation but he/she is not your friend.", user.GetLink())
+        .AppendFormat("{0} is asking for Friendship.", user.GetLink())
         .ToTextMessageContent();
       var userMarkup = new InlineKeyboardMarkup(new []
       {
@@ -78,7 +78,7 @@ namespace RaidBattlesBot
         },
         new []
         {
-          InlineKeyboardButton.WithCallbackData("He/She is already Friend",
+          InlineKeyboardButton.WithCallbackData("He/She is already a Friend",
             callbackData: FriendshipCallbackQueryHandler.Commands.Approve(user))
         }
       });
