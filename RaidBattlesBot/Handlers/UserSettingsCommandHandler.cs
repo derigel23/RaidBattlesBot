@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace RaidBattlesBot.Handlers
       if (!this.ShouldProcess(entity, context)) return null;
 
       var author = entity.Message.From;
-      var settings = await myContext.Set<UserSettings>().SingleOrDefaultAsync(_ => _.UserId == author.Id, cancellationToken);
+      var settings = await myContext.Set<UserSettings>().Get(author, cancellationToken);
 
       var content = await GetMessage(settings, cancellationToken);
       var sentMessage = await myBot.SendTextMessageAsync(entity.Message.Chat, content, cancellationToken: cancellationToken,
@@ -93,12 +94,12 @@ namespace RaidBattlesBot.Handlers
         return null;
       }
 
-      var userId = message.From.Id;
+      var user = message.From ?? throw new ArgumentNullException();
       var settingsDB = myContext.Set<UserSettings>();
-      var settings = await settingsDB.SingleOrDefaultAsync(_ => _.UserId == userId, cancellationToken);
+      var settings = await settingsDB.Get(user, cancellationToken);
       if (settings == null)
       {
-        settings = new UserSettings { UserId = userId };
+        settings = new UserSettings { UserId = user.Id };
         settingsDB.Add(settings);
       }
       if (TimeZoneLookup.GetTimeZone(location.Latitude, location.Longitude).Result is { } timeZoneId)

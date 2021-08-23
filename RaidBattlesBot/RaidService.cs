@@ -102,7 +102,7 @@ namespace RaidBattlesBot
       if (pollData.Portal is { } portal)
       {
         var portalSet = myContext.Set<Portal>();
-        var existingPortal = await portalSet.AsTracking().FirstOrDefaultAsync(p => p.Guid == portal.Guid, cancellationToken);
+        var existingPortal = await portalSet.FindAsync(portal.Guid, cancellationToken);
         if (existingPortal == null)
         {
           portalSet.Attach(portal).State = EntityState.Added;

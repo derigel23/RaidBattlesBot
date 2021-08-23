@@ -1,7 +1,6 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -15,7 +14,7 @@ namespace RaidBattlesBot.Handlers
   public class PlayerCommandsHandler : IReplyBotCommandHandler
   {
     public const string COMMAND = "ign";
-    
+
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
     private readonly Message myMessage;
@@ -44,7 +43,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Process(User user, string nickname, CancellationToken cancellationToken = default)
     {
-      var player = await myContext.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+      var player = await myContext.Set<Player>().Get(user, cancellationToken);
       if (!string.IsNullOrEmpty(nickname))
       {
         if (player == null)

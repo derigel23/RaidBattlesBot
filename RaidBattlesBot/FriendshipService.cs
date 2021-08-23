@@ -1,9 +1,10 @@
+using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Handlers;
@@ -15,7 +16,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot
 {
-  [UsedImplicitly]
   public class FriendshipService
   {
     private readonly RaidBattlesContext myDB;
@@ -25,18 +25,14 @@ namespace RaidBattlesBot
       myDB = db;
     }
 
-    [ItemCanBeNull]
-    public async Task<Player> GetPlayer(User user, CancellationToken cancellationToken = default)
-    {
-      return await myDB.Set<Player>().FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
-    }
-
     public async Task ApproveFriendship(User host, User user, CancellationToken cancellationToken = default)
     {
       var friendshipDB = myDB.Set<Friendship>();
-      var friendship = await friendshipDB.SingleOrDefaultAsync(friendship =>
+      Expression<Func<Friendship,bool>> findFriendPredicate = friendship =>
         friendship.Id == host.Id && friendship.FriendId == user.Id ||
-        friendship.Id == user.Id && friendship.FriendId == host.Id, cancellationToken);
+        friendship.Id == user.Id && friendship.FriendId == host.Id;
+      var friendship = friendshipDB.Local.SingleOrDefault(findFriendPredicate.Compile()) ??
+                       await friendshipDB.FirstOrDefaultAsync(findFriendPredicate, cancellationToken);
       if (friendship == null)
       {
         friendship = new Friendship { Id = host.Id, FriendId = user.Id };
@@ -62,7 +58,7 @@ namespace RaidBattlesBot
     
     public async Task SendCode(ITelegramBotClient bot, User user, User host, Player hostPlayer = null, CancellationToken cancellationToken = default)
     {
-      hostPlayer ??= await GetPlayer(host, cancellationToken);
+      hostPlayer ??= await myDB.Set<Player>().Get(host, cancellationToken);
       if (hostPlayer?.FriendCode == null) return; // alarm, can't be
       var content = FormatUser(new StringBuilder(), host, hostPlayer)
         .Append(" Friend Code is ")
@@ -76,7 +72,7 @@ namespace RaidBattlesBot
 
     public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, Player userPlayer = null,  CancellationToken cancellationToken = default)
     {
-      userPlayer ??= await GetPlayer(user, cancellationToken);
+      userPlayer ??= await myDB.Set<Player>().Get(user, cancellationToken);
       var userContent = FormatUser(new StringBuilder(), user, userPlayer)
         .AppendFormat(" is asking for Friendship.")
         .ToTextMessageContent();
@@ -106,7 +102,7 @@ namespace RaidBattlesBot
 
     public async Task SetupFriendCode(ITelegramBotClient bot, User user, StringSegment text, CancellationToken cancellationToken = default)
     {
-      var player = await GetPlayer(user, cancellationToken);
+      var player = await myDB.Set<Player>().Get(user, cancellationToken);
       long? friendCode = null;
       if (ourFriendCodeMatcher.Match(text.Buffer, text.Offset, text.Length) is { Success: true } match)
       {

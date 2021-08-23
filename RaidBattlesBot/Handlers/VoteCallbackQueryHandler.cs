@@ -152,7 +152,7 @@ namespace RaidBattlesBot.Handlers
         // Handling invitation request
         if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
-          var player = await myFriendshipService.GetPlayer(user, cancellationToken);
+          var player = await myDb.Set<Player>().Get(user, cancellationToken);
 
           // request friendship from host(s)
           var hosts = poll.Votes.Where(_ => _.Team?.HasAnyFlags(VoteEnum.Host) ?? false).ToList();
@@ -175,7 +175,7 @@ namespace RaidBattlesBot.Handlers
               }
               friendship.PollId = poll.Id;
 
-              var hostPlayer = await myFriendshipService.GetPlayer(host.User, cancellationToken);
+              var hostPlayer = await myDb.Set<Player>().Get(host.User, cancellationToken);
               // auto approve
               if (hostPlayer?.AutoApproveFriendship ?? host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
               {

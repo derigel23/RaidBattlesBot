@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GeoTimeZone;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using RaidBattlesBot.Model;
 using Telegram.Bot.Types;
@@ -33,8 +32,7 @@ namespace RaidBattlesBot
       }
 
       {
-        var userSettings = await myDB.Set<UserSettings>()
-          .SingleOrDefaultAsync(settings => settings.UserId == inlineQuery.From.Id, cancellationToken);
+        var userSettings = await myDB.Set<UserSettings>().Get(inlineQuery.From, cancellationToken);
         if (userSettings?.TimeZoneId is { } timeZoneId && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is { } timeZone)
         {
           return timeZone;

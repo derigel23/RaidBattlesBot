@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -20,7 +19,7 @@ namespace RaidBattlesBot.Handlers
       public const string ClearIGN = "clear";
       public const string ClearFriendCode = "clear_fc";
     }
-    
+
     private readonly RaidBattlesContext myDb;
     private readonly ITelegramBotClient myBot;
 
@@ -36,7 +35,7 @@ namespace RaidBattlesBot.Handlers
       if (callback?[0] != ID)
         return (null, false, null);
 
-      var player = await myDb.Set<Player>().FirstOrDefaultAsync(p => p.UserId == data.From.Id, cancellationToken);
+      var player = await myDb.Set<Player>().Get(data.From, cancellationToken);
       
       switch (callback.Skip(1).FirstOrDefault()?.ToLowerInvariant())
       {

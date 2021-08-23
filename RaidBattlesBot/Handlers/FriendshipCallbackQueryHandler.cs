@@ -55,7 +55,7 @@ namespace RaidBattlesBot.Handlers
         return (null, false, null);
 
       var host = data.From;
-      var player = await myFriendshipService.GetPlayer(host, cancellationToken);
+      var player = await myDB.Set<Player>().Get(host, cancellationToken);
       
       var command = callback.Skip(1).FirstOrDefault();
       var commandParameter = callback.Skip(2).FirstOrDefault();

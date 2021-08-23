@@ -13,19 +13,19 @@ namespace RaidBattlesBot.Handlers
   public class FriendshipCommandHandler : IBotCommandHandler
   {
     private readonly ITelegramBotClient myBot;
-    private readonly FriendshipService myFriendshipService;
+    private readonly RaidBattlesContext myDB;
 
-    public FriendshipCommandHandler(ITelegramBotClient bot, FriendshipService friendshipService)
+    public FriendshipCommandHandler(ITelegramBotClient bot, RaidBattlesContext db)
     {
       myBot = bot;
-      myFriendshipService = friendshipService;
+      myDB = db;
     }
     
     public async Task<bool?> Handle(MessageEntityEx data, PollMessage context = default, CancellationToken cancellationToken = default)
     {
       if (!this.ShouldProcess(data, context)) return null;
       
-      var player = await myFriendshipService.GetPlayer(data.Message.From, cancellationToken);
+      var player = await myDB.Set<Player>().Get(data.Message.From, cancellationToken);
 
       var content = new StringBuilder("When someone is asking for Friendship")
         .ToTextMessageContent();
