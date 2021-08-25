@@ -11,7 +11,7 @@ namespace RaidBattlesBot.Model
     [ItemCanBeNull]
     public static async Task<Player> Get(this DbSet<Player> players, User user, CancellationToken cancellationToken = default)
     {
-      return await players.FindAsync(new [] { user.Id }, cancellationToken);
+      return await players.FindAsync(new object[] { user.Id }, cancellationToken);
     }
   }
 }
