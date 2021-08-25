@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -12,7 +11,7 @@ namespace RaidBattlesBot.Model
     [ItemCanBeNull]
     public static async Task<UserSettings> Get(this DbSet<UserSettings> settings, User user, CancellationToken cancellationToken)
     {
-      return await settings.FindAsync(user.Id, cancellationToken);
+      return await settings.FindAsync(new object[] { user.Id }, cancellationToken);
     }
 
     [ItemCanBeNull]
