@@ -1,6 +1,13 @@
-- name: Issue Reminder
-  uses: agrc/reminder-action@v1.0.0
-  
-- name: Create Reminder
-  uses: agrc/create-reminder-action@v1.1.0
+name: 'create reminder'
 
+on:
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: check for reminder
+        uses: agrc/create-reminder-action@v1.1.0
