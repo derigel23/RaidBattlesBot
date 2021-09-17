@@ -1,2 +1,6 @@
 - name: Issue Reminder
   uses: agrc/reminder-action@v1.0.0
+  
+- name: Create Reminder
+  uses: agrc/create-reminder-action@v1.1.0
+
