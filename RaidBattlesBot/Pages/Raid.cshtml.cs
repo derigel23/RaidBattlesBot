@@ -22,7 +22,7 @@ namespace RaidBattlesBot.Pages
       {
         Raid = await myDbContext
           .Set<Raid>()
-          .FindAsync(raidId, cancellationToken);
+          .FindAsync(new object[] { raidId }, cancellationToken);
         if (Raid == null)
           return NotFound($"Raid {raidId} not found.");
 
