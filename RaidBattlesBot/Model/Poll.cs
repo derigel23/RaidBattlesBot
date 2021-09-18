@@ -52,6 +52,8 @@ namespace RaidBattlesBot.Model
     public long? Owner { get; set; }
     public string Title { get; set; }
     public DateTimeOffset? Time { get; set; }
+    /// TimeZone of <see cref="Time"/>
+    public string TimeZoneId { get; set; }
     public DateTimeOffset? Modified { get; set; }
     public bool Cancelled { get; set; }
     public VoteEnum? AllowedVotes { get; set; }

@@ -377,6 +377,7 @@ namespace RaidBattlesBot.Model
           var localDateTime = time.On(date);
           var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
           poll.Time = detectedTime.ToDateTimeOffset();
+          poll.TimeZoneId = detectedTime.Zone.Id;
         }
       }
       return poll;

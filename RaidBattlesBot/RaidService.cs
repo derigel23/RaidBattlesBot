@@ -96,6 +96,7 @@ namespace RaidBattlesBot
         Portal = pollData.Portal,
         ExRaidGym = exRaidGym,
         Time = pollData.Time,
+        TimeZoneId = pollData.TimeZoneId,
         Votes = new List<Vote>()
       };
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
