@@ -35,11 +35,13 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly IClock myClock;
     private readonly FriendshipService myFriendshipService;
+    private readonly TimeZoneNotifyService myTimeZoneNotifyService;
     private readonly TimeSpan myVoteTimeout;
     private readonly HashSet<long> myBlackList;
 
-    public VoteCallbackQueryHandler(TelemetryClient telemetryClient, RaidBattlesContext db, IDictionary<long, ITelegramBotClient> bots, ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options,
-      FriendshipService friendshipService)
+    public VoteCallbackQueryHandler(TelemetryClient telemetryClient, RaidBattlesContext db, IDictionary<long, ITelegramBotClient> bots,
+      ITelegramBotClient bot, RaidService raidService, IUrlHelper urlHelper, IClock clock, IOptions<BotConfiguration> options,
+      FriendshipService friendshipService, TimeZoneNotifyService timeZoneNotifyService)
     {
       myTelemetryClient = telemetryClient;
       myDb = db;
@@ -49,6 +51,7 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
       myClock = clock;
       myFriendshipService = friendshipService;
+      myTimeZoneNotifyService = timeZoneNotifyService;
       myVoteTimeout = options.Value.VoteTimeout;
       myBlackList = options.Value.BlackList ?? new HashSet<long>(0);
     }
@@ -152,6 +155,25 @@ namespace RaidBattlesBot.Handlers
         // Handling invitation request
         if (votedTeam.HasFlag(VoteEnum.Invitation))
         {
+          // send time zone notification, if necessary
+          try
+          {
+            await myTimeZoneNotifyService.ProcessPoll(myBot, user.Id, null, ct => Task.FromResult(poll),
+              () => new StringBuilder("Poll ").Bold((b, m) => b.Sanitize(poll.Title, m)).NewLine(), cancellationToken);
+          }
+          catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
+          {
+            // personal messages banned for user
+          }
+          catch (Exception ex)
+          {
+            myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
+            {
+              { nameof(ITelegramBotClient.BotId), myBot?.BotId .ToString() },
+              { "UserId", user.Id.ToString() }
+            });
+          }
+        
           var player = await myDb.Set<Player>().Get(user, cancellationToken);
 
           // request friendship from host(s)
@@ -231,9 +253,10 @@ namespace RaidBattlesBot.Handlers
                 });
               }
             }
-            await myDb.SaveChangesAsync(cancellationToken);
           }
-          
+
+          await myDb.SaveChangesAsync(cancellationToken);
+
           // check user's nickname
           if (string.IsNullOrEmpty(player?.Nickname))
           {

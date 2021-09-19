@@ -72,6 +72,7 @@ namespace RaidBattlesBot
         .Set<Poll>()
         .Where(_ => _.Id == pollId)
         .IncludeRelatedData()
+        .Include(poll => poll.Notifications)
         .FirstOrDefaultAsync(cancellationToken);
 
       if (poll != null)

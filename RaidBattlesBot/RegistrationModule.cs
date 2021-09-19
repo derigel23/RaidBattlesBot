@@ -37,6 +37,7 @@ namespace RaidBattlesBot
       builder.RegisterType<ChatInfo>().InstancePerLifetimeScope();
       builder.RegisterType<RaidService>().InstancePerLifetimeScope();
       builder.RegisterType<FriendshipService>().InstancePerLifetimeScope();
+      builder.RegisterType<TimeZoneNotifyService>().InstancePerLifetimeScope();
 
       builder.RegisterTelegramSkeleton<PoGoTelegramBotClient>();
 
