@@ -28,10 +28,11 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidService myRaidService;
     private readonly GeoCoderEx myGeoCoder;
     private readonly IClock myClock;
+    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
     private readonly IUrlHelper myUrlHelper;
     private readonly IngressClient myIngressClient;
     
-    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService, GeoCoderEx geoCoder, IClock clock)
+    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService, GeoCoderEx geoCoder, IClock clock, IDateTimeZoneProvider dateTimeZoneProvider)
     {
       myUrlHelper = urlHelper;
       myIngressClient = ingressClient;
@@ -40,6 +41,7 @@ namespace RaidBattlesBot.Handlers
       myRaidService = raidService;
       myGeoCoder = geoCoder;
       myClock = clock;
+      myDateTimeZoneProvider = dateTimeZoneProvider;
     }
 
     private const int MAX_PORTALS_PER_RESPONSE = 20;
@@ -63,7 +65,7 @@ namespace RaidBattlesBot.Handlers
               : location;
             break;
 
-          case { } part when Regex.Match(part, PATTERN) is { } match && match.Success:
+          case { } part when Regex.Match(part, PATTERN) is { Success: true } match:
             if (int.TryParse(match.Groups["pollId"].Value, out var pollId))
             {
               poll = myRaidService.GetTemporaryPoll(pollId);
@@ -98,7 +100,7 @@ namespace RaidBattlesBot.Handlers
           Title = string.Join("  ", pollQuery),
           AllowedVotes = voteFormat,
           ExRaidGym = false
-        }.DetectRaidTime(async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
+        }.DetectRaidTime(myDateTimeZoneProvider, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {

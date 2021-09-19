@@ -71,7 +71,7 @@ namespace RaidBattlesBot
       foreach (var poll in polls)
       {
         var pollMode = poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false ? PollMode.Invitation : default;
-        var alreadyNotified = poll.Notifications.Select(notification => notification.ChatId).ToHashSet();
+        var alreadyNotified = poll.Notifications.Where(notification => notification.Type == NotificationType.PollTime).Select(notification => notification.ChatId).ToHashSet();
         foreach (var pollVote in poll.Votes)
         {
           var botId = pollVote.BotId;
@@ -90,14 +90,30 @@ namespace RaidBattlesBot
               PollMode = pollMode
             };
             var notificationMessage = await myRaidService.GetOrCreatePollAndMessage(pollMessage, null, poll.AllowedVotes, cancellationToken);
-            poll.Notifications.Add(new Notification { PollId = poll.Id, BotId = pollMessage.BotId, ChatId = userId, DateTime = notificationMessage.Modified});
+            poll.Notifications.Add(new Notification
+            {
+              PollId = poll.Id,
+              BotId = pollMessage.BotId,
+              ChatId = notificationMessage.Chat.Id,
+              MessageId = notificationMessage.MessageId,
+              DateTime = notificationMessage.Modified,
+              Type = NotificationType.PollTime
+            });
           }
           catch (Exception ex)
           {
             if (ex is ApiRequestException { ErrorCode: 403 })
             {
               // Do not try to notify the user again for this poll
-              poll.Notifications.Add(new Notification { PollId = poll.Id, BotId = botId, ChatId = userId, DateTime = null});
+              poll.Notifications.Add(new Notification
+              {
+                PollId = poll.Id,
+                BotId = botId,
+                ChatId = userId,
+                MessageId = null,
+                DateTime = null,
+                Type = NotificationType.PollTime
+              });
             }
             else
               myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>

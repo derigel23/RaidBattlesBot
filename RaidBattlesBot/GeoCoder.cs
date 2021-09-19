@@ -23,13 +23,15 @@ namespace RaidBattlesBot
     private readonly TelemetryClient myTelemetryClient;
     private readonly YandexMapsClient myYandexMapsClient;
     private readonly ZonedClock myClock;
+    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
     private readonly GeoCoderConfiguration myGeoCoderOptions;
 
-    public GeoCoder(TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions, YandexMapsClient yandexMapsClient, ZonedClock clock)
+    public GeoCoder(TelemetryClient telemetryClient, IOptions<GeoCoderConfiguration> geoCoderOptions, YandexMapsClient yandexMapsClient, ZonedClock clock, IDateTimeZoneProvider dateTimeZoneProvider)
     {
       myTelemetryClient = telemetryClient;
       myYandexMapsClient = yandexMapsClient;
       myClock = clock;
+      myDateTimeZoneProvider = dateTimeZoneProvider;
       myGeoCoderOptions = geoCoderOptions.Value ?? throw new ArgumentNullException(nameof(geoCoderOptions));
     }
 
@@ -221,7 +223,7 @@ namespace RaidBattlesBot
         return myClock.Zone;
 
       if (timeZoneResponse.TimeZoneId is { } timeZoneId &&
-          DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is { } dateTimeZone)
+          myDateTimeZoneProvider.GetZoneOrNull(timeZoneId) is { } dateTimeZone)
         return dateTimeZone;
 
       return DateTimeZone.ForOffset(Offset.FromSeconds((int) (timeZoneResponse.RawOffSet + timeZoneResponse.DstOffSet)));

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using NodaTime.Extensions;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -30,8 +29,9 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myDb;
     private readonly GeoCoderEx myGeoCoder;
     private readonly IClock myClock;
+    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
 
-    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db, GeoCoderEx geoCoder, IClock clock)
+    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db, GeoCoderEx geoCoder, IClock clock, IDateTimeZoneProvider dateTimeZoneProvider)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
@@ -41,6 +41,7 @@ namespace RaidBattlesBot.Handlers
       myDb = db;
       myGeoCoder = geoCoder;
       myClock = clock;
+      myDateTimeZoneProvider = dateTimeZoneProvider;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
@@ -89,7 +90,7 @@ namespace RaidBattlesBot.Handlers
       else
       {
         var poll = await new Poll(data) { Title = query, Portal = portal }
-          .DetectRaidTime(async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
+          .DetectRaidTime(myDateTimeZoneProvider, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         var pollId = await myRaidService.GetPollId(poll, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
         ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);

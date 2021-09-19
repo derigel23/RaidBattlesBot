@@ -3,7 +3,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GeoTimeZone;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using NodaTime;
 using RaidBattlesBot.Model;
@@ -27,14 +26,16 @@ namespace RaidBattlesBot.Handlers
     private readonly IMemoryCache myCache;
     private readonly IClock myClock;
     private readonly GeoCoder myGeoCoder;
+    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
 
-    public UserSettingsCommandHandler(RaidBattlesContext context, ITelegramBotClient bot, IMemoryCache cache, IClock clock, GeoCoder geoCoder)
+    public UserSettingsCommandHandler(RaidBattlesContext context, ITelegramBotClient bot, IMemoryCache cache, IClock clock, GeoCoder geoCoder, IDateTimeZoneProvider dateTimeZoneProvider)
     {
       myContext = context;
       myBot = bot;
       myCache = cache;
       myClock = clock;
       myGeoCoder = geoCoder;
+      myDateTimeZoneProvider = dateTimeZoneProvider;
     }
 
     public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
@@ -69,7 +70,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
       
-      if (settings?.TimeZoneId is { } timeZoneId && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is { } timeZone)
+      if (settings?.TimeZoneId is { } timeZoneId && myDateTimeZoneProvider.GetZoneOrNull(timeZoneId) is { } timeZone)
       {
         var zoneInterval = timeZone.GetZoneInterval(myClock.GetCurrentInstant());
         contentBuilder.Append("Your time zone is ")

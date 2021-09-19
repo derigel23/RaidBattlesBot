@@ -26,12 +26,16 @@ namespace RaidBattlesBot.Handlers
     private readonly TelemetryClient myTelemetryClient;
     private readonly ITelegramBotClient myBot;
     private readonly RaidBattlesContext myDB;
+    private readonly DateTimeZone myDateTimeZone;
+    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
 
-    public TimeZoneNotifyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, RaidBattlesContext db)
+    public TimeZoneNotifyHandler(TelemetryClient telemetryClient, ITelegramBotClient bot, RaidBattlesContext db, DateTimeZone dateTimeZone, IDateTimeZoneProvider dateTimeZoneProvider)
     {
       myTelemetryClient = telemetryClient;
       myBot = bot;
       myDB = db;
+      myDateTimeZone = dateTimeZone;
+      myDateTimeZoneProvider = dateTimeZoneProvider;
     }
     
     /// processing delay for incoming messages to allow <see cref="ChosenInlineResultHandler"/> handle message first
@@ -45,7 +49,6 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> Handle(Message message, (UpdateType updateType, PollMessage context) context = default, CancellationToken cancellationToken = default)
     {
-      return null;
       if (message is { ReplyMarkup: { InlineKeyboard: {} inlineKeyboard} })
       {
         foreach (var buttons in inlineKeyboard)
@@ -55,26 +58,24 @@ namespace RaidBattlesBot.Handlers
           {
             if (callbackDataParts.Length > 1 && callbackDataParts[0] == VoteCallbackQueryHandler.ID)
             {
-              if (PollEx.TryGetPollId(callbackDataParts[1], out var pollId, out var format))
+              if (PollEx.TryGetPollId(callbackDataParts[1], out var pollId, out _))
               {
+                var timeZoneSettings = await myDB.Set<TimeZoneSettings>().Where(settings => settings.ChatId == message.Chat.Id).ToListAsync(cancellationToken);
+                if (timeZoneSettings.Count == 0) return false;
+                
                 await Task.Delay(ourDelayProcessing, cancellationToken);
                 
                 var poll = await myDB
                   .Set<Model.Poll>()
                   .Where(p => p.Id == pollId)
                   .IncludeRelatedData()
+                  .Include(poll => poll.Notifications)
                   .FirstOrDefaultAsync(cancellationToken);
                 if (poll?.Time is not { } datetime  ) return default; // no poll or without time
 
                 try
                 {
-                  var zonedDateTime = datetime.ToZonedDateTime();
-                  if (poll.TimeZoneId is { } timeZoneId && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) is {} timeZone)
-                  {
-                    zonedDateTime = zonedDateTime.WithZone(timeZone);
-                  }
-
-                  var builder = new StringBuilder();
+                 var builder = new StringBuilder();
                     
                   var culture = CultureInfo.InvariantCulture;
                   // var zoneCounties = (TzdbDateTimeZoneSource.Default.ZoneLocations ?? Enumerable.Empty<TzdbZoneLocation>())
@@ -93,13 +94,32 @@ namespace RaidBattlesBot.Handlers
                   //   }
                   // }
                     
-                  var pattern = ZonedDateTimePattern.Create("HH':'mm z", culture, Resolvers.StrictResolver, ZonedDateTimePattern.GeneralFormatOnlyIso.ZoneProvider, ZonedDateTimePattern.GeneralFormatOnlyIso.TemplateValue);
+                  var pattern = ZonedDateTimePattern.Create("HH':'mm z", culture, Resolvers.StrictResolver, myDateTimeZoneProvider, ZonedDateTimePattern.GeneralFormatOnlyIso.TemplateValue);
+                  var zonedDateTime = datetime.ToZonedDateTime();
+                  var processedZones = new HashSet<DateTimeZone>();
+                  foreach (var timeZoneId in timeZoneSettings.Select(settings => settings.TimeZone).Prepend(poll.TimeZoneId))
+                  {
+                    if (timeZoneId is not null && myDateTimeZoneProvider.GetZoneOrNull(timeZoneId) is { } timeZone && processedZones.Add(timeZone))
+                    {
+                      zonedDateTime = zonedDateTime.WithZone(timeZone);
+                      var clockFace = ourClockFaces[Convert.ToInt32(zonedDateTime.ToDateTimeOffset().TimeOfDay.TotalMinutes / 30) % ourClockFaces.Length];
+                      builder.Append(clockFace).Append(' ');
+                      pattern.AppendFormat(zonedDateTime, builder);
+                      builder.AppendLine();
+                    }
+                  }
 
-                  var clockFace = ourClockFaces[Convert.ToInt32(zonedDateTime.ToDateTimeOffset().TimeOfDay.TotalMinutes / 30) % ourClockFaces.Length];
-                  builder.Append(clockFace).Append(' ');
-                  var content = pattern.AppendFormat(zonedDateTime, builder)
-                    .ToTextMessageContent();
-                  await myBot.SendTextMessageAsync(message.Chat, content, true, message.MessageId, cancellationToken: cancellationToken);
+                  var content = builder.ToTextMessageContent();
+                  var notificationMessage = await myBot.SendTextMessageAsync(message.Chat, content, true, message.MessageId, cancellationToken: cancellationToken);
+                  poll.Notifications.Add(new Notification
+                  {
+                    PollId = poll.Id,
+                    BotId = myBot.BotId,
+                    ChatId = notificationMessage.Chat.Id,
+                    MessageId = notificationMessage.MessageId,
+                    DateTime = notificationMessage.GetMessageDate(myDateTimeZone).ToDateTimeOffset(),
+                    Type = NotificationType.TimeZone
+                  });
                 }
                 catch (Exception ex)
                 {
@@ -114,6 +134,7 @@ namespace RaidBattlesBot.Handlers
                     });
                 }
 
+                await myDB.SaveChangesAsync(cancellationToken);
                 return true;
               }
             }

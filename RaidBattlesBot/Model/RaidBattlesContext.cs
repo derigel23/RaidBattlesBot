@@ -78,7 +78,7 @@ namespace RaidBattlesBot.Model
       modelBuilder.Entity<Notification>(builder =>
       {
         builder.ToTable("Notifications");
-        builder.HasKey(notification => new { notification.PollId, notification.ChatId });
+        builder.HasKey(notification => new { notification.PollId, notification.ChatId, notification.Type });
         builder.HasOne(notification => notification.Poll)
           .WithMany(poll => poll.Notifications)
           .HasForeignKey(notification => notification.PollId);
@@ -108,6 +108,13 @@ namespace RaidBattlesBot.Model
         builder.ToTable("Friendship");
         builder.HasKey(friendship => new { friendship.Id, friendship.FriendId });
         builder.HasIndex(friendship => friendship.PollId);
+      });
+
+      modelBuilder.Entity<TimeZoneSettings>(builder =>
+      {
+        builder.ToTable(nameof(TimeZoneSettings));
+        builder.HasKey(settings => settings.Id);
+        builder.HasIndex(settings => settings.ChatId);
       });
 
     }

@@ -352,7 +352,7 @@ namespace RaidBattlesBot.Model
     
     private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[a-zA-Z0-9/_-]+)?(\b|\s|$)");
     
-    public static async Task<Poll> DetectRaidTime(this Poll poll, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
+    public static async Task<Poll> DetectRaidTime(this Poll poll, IDateTimeZoneProvider dateTimeZoneProvider, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
       if (ourRaidTimeDetector.Matches(poll.Title) is {} matches && matches.LastOrDefault() is {} match)
       {
@@ -361,7 +361,7 @@ namespace RaidBattlesBot.Model
         {
           if (match.Groups["timezone"] is {} timezoneMatch && timezoneMatch.Success)
           {
-            if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneMatch.Value) is {} timeZone)
+            if (dateTimeZoneProvider.GetZoneOrNull(timezoneMatch.Value) is {} timeZone)
             {
               var prevDateTime = getDateTime;
               getDateTime = async ct => (await prevDateTime(ct)).WithZone(timeZone);
