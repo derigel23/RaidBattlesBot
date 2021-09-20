@@ -131,8 +131,7 @@ namespace RaidBattlesBot.Handlers
 
       async Task<(string, bool, string)> Return((InputTextMessageContent content, InlineKeyboardMarkup replyMarkup) pass, string notification = "")
       {
-        await myTelegramBotClient.EditMessageTextAsync(data.Message.Chat, data.Message.MessageId,
-          pass.content, pass.replyMarkup, cancellationToken);
+        await myTelegramBotClient.EditMessageTextAsync(data, pass.content, pass.replyMarkup, cancellationToken);
 
         return (notification, false, null);
       }

@@ -11,6 +11,7 @@
     <None Include="PogoAssets\**\*" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="EFCore.BulkExtensions" Version="5.4.0" />
     <PackageReference Include="GeoTimeZone" Version="4.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.6" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />

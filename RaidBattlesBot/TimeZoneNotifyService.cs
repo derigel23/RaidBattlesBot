@@ -10,9 +10,15 @@ using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.Text;
 using NodaTime.TimeZones;
+using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
+using SimpleBase;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.ReplyMarkups;
 using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot
@@ -22,12 +28,16 @@ namespace RaidBattlesBot
     private readonly RaidBattlesContext myDB;
     private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
     private readonly DateTimeZone myDateTimeZone;
+    private readonly IClock myClock;
+    private readonly ITelegramBotClient myBot;
 
-    public TimeZoneNotifyService(RaidBattlesContext db, IDateTimeZoneProvider dateTimeZoneProvider, DateTimeZone dateTimeZone)
+    public TimeZoneNotifyService(RaidBattlesContext db, IDateTimeZoneProvider dateTimeZoneProvider, DateTimeZone dateTimeZone, IClock clock, ITelegramBotClient bot)
     {
       myDB = db;
       myDateTimeZoneProvider = dateTimeZoneProvider;
       myDateTimeZone = dateTimeZone;
+      myClock = clock;
+      myBot = bot;
     }
 
     private static readonly string[] ourClockFaces =
@@ -53,22 +63,6 @@ namespace RaidBattlesBot
       var builder = getInitialText();
           
       var culture = CultureInfo.InvariantCulture;
-      // var zoneCounties = (TzdbDateTimeZoneSource.Default.ZoneLocations ?? Enumerable.Empty<TzdbZoneLocation>())
-      //   .ToImmutableDictionary(location => location.ZoneId, location => location.CountryCode);
-      //
-      // if (zoneCounties.TryGetValue(zonedDateTime.Zone.Id, out var countryCode))
-      // {
-      //   var regionInfo = new RegionInfo(countryCode);
-      //   foreach (var cultureInfo in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
-      //   {
-      //     if (new RegionInfo(cultureInfo.LCID).GeoId == regionInfo.GeoId)
-      //     {
-      //       culture = cultureInfo;
-      //       break;
-      //     }
-      //   }
-      // }
-        
       var pattern = ZonedDateTimePattern.Create("HH':'mm z", culture, Resolvers.StrictResolver, myDateTimeZoneProvider, ZonedDateTimePattern.GeneralFormatOnlyIso.TemplateValue);
       var zonedDateTime = datetime.ToZonedDateTime();
       var processedZones = new HashSet<DateTimeZone>();
@@ -97,6 +91,83 @@ namespace RaidBattlesBot
       });
 
       return true;
+    }
+
+    public async Task<(InputTextMessageContent content, InlineKeyboardMarkup replyMarkup)> GetSettingsMessage(Chat chat, int messageId = 0, CancellationToken cancellationToken = default)
+    {
+      var settings = await myDB.Set<TimeZoneSettings>().Where(s => s.ChatId == chat.Id).ToListAsync(cancellationToken);
+      var title = chat.Title ?? chat.Username;
+      if (title == null)
+      {
+        title = await myBot.GetChatAsync(chat, cancellationToken) is {} ch ? ch.Title ?? ch.Username : null;
+      }
+      var builder = new StringBuilder("Time zone notifications for ")
+        .Bold((b, m) => b.Sanitize(title, m))
+        .NewLine().NewLine();
+
+      var instant = myClock.GetCurrentInstant();
+      foreach (var setting in settings)
+      {
+        if (myDateTimeZoneProvider.GetZoneOrNull(setting.TimeZone) is {} timeZone)
+        {
+          builder.AppendLine($"{timeZone.Id} ({timeZone.GetUtcOffset(instant)})");
+        }
+      }
+      
+      if (settings.Count == 0)
+      {
+        builder.Append("No time zone notifications");
+      }
+
+      var encodedId = EncodeId(chat.Id, messageId);
+      var replyMarkupButtons = new List<InlineKeyboardButton[]>
+      {
+        new []
+        {
+          chat.Type switch
+          {
+            ChatType.Sender or ChatType.Private =>
+              InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Add", $"{TimeZoneQueryHandler.PREFIX}:{encodedId} "),
+            _ =>
+              InlineKeyboardButton.WithSwitchInlineQuery("Add", $"{TimeZoneQueryHandler.PREFIX}:{encodedId} ")
+          }
+        }
+      };
+
+      if (settings.Count > 0)
+      {
+        replyMarkupButtons.Add(new []
+        {
+          InlineKeyboardButton.WithCallbackData("Clear", $"{TimeZoneQueryHandler.PREFIX}:clear:{encodedId}")
+        });
+      }
+
+      return (builder.ToTextMessageContent(), new InlineKeyboardMarkup(replyMarkupButtons));
+    }
+
+    public string EncodeId(long chatId, int messageId)
+    {
+      var idBytes = new byte[sizeof(long) + sizeof(int)].AsSpan();
+      BitConverter.TryWriteBytes(idBytes, chatId);
+      BitConverter.TryWriteBytes(idBytes[sizeof(long)..], messageId);
+      return Base58.Flickr.Encode(idBytes);
+    }
+    
+    public bool DecodeId(string chatIdEncoded, out long chatId, out int messageId)
+    {
+      chatId = messageId = 0;
+      if (string.IsNullOrEmpty(chatIdEncoded))
+        return false;
+      
+      var chatIdBytes = new byte[sizeof(long) + sizeof(int)];
+      if (Base58.Flickr.TryDecode(chatIdEncoded, chatIdBytes, out _))
+      {
+        chatId = BitConverter.ToInt64(chatIdBytes, 0);
+        messageId = BitConverter.ToInt32(chatIdBytes, sizeof(long));
+        return true;
+      }
+
+      return false;
     }
   }
 }
