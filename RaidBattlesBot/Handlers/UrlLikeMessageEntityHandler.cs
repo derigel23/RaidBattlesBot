@@ -49,10 +49,6 @@ using RaidBattlesBot.Model;
       using (var httpClient = myHttpClientFactory.CreateClient())
       {
         var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url.ToString());
-        if (InfoGymBotHelper.IsAppropriateUrl(poketrackRequest.RequestUri))
-        {
-          poketrackRequest.Method = HttpMethod.Get;
-        }
 
         var requestUri = poketrackRequest.RequestUri;
         HttpContent poketrackResponseContent = null;
@@ -93,50 +89,6 @@ using RaidBattlesBot.Model;
           var messageText = entity.Message.Text;
           var lines = messageText.Split(Environment.NewLine.ToCharArray(), 2);
           var firstLine = lines[0].Trim();
-          if (InfoGymBotHelper.IsAppropriateUrl(requestUri))
-          {
-            try
-            {
-              if (poketrackResponseContent is HttpContent content &&
-                  await content.ReadAsStringAsync() is var poketrackResponseStringContent &&
-                  ourRaidInfoBotGymDetector.Match(poketrackResponseStringContent) is var raidInfoBotGymMatch &&
-                  raidInfoBotGymMatch.Success)
-              {
-                raid.PossibleGym = raidInfoBotGymMatch.Value;
-              }
-            }
-            catch (Exception e)
-            {
-              myTelemetryClient.TrackExceptionEx(e, pollMessage.GetTrackingProperties());
-            }
-            if (query.TryGetValue("b", out var boss))
-            {
-              var movesString = lines.ElementAtOrDefault(1);
-              if (movesString?.IndexOf("{подробнее}", StringComparison.Ordinal) is int tail && tail >= 0)
-              {
-                movesString = movesString.Remove(tail);
-              }
-              else if (movesString?.IndexOf("📌", StringComparison.Ordinal) is int tail2 && tail2 >= 0)
-              {
-                movesString = movesString.Remove(tail2);
-              }
-              raid.ParseRaidInfo(myPokemons, boss.ToString(), movesString);
-
-              if (query.TryGetValue("t", out var time) && messageDate.ParseTime(time, out var dateTime))
-              {
-                raid.RaidBossEndTime = dateTime;
-              }
-              else if (query.TryGetValue("tb", out time) && messageDate.ParseTime(time, out dateTime))
-              {
-                raid.EndTime = dateTime;
-              }
-            }
-            else
-            {
-              title.Append(firstLine);
-            }
-          }
-          else
           {
             Match raidBossLevelMatch = null;
             Match raidInfoMatch = null;

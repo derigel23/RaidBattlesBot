@@ -33,7 +33,6 @@ namespace RaidBattlesBot
         .As<ZonedClock>().InstancePerLifetimeScope();
 
       builder.RegisterType<GymHelper>().InstancePerLifetimeScope();
-      builder.RegisterType<InfoGymBotHelper>().InstancePerLifetimeScope();
       builder.RegisterType<ChatInfo>().InstancePerLifetimeScope();
       builder.RegisterType<RaidService>().InstancePerLifetimeScope();
       builder.RegisterType<FriendshipService>().InstancePerLifetimeScope();

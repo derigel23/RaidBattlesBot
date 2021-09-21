@@ -107,11 +107,6 @@ namespace RaidBattlesBot.Model
         //raid.IV = 100; // raid bosses are always 100%
         raid.RaidBossLevel = pokemonInfo.GetRaidBossLevel(name);
         raid.Pokemon = pokemonInfo.GetPokemonNumber(name);
-
-        if (!string.IsNullOrEmpty(moves))
-        {
-          InfoGymBotHelper.ProcessMoves(moves, raid);
-        }
       }
 
       return raid;
