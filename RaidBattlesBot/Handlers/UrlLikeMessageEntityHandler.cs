@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
@@ -51,11 +51,11 @@ using RaidBattlesBot.Model;
         var poketrackRequest = new HttpRequestMessage(HttpMethod.Head, url.ToString());
 
         var requestUri = poketrackRequest.RequestUri;
-        HttpContent poketrackResponseContent = null;
         if (!myBotConfiguration?.SkipDomains.Contains(requestUri.Host, StringComparer.OrdinalIgnoreCase) ?? true)
         {
-          var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-          poketrackResponseContent = poketrackResponse.Content;
+          using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+          cts.CancelAfter(TimeSpan.FromSeconds(15));
+          var poketrackResponse = await httpClient.SendAsync(poketrackRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
           requestUri = poketrackResponse.RequestMessage.RequestUri;
         }
         var query = QueryHelpers.ParseQuery(requestUri.Query);
