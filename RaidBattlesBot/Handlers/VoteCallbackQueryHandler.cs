@@ -159,7 +159,7 @@ namespace RaidBattlesBot.Handlers
           try
           {
             await myTimeZoneNotifyService.ProcessPoll(myBot, user.Id, null, ct => Task.FromResult(poll),
-              () => new StringBuilder("Poll ").Bold((b, m) => b.Sanitize(poll.Title, m)).NewLine(), cancellationToken);
+              () => new StringBuilder().Bold((b, m) => b.Sanitize(poll.Title, m)).NewLine(), cancellationToken);
           }
           catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
           {
@@ -236,7 +236,7 @@ namespace RaidBattlesBot.Handlers
 
                 if (host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) is not true)
                 {
-                  var pollContent = new StringBuilder("Poll ")
+                  var pollContent = new StringBuilder()
                     .Bold((b, m) => b.Sanitize(poll.Title, m))
                     .ToTextMessageContent();
                   var pollMarkup = new InlineKeyboardMarkup(
