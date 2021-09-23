@@ -29,9 +29,9 @@ namespace RaidBattlesBot.Handlers
     private readonly RaidBattlesContext myDb;
     private readonly GeoCoderEx myGeoCoder;
     private readonly IClock myClock;
-    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
+    private readonly TimeZoneService myTimeZoneService;
 
-    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db, GeoCoderEx geoCoder, IClock clock, IDateTimeZoneProvider dateTimeZoneProvider)
+    public GeneralInlineQueryHandler(ITelegramBotClientEx bot, IUrlHelper urlHelper, ShareInlineQueryHandler shareInlineQueryHandler, RaidService raidService, IngressClient ingressClient, RaidBattlesContext db, GeoCoderEx geoCoder, IClock clock, TimeZoneService timeZoneService)
     {
       myBot = bot;
       myUrlHelper = urlHelper;
@@ -41,13 +41,16 @@ namespace RaidBattlesBot.Handlers
       myDb = db;
       myGeoCoder = geoCoder;
       myClock = clock;
-      myDateTimeZoneProvider = dateTimeZoneProvider;
+      myTimeZoneService = timeZoneService;
     }
 
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       IReadOnlyCollection<InlineQueryResult> inlineQueryResults;
 
+      Task<Location> location = null;
+      async Task<Location> GetLocation() =>  await (location ??= myDb.Set<UserSettings>().GetLocation(data, cancellationToken));
+      
       string query = null;
       Portal portal = null;
       bool exRaidGym = false;
@@ -64,7 +67,7 @@ namespace RaidBattlesBot.Handlers
               exRaidGym = true;
             }
             var portalGuid = PortalEx.DecodeGuid(guid);
-            portal = await myIngressClient.Get(portalGuid, await myDb.Set<UserSettings>().GetLocation(data, cancellationToken), cancellationToken);
+            portal = await myIngressClient.Get(portalGuid, await GetLocation(), cancellationToken);
             break;
           default:
             query += (query == null ? default(char?) : ' ') + queryPart;
@@ -90,7 +93,7 @@ namespace RaidBattlesBot.Handlers
       else
       {
         var poll = await new Poll(data) { Title = query, Portal = portal }
-          .DetectRaidTime(myDateTimeZoneProvider, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
+          .DetectRaidTime(myTimeZoneService, GetLocation, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         var pollId = await myRaidService.GetPollId(poll, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
         ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);

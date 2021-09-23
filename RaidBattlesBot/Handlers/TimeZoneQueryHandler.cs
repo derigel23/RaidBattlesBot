@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
-using NodaTime.TimeZones;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -37,9 +34,10 @@ namespace RaidBattlesBot.Handlers
     private readonly IUrlHelper myUrlHelper;
     private readonly RaidBattlesContext myDB;
     private readonly TimeZoneNotifyService myTimeZoneNotifyService;
+    private readonly TimeZoneService myTimeZoneService;
     private readonly HashSet<long> mySuperAdministrators;
 
-    public TimeZoneQueryHandler(ITelegramBotClientEx bot, IDateTimeZoneProvider dateTimeZoneProvider, IClock clock, IUrlHelper urlHelper, RaidBattlesContext db, IOptions<BotConfiguration> options, TimeZoneNotifyService timeZoneNotifyService)
+    public TimeZoneQueryHandler(ITelegramBotClientEx bot, IDateTimeZoneProvider dateTimeZoneProvider, IClock clock, IUrlHelper urlHelper, RaidBattlesContext db, IOptions<BotConfiguration> options, TimeZoneNotifyService timeZoneNotifyService, TimeZoneService timeZoneService)
     {
       myBot = bot;
       myDateTimeZoneProvider = dateTimeZoneProvider;
@@ -47,6 +45,7 @@ namespace RaidBattlesBot.Handlers
       myUrlHelper = urlHelper;
       myDB = db;
       myTimeZoneNotifyService = timeZoneNotifyService;
+      myTimeZoneService = timeZoneService;
       mySuperAdministrators = options.Value?.SuperAdministrators ?? new HashSet<long>(0);
     }
 
@@ -65,12 +64,6 @@ namespace RaidBattlesBot.Handlers
       }
       query = query.Trim();
 
-      // reverse tz map
-      var timeZoneCountryCodes = (TzdbDateTimeZoneSource.Default.ZoneLocations ?? Enumerable.Empty<TzdbZoneLocation>())
-        .ToImmutableDictionary(location => location.ZoneId, location => location.CountryCode);
-
-      var timeZoneCountries = new Dictionary<string, string>();
-      
       var matchedZones = myDateTimeZoneProvider.Ids.Where(id =>
       {
         // check tz id
@@ -78,26 +71,9 @@ namespace RaidBattlesBot.Handlers
           return true;
         
         // check Region name
-        if (!timeZoneCountries.TryGetValue(id, out var country))
-        {
-          if (timeZoneCountryCodes.TryGetValue(id, out var countryCode))
-          {
-            try
-            {
-              var regionInfo = new RegionInfo(countryCode);
-              country = regionInfo.EnglishName + " " + regionInfo.NativeName;
-            }
-            catch (ArgumentException) { }
-          }
-          else
-          {
-            country = null;
-          }
-
-          timeZoneCountries[id] = country;
-        }
-
-        return country?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false;
+        return myTimeZoneService.TryGetRegion(id, out var region) && (
+          region.EnglishName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+          region.NativeName.Contains(query, StringComparison.OrdinalIgnoreCase));
       }).ToList();
 
       InlineKeyboardMarkup replyMarkup = null;
@@ -117,14 +93,16 @@ namespace RaidBattlesBot.Handlers
             .Append(title)
             .AppendLine("\x00A0"); // trailing space is necessary to allow edit it further to the same message
 
-          if (timeZoneCountries.TryGetValue(timeZone.Id, out var country))
+          string countryString = null;
+          if (myTimeZoneService.TryGetRegion(timeZone.Id, out var country))
           {
-            builder.AppendLine(country);
+            countryString = $"{country.EnglishName} {country.NativeName}";
+            builder.AppendLine(countryString);
           }
 
           results.Add(new InlineQueryResultArticle($"{PREFIX}:{encodedId}:{timeZone.Id}", title, builder.ToTextMessageContent())
           {
-            Description = country,
+            Description = countryString,
             ReplyMarkup = replyMarkup
           });
         }

@@ -350,25 +350,33 @@ namespace RaidBattlesBot.Model
       return true;
     }
     
-    private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[a-zA-Z0-9/_-]+)?(\b|\s|$)");
+    private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]+)?(\b|\s|$)");
     
-    public static async Task<Poll> DetectRaidTime(this Poll poll, IDateTimeZoneProvider dateTimeZoneProvider, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
+    public static async Task<Poll> DetectRaidTime(this Poll poll, TimeZoneService timeZoneService, Func<Task<Location>> getLocation, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
       if (ourRaidTimeDetector.Matches(poll.Title) is {} matches && matches.LastOrDefault() is {} match)
       {
         var timePattern = LocalTimePattern.CreateWithCurrentCulture(@$"H\{match.Groups["delimeter"]}mm");
         if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(LocalTime.MinValue, out var time))
         {
-          if (match.Groups["timezone"] is {} timezoneMatch && timezoneMatch.Success)
+          if (match.Groups["timezone"] is { Success: true } timezoneMatch)
           {
-            if (dateTimeZoneProvider.GetZoneOrNull(timezoneMatch.Value) is {} timeZone)
+            if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
             {
-              var prevDateTime = getDateTime;
-              getDateTime = async ct => (await prevDateTime(ct)).WithZone(timeZone);
+              if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
+              {
+                timeZone = DateTimeZone.ForOffset(offset);
+              }
+            }
+
+            if (timeZone != null)
+            {
+              var getPrevDateTime = getDateTime;
+              getDateTime = async ct => (await getPrevDateTime(ct)).WithZone(timeZone); 
             }
           }
           
-          if (match.Groups["designator"] is {} designatorMatch && designatorMatch.Success && designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+          if (match.Groups["designator"] is { Success: true } designatorMatch && designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
           {
             time = time.PlusHours(12);
           }

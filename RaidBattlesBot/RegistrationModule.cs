@@ -18,6 +18,7 @@ namespace RaidBattlesBot
       builder.RegisterInstance(SystemClock.Instance).As<IClock>();
       //builder.RegisterInstance(new FakeClock(SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(5)))).As<IClock>();
       builder.RegisterInstance(DateTimeZoneProviders.Tzdb).As<IDateTimeZoneProvider>();
+      builder.RegisterType<TimeZoneService>().SingleInstance();
       builder.Register(c =>
       {
         var configuration = c.Resolve<IConfiguration>();
