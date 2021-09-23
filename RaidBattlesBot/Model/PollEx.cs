@@ -376,9 +376,17 @@ namespace RaidBattlesBot.Model
             }
           }
           
-          if (match.Groups["designator"] is { Success: true } designatorMatch && designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+          if (match.Groups["designator"] is { Success: true } designatorMatch)
           {
-            time = time.PlusHours(12);
+            if (time.ClockHourOfHalfDay == 12)
+            {
+              time = time.PlusHours(-12);
+            }
+
+            if (designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+            {
+              time = time.PlusHours(12);
+            }
           }
 
           var ((date, _), dateTimeZone, _) = await getDateTime(cancellationToken);
