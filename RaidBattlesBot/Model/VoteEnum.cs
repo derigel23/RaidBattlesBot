@@ -79,6 +79,8 @@ namespace RaidBattlesBot.Model
     AutoApproveFriend = Thanks << 1,
     [Display(Name = "🔔", Order = 9999, Description = "Automatically approve all friend requests for this poll (notification sent)")]
     AutoApproveFriendNotificationSent = AutoApproveFriend << 1,
+    [Display(Name = "✋", Order = 9999, Description = "Friend Code ia asked for this poll")]
+    FriendCodeAsked = AutoApproveFriendNotificationSent << 1,
 
     #region Plused votes
 
@@ -133,6 +135,6 @@ namespace RaidBattlesBot.Model
     [Display(Name = "🆔", Order = 106, Description = "Show IGNs / Names / Usernames")]
     PollMode = PollModeNicknames | PollModeNames | PollModeUsernames,
     
-    Modifiers = Plus | Share | PollMode | AutoApproveFriend | AutoApproveFriendNotificationSent,
+    Modifiers = Plus | Share | PollMode | AutoApproveFriend | AutoApproveFriendNotificationSent | FriendCodeAsked,
   }
 }

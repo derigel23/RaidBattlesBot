@@ -220,13 +220,21 @@ namespace RaidBattlesBot.Handlers
               try
               {
                 // ask invitee instead
-                if (hostPlayer?.AutoApproveFriendship is false)
+                if (hostPlayer?.AutoApproveFriendship is false &&
+                    vote.Team?.HasFlag(VoteEnum.FriendCodeAsked) is not true)
                 {
-                  await myFriendshipService.AskCode(host.User, bot, user, myBot, hostPlayer, cancellationToken);
+                  try
+                  {
+                    await myFriendshipService.AskCode(host.User, bot, user, myBot, hostPlayer, cancellationToken);
+                  }
+                  finally
+                  {
+                    vote.Team |= VoteEnum.FriendCodeAsked;
+                  }
                   continue;
                 }
 
-                if (!(host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) ?? false))
+                if (host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) is not true)
                 {
                   var pollContent = new StringBuilder("Poll ")
                     .Bold((b, m) => b.Sanitize(poll.Title, m))
@@ -234,11 +242,27 @@ namespace RaidBattlesBot.Handlers
                   var pollMarkup = new InlineKeyboardMarkup(
                     new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", 
                       callbackData: FriendshipCallbackQueryHandler.Commands.AutoApprove(poll)) });
-                  await bot.SendTextMessageAsync(host.UserId, pollContent, replyMarkup: pollMarkup, cancellationToken: cancellationToken);
-                  host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
+                  try
+                  {
+                    await bot.SendTextMessageAsync(host.UserId, pollContent, replyMarkup: pollMarkup, cancellationToken: cancellationToken);
+                  }
+                  finally
+                  {
+                    host.Team |= VoteEnum.AutoApproveFriendNotificationSent;
+                  }
                 }
 
-                await myFriendshipService.AskCode(user, myBot, host.User, bot, player, cancellationToken);
+                if (host.Team?.HasFlag(VoteEnum.FriendCodeAsked) is not true)
+                {
+                  try
+                  {
+                    await myFriendshipService.AskCode(user, myBot, host.User, bot, player, cancellationToken);
+                  }
+                  finally
+                  {
+                    host.Team |= VoteEnum.FriendCodeAsked;
+                  }
+                }
               }
               catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
               {

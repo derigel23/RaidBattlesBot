@@ -66,8 +66,14 @@ namespace RaidBattlesBot
         .AppendLine()
         .Append("Please, add him/her to your friends.")
         .ToTextMessageContent();
-      await bot.SendTextMessageAsync(user.Id, content, cancellationToken: cancellationToken);
-      await ApproveFriendship(host, user, cancellationToken);
+      try
+      {
+        await bot.SendTextMessageAsync(user.Id, content, cancellationToken: cancellationToken);
+      }
+      finally
+      {
+        await ApproveFriendship(host, user, cancellationToken);
+      }
     }
 
     public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, Player userPlayer = null,  CancellationToken cancellationToken = default)
