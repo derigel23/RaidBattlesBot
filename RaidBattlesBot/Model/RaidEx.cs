@@ -137,16 +137,6 @@ namespace RaidBattlesBot.Model
         }
       }
 
-
-      string GetMoveAbbreviation(string move) =>
-        move.Split(' ', StringSplitOptions.RemoveEmptyEntries).Aggregate("", (agg, s) => agg + s.FirstOrDefault()).ToUpper();
-      //if (raid.Move1 != null)
-      //{
-      //  title.Append(" ∙ ").Append(GetMoveAbbreviation(raid.Move1));
-      //  if (raid.Move2 != null)
-      //    title.Append('|').Append(GetMoveAbbreviation(raid.Move2));
-      //}
-
       return title;
     }
 

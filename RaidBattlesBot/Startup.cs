@@ -93,7 +93,6 @@ namespace RaidBattlesBot
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().Single()));
         })
         .AddNewtonsoftJson()
-        .SetCompatibilityVersion(CompatibilityVersion.Latest)
         .AddApplicationPart(typeof(TelegramController).Assembly)
         .AddRazorPagesOptions(options =>
         {
