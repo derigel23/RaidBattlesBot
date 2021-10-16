@@ -80,6 +80,7 @@ namespace RaidBattlesBot.Model
 
     public static IQueryable<Raid> IncludeRelatedData(this IQueryable<Raid> raids) =>
       raids
+        .AsSingleQuery()
         .Include(_ => _.PostEggRaid)
         .Include(_ => _.Polls)
         .ThenInclude(_ => _.Messages)

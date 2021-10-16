@@ -286,6 +286,7 @@ namespace RaidBattlesBot.Model
     public static IQueryable<Poll> IncludeRelatedData(this IQueryable<Poll> polls)
     {
       return polls
+        .AsSingleQuery()
         .Include(_ => _.Votes)
         .Include(_ => _.Messages)
         .Include(_ => _.Portal)
