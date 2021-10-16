@@ -140,6 +140,12 @@ namespace RaidBattlesBot.Handlers
           voted.CommonFlags(VoteEnum.SomePlus).IncreaseVotesCount(1) : clearTeam;
       }
 
+      if (votedTeam.HasAnyFlags(VoteEnum.ExplicitVotes))
+      {
+        // clear implicit votes
+        poll.Votes.RemoveAll(v => v.UserId != user.Id && (v.Team?.HasAnyFlags(VoteEnum.ImplicitVotes) ?? false));
+      }
+      
       var changed = await myDb.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {

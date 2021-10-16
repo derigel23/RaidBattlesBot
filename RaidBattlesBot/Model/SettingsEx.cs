@@ -14,7 +14,7 @@ namespace RaidBattlesBot.Model
         .OrderBy(_ => _.Order);
     }
 
-    public static IQueryable<VoteEnum> GetFormats(this DbSet<Settings> settings, long? chatId, CancellationToken cancellationToken = default)
+    public static IQueryable<VoteEnum> GetFormats(this DbSet<Settings> settings, long? chatId)
     {
       return settings
         .GetSettings(chatId)
@@ -23,7 +23,7 @@ namespace RaidBattlesBot.Model
 
     public static async Task<VoteEnum> GetFormat(this DbSet<Settings> settings, long? chatId, CancellationToken cancellationToken = default)
     {
-      return (await settings.GetFormats(chatId).Cast<VoteEnum?>().FirstOrDefaultAsync(cancellationToken)) ?? VoteEnum.Standard;
+      return await settings.GetFormats(chatId).Cast<VoteEnum?>().FirstOrDefaultAsync(cancellationToken) ?? VoteEnum.Standard;
     }
   }
 }

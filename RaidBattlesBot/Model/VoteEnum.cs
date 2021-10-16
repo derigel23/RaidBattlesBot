@@ -82,6 +82,9 @@ namespace RaidBattlesBot.Model
     [Display(Name = "✋", Order = 9999, Description = "Friend Code ia asked for this poll")]
     FriendCodeAsked = AutoApproveFriendNotificationSent << 1,
 
+    [Display(Name = "📣", Order = 0, Description = "You're the host")]
+    Host = FriendCodeAsked << 1,
+
     #region Plused votes
 
     [Display(Name = "❤", Order = 1)]
@@ -117,7 +120,7 @@ namespace RaidBattlesBot.Model
     
     #endregion
 
-    Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | PollMode | Share,
+    Standard = YesPlus1 | Remotely | Invitation | MayBe | Cancel | PollMode | Share | Host,
 
     Team = Valor | Instinct | Mystic,
     TeamPlusOne = Team | Plus1,
@@ -136,5 +139,8 @@ namespace RaidBattlesBot.Model
     PollMode = PollModeNicknames | PollModeNames | PollModeUsernames,
     
     Modifiers = Plus | Share | PollMode | AutoApproveFriend | AutoApproveFriendNotificationSent | FriendCodeAsked,
+    
+    ImplicitVotes = Host,
+    ExplicitVotes = Hosting & ~ImplicitVotes
   }
 }

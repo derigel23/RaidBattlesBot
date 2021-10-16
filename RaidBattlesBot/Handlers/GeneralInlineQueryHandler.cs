@@ -94,22 +94,20 @@ namespace RaidBattlesBot.Handlers
       {
         var poll = await new Poll(data) { Title = query, Portal = portal }
           .DetectRaidTime(myTimeZoneService, GetLocation, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
-        var pollId = await myRaidService.GetPollId(poll, cancellationToken);
+        var pollId = await myRaidService.GetPollId(poll, data.From, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
-        ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id, cancellationToken).ToListAsync(cancellationToken);
+        ICollection<VoteEnum> voteFormats = await myDb.Set<Settings>().GetFormats(data.From.Id).ToListAsync(cancellationToken);
         if (voteFormats.Count == 0)
         {
           voteFormats = VoteEnumEx.DefaultVoteFormats;
         }
         inlineQueryResults = voteFormats
-            .Select(format => new Poll
+            .Select(format => new Poll(poll)
             {
               Id = exRaidGym ? -pollId : pollId,
-              Title = query,
               AllowedVotes = format,
-              Portal = portal,
               ExRaidGym = exRaidGym
-            })
+            }.InitImplicitVotes(data.From, myBot.BotId))
             .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(),
               fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {

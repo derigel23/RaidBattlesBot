@@ -13,7 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
 using RaidBattlesBot.Handlers;
- using Telegram.Bot.Types;
+using Telegram.Bot;
+using Telegram.Bot.Types;
  using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -50,15 +51,16 @@ namespace RaidBattlesBot.Model
     
     private static readonly VoteGrouping[] ourVoteGrouping =
     {
-      new VoteGrouping(VoteEnum.Going, 1, 1, "is going", "are going", 
-        new VoteGrouping(VoteEnum.Hosting, 3, 1,  "on-site", "on-site"),
-        new VoteGrouping(VoteEnum.Remotely, 2, 2, "remotely", "remotely"),
-        new VoteGrouping(VoteEnum.Invitation, 1, 3, "by invitation", "by invitation")),
-      new VoteGrouping(VoteEnum.Thinking, 2, 2, "maybe", "maybe"),
-      new VoteGrouping(VoteEnum.ChangedMind, 3, 3, "bailed", "bailed"),
-      new VoteGrouping(VoteEnum.ThumbsUp, 4, 4, "voted for", "votes for"),
-      new VoteGrouping(VoteEnum.ThumbsDown, 5, 5, "vote against", "votes against"),
-      new VoteGrouping(VoteEnum.Thanks, 6, 6, "thanked", "thanked"),
+      new(VoteEnum.Host, 0, 0,  "Host", "Hosts"),
+      new(VoteEnum.Going, 1, 1, "{0} is going", "{0} are going", 
+        new (VoteEnum.Hosting, 3, 1,  "{0} on-site", "{0} on-site"),
+        new (VoteEnum.Remotely, 2, 2, "{0} remotely", "{0} remotely"),
+        new (VoteEnum.Invitation, 1, 3, "{0} by invitation", "{0} by invitation")),
+      new(VoteEnum.Thinking, 2, 2, "{0} maybe", "{0} maybe"),
+      new(VoteEnum.ChangedMind, 3, 3, "{0} bailed", "{0} bailed"),
+      new(VoteEnum.ThumbsUp, 4, 4, "{0} voted for", "{0} votes for"),
+      new(VoteEnum.ThumbsDown, 5, 5, "{0} vote against", "{0} votes against"),
+      new(VoteEnum.Thanks, 6, 6, "{0} thanked", "{0} thanked"),
     };
 
     public static Uri GetThumbUrl(this Poll poll, IUrlHelper urlHelper)
@@ -179,10 +181,9 @@ namespace RaidBattlesBot.Model
           var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
           StringBuilder FormatCaption(StringBuilder sb)
           {
-            var captionParts = new[] { votesNumber.ToString(), extraPhrase, countStr }.Where(s => !string.IsNullOrWhiteSpace(s));
             return sb
               .NewLine()
-              .Sanitize(string.Join(" ", captionParts), parseMode)
+              .Sanitize(string.Format(countStr, extraPhrase is {} extraPhraseNotNull ? string.Format(extraPhraseNotNull, votesNumber) : votesNumber), parseMode)
               .NewLine();
           }
 
@@ -241,7 +242,7 @@ namespace RaidBattlesBot.Model
 
       var buttons = new List<IReadOnlyCollection<InlineKeyboardButton>>
       {
-        new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes ?? VoteEnum.Standard)
+        new List<InlineKeyboardButton>(collection: VoteEnumEx.GetFlags(poll.AllowedVotes & ~VoteEnum.ImplicitVotes ?? VoteEnum.Standard)
           .Select(vote =>
           {
             string display = null;
@@ -322,8 +323,8 @@ namespace RaidBattlesBot.Model
       };
     }
 
-    public static PollId GetId(this Poll poll) =>
-      new PollId { Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard};
+    public static PollId GetId(this Poll poll) => new()
+      { Id = poll.Id, Format = poll.AllowedVotes ?? VoteEnum.Standard };
 
     public const string InlineIdPrefix = "poll";
     
@@ -351,7 +352,9 @@ namespace RaidBattlesBot.Model
       return true;
     }
     
-    private static readonly Regex ourRaidTimeDetector = new Regex(@"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]+)?(\b|\s|$)");
+    private static readonly Regex ourRaidTimeDetector =
+      new(
+        @"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]+)?(\b|\s|$)");
     
     public static async Task<Poll> DetectRaidTime(this Poll poll, TimeZoneService timeZoneService, Func<Task<Location>> getLocation, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
@@ -399,7 +402,23 @@ namespace RaidBattlesBot.Model
       }
       return poll;
     }
-    
+
+    public static Poll InitImplicitVotes(this Poll poll, User owner, long? botId = null)
+    {
+      foreach (var vote in ((poll.AllowedVotes ?? VoteEnum.None) & VoteEnum.ImplicitVotes).GetFlags())
+      {
+        (poll.Votes ??= new List<Vote>()).Add(new Vote
+        {
+          BotId = botId,
+          User = owner,
+          Team = vote,
+          PollId = poll.Id
+        });
+      }
+
+      return poll;
+    }
+
     public static async Task<InputTextMessageContent> GetInviteMessage(this Poll poll, RaidBattlesContext db, CancellationToken cancellationToken = default)
     {
       if (!poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? true)

@@ -88,14 +88,7 @@ namespace RaidBattlesBot
     {
       return dateTime.AddTicks(-(dateTime.Ticks % interval.Ticks));
     }
-
-    public static DateTimeOffset Ceiling(this DateTimeOffset dateTime, TimeSpan interval)
-    {
-      var overflow = dateTime.Ticks % interval.Ticks;
-
-      return overflow == 0 ? dateTime : dateTime.AddTicks(interval.Ticks - overflow);
-    }
-
+    
     public static DateTimeOffset Round(this DateTimeOffset dateTime, TimeSpan interval)
     {
       var halfIntervalTicks = (interval.Ticks + 1) >> 1;
@@ -218,7 +211,7 @@ namespace RaidBattlesBot
 
     public static StringBuilder Sanitize(this StringBuilder builder, string content, ParseMode parseMode = DefaultParseMode) =>
       builder.Append(content.Sanitize(parseMode));
-    
+
     public static InputTextMessageContent ToTextMessageContent(this StringBuilder builder, ParseMode parseMode = DefaultParseMode, bool disableWebPreview = false) =>
       new(builder.ToString())
       {

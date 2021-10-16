@@ -53,21 +53,6 @@ namespace RaidBattlesBot.Handlers
           };
           return true;
 
-        case "/poll"  when PollEx.TryGetPollId(commandText, out var pollId, out _):
-        case "/start" when PollEx.TryGetPollId(commandText, out pollId, out _):
-          
-          var existingPoll = await myContext
-            .Set<Poll>()
-            .Where(_ => _.Id == pollId)
-            .IncludeRelatedData()
-            .FirstOrDefaultAsync(cancellationToken);
-          
-          if (existingPoll == null)
-            return false;
-
-          pollMessage.Poll = existingPoll;
-          return true;
-        
         // deep linking to gym
         case "/start" when commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
@@ -87,6 +72,21 @@ namespace RaidBattlesBot.Handlers
         // deep linking with IGN
         case "/start" when commandText.Equals(PlayerCommandsHandler.COMMAND, StringComparison.OrdinalIgnoreCase):
           return await myPlayerCommandsHandler.Process(myMessage.From, null, cancellationToken);
+
+        case "/start" when PollEx.TryGetPollId(commandText, out var pollId, out _):
+        case "/poll"  when PollEx.TryGetPollId(commandText, out pollId, out _):
+          
+          var existingPoll = await myContext
+            .Set<Poll>()
+            .Where(_ => _.Id == pollId)
+            .IncludeRelatedData()
+            .FirstOrDefaultAsync(cancellationToken);
+          
+          if (existingPoll == null)
+            return false;
+
+          pollMessage.Poll = existingPoll;
+          return true;
 
         case "/p" when int.TryParse(commandText, out var pollId):
           var poll = await myContext

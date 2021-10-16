@@ -16,7 +16,7 @@ namespace RaidBattlesBot.Model
 
     public User User
     {
-      get => new User
+      get => new()
       {
         Id = UserId,
         Username = Username,

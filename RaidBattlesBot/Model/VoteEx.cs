@@ -13,7 +13,7 @@ namespace RaidBattlesBot.Model
     {
       var result = vote.User.GetLink(userFormatter ?? UserEx.DefaultUserExtractor, parseMode);
 
-      if (vote.Team.GetPlusVotesCount() is var plusCount && plusCount > 0)
+      if (vote.Team.GetPlusVotesCount() is var plusCount and > 0)
       {
         result
           .Sanitize("⁺", parseMode)

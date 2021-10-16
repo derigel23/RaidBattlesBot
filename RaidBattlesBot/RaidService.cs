@@ -45,16 +45,28 @@ namespace RaidBattlesBot
     }
 
     private string this[int pollId] => $"poll:data:{pollId}";
+    private string this[User user] => $"user:data:{user.Id}";
 
+    private User GetCachedUser(long userId)
+    {
+      var user = new User { Id = userId };
+
+      return myMemoryCache.Get<User>(this[user]) ?? user;
+    }
+    
     [CanBeNull] public Poll GetTemporaryPoll(int pollId) => myMemoryCache.Get<Poll>(this[pollId]);
 
-    public async Task<int> GetPollId(Poll poll, CancellationToken cancellationToken = default)
+    public async Task<int> GetPollId(Poll poll, User user, CancellationToken cancellationToken = default)
     {
       var nextId = poll.Id = await myContext.GetNextPollId(cancellationToken);
-      
-      using var entry = myMemoryCache.CreateEntry(this[nextId]);
-      entry.Value = poll;
-      entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
+
+      using var pollEntry = myMemoryCache.CreateEntry(this[nextId]);
+      pollEntry.Value = poll;
+      pollEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
+
+      using var userEntry = myMemoryCache.CreateEntry(this[user]);
+      userEntry.Value = user;
+      userEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3);
 
       return nextId;
     }
@@ -98,9 +110,12 @@ namespace RaidBattlesBot
         ExRaidGym = exRaidGym,
         Time = pollData.Time,
         TimeZoneId = pollData.TimeZoneId,
-        Votes = new List<Vote>()
+        Votes = pollData.Votes
       };
+      if (pollMessage.UserId is { } userId)
+        pollMessage.Poll.InitImplicitVotes(GetCachedUser(userId), pollMessage.BotId);
       myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
+      
       if (pollData.Portal is { } portal)
       {
         var portalSet = myContext.Set<Portal>();
@@ -135,19 +150,20 @@ namespace RaidBattlesBot
       var eggRaidUpdated = false;
       if (message.Poll?.Raid is { Id: 0 } raid)
       {
+        var raidCopy = raid;
         var sameRaids = myContext
           .Set<Raid>()
-          .Where(_ => _.Lon == raid.Lon && _.Lat == raid.Lat);
+          .Where(_ => _.Lon == raidCopy.Lon && _.Lat == raidCopy.Lat);
         var existingRaid = await sameRaids
-          .Where(_ => _.RaidBossLevel == raid.RaidBossLevel && _.Pokemon == raid.Pokemon && _.EndTime == raid.EndTime)
+          .Where(_ => _.RaidBossLevel == raidCopy.RaidBossLevel && _.Pokemon == raidCopy.Pokemon && _.EndTime == raidCopy.EndTime)
           .Include(_ => _.EggRaid)
           .IncludeRelatedData()
           .FirstOrDefaultAsync(cancellationToken);
         if (existingRaid != null)
         {
-          if (((existingRaid.Gym ?? existingRaid.PossibleGym) == null) && ((raid.Gym ?? raid.PossibleGym) != null))
+          if ((existingRaid.Gym ?? existingRaid.PossibleGym) == null && (raidCopy.Gym ?? raidCopy.PossibleGym) != null)
           {
-            existingRaid.PossibleGym = raid.Gym ?? raid.PossibleGym;
+            existingRaid.PossibleGym = raidCopy.Gym ?? raidCopy.PossibleGym;
             raidUpdated = true;
           }
 
@@ -176,14 +192,14 @@ namespace RaidBattlesBot
           raid = message.Poll.Raid = existingRaid;
         }
 
-        if ((raid.Pokemon != null) && (raid.EggRaid == null)) // check for egg raid
+        if (raid.Pokemon != null && raid.EggRaid == null) // check for egg raid
         {
           var eggRaid = await sameRaids
             .Where(_ => _.Pokemon == null && _.RaidBossEndTime == raid.RaidBossEndTime)
             .IncludeRelatedData()
             .DecompileAsync()
             .FirstOrDefaultAsync(cancellationToken);
-          if ((eggRaid != null) && (raid.Id != eggRaid.Id))
+          if (eggRaid != null && raid.Id != eggRaid.Id)
           {
             var eggRaidPolls = eggRaid.Polls ??= new List<Poll>(0);
             var raidPolls = raid.Polls ??= new List<Poll>(eggRaidPolls.Count);
@@ -249,7 +265,7 @@ namespace RaidBattlesBot
         message.Chat = postedMessage.Chat;
         message.MessageId = postedMessage.MessageId;
       }
-      else if (message.InlineMessageId is { } inlineMessageId)
+      else if (message.InlineMessageId is { })
       {
         //await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
         //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
@@ -280,7 +296,7 @@ namespace RaidBattlesBot
       Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null;
 
       Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> UserGroupFormatter(string delimiter, Func<StringBuilder, StringBuilder> postAction = null) =>
-        (vote, compactMode, builder, parseMode) =>
+        (vote, _, builder, _) =>
           builder.Sanitize(vote.Key?.Description())
             .Append('\x00A0')
             .Code((b, m) =>

@@ -17,7 +17,7 @@ namespace RaidBattlesBot.Model
 
     public Poll(InlineQuery inlineQuery)
     {
-      Owner = inlineQuery.From?.Id;
+      Owner = inlineQuery.From.Id;
       Title = inlineQuery.Query;
     }
 
@@ -48,7 +48,6 @@ namespace RaidBattlesBot.Model
     public string PortalId { get; set; }
     public Portal Portal { get; set; }
     
-    /// <remarks>Chat Id (equals user Id for private chat with bot)</remarks>
     public long? Owner { get; set; }
     public string Title { get; set; }
     public DateTimeOffset? Time { get; set; }

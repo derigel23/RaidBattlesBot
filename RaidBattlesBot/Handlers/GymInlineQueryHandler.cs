@@ -68,7 +68,9 @@ namespace RaidBattlesBot.Handlers
           case { } part when Regex.Match(part, PATTERN) is { Success: true } match:
             if (int.TryParse(match.Groups["pollId"].Value, out var pollId))
             {
-              poll = myRaidService.GetTemporaryPoll(pollId);
+              poll = myRaidService
+                .GetTemporaryPoll(pollId)
+                .InitImplicitVotes(data.From, myBot.BotId);
             }
             query = searchQuery;
 
@@ -92,7 +94,7 @@ namespace RaidBattlesBot.Handlers
 
       var results = new List<InlineQueryResult>(Math.Min(portals.Length, MAX_PORTALS_PER_RESPONSE) + 2);
 
-      if ((poll == null) && (pollQuery.Count != 0))
+      if (poll == null && pollQuery.Count != 0)
       {
         var voteFormat = await myDb.Set<Settings>().GetFormat(data.From.Id, cancellationToken);
         poll = await new Poll(data)
@@ -107,8 +109,8 @@ namespace RaidBattlesBot.Handlers
           poll = new Poll(poll)
           {
             Portal = portals[i]
-          };
-          await myRaidService.GetPollId(poll, cancellationToken);
+          }.InitImplicitVotes(data.From, myBot.BotId);
+          await myRaidService.GetPollId(poll, data.From, cancellationToken);
 
           results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
@@ -152,7 +154,7 @@ namespace RaidBattlesBot.Handlers
           }
 
           var portalContent = new StringBuilder()
-            .Bold((builder, mode) => builder.Sanitize(portal.Name)).NewLine()
+            .Bold((builder, mode) => builder.Sanitize(portal.Name, mode)).NewLine()
             .Sanitize(portal.Address)
             .Link("\u200B", portal.Image)
             .ToTextMessageContent();
@@ -164,7 +166,7 @@ namespace RaidBattlesBot.Handlers
           {
             var exRaidPortalContent = new StringBuilder()
               .Sanitize("☆ ")
-              .Bold((builder, mode) => builder.Sanitize(portal.Name))
+              .Bold((builder, mode) => builder.Sanitize(portal.Name, mode))
               .Sanitize(" (EX Raid Gym)").NewLine()
               .Sanitize(portal.Address)
               .Link("\u200B", portal.Image)
