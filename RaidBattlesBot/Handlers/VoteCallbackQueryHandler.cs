@@ -177,7 +177,7 @@ namespace RaidBattlesBot.Handlers
           var player = await myDb.Set<Player>().Get(user, cancellationToken);
 
           // request friendship from host(s)
-          var hosts = poll.Votes.Where(_ => _.Team?.HasAnyFlags(VoteEnum.Host) ?? false).ToList();
+          var hosts = poll.Votes.Where(_ => _.Team?.HasAnyFlags(VoteEnum.Hosting) ?? false).ToList();
           if (hosts.Count > 0)
           {
             var hostIds = hosts.ConvertAll(_ => _.UserId);
