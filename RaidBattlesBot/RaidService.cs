@@ -126,13 +126,7 @@ namespace RaidBattlesBot
         }
         else
         {
-          existingPortal.Guid = portal.Guid;
-          existingPortal.Name = portal.Name;
-          existingPortal.Address = portal.Address;
-          existingPortal.Image = portal.Image;
-          existingPortal.Latitude = portal.Latitude;
-          existingPortal.Longitude = portal.Longitude;
-          portalSet.Attach(portal).State = EntityState.Modified;
+          myContext.Entry(existingPortal).CurrentValues.SetValues(portal);
         }
       }
       

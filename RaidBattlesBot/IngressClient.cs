@@ -44,11 +44,18 @@ namespace RaidBattlesBot
       
       var portalSet = myContext.Set<Portal>();
       var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
-      if ((myClock.GetCurrentInstant().ToDateTimeOffset() - portal?.Modified)?.TotalDays < 1) // refresh every day 
+      var now = myClock.GetCurrentInstant().ToDateTimeOffset();
+      if ((now - portal?.Modified)?.TotalDays < 1) // refresh every day 
         return portal;
       
       var portals = await Search(guid, location ?? myDefaultLocation, near:false, cancellationToken);
-      return portals.FirstOrDefault(p => p.Guid == guid);
+      var remotePortal = portals.FirstOrDefault(p => p.Guid == guid);
+      if (remotePortal != null && portal != null)
+      {
+        remotePortal.Modified = now;
+        myContext.Entry(portal).CurrentValues.SetValues(remotePortal);
+      }
+      return remotePortal;
     }
 
     public async Task<Portal[]> Search(string query, Location location = default, bool near = true, CancellationToken cancellationToken = default)
@@ -56,9 +63,9 @@ namespace RaidBattlesBot
       location ??= myDefaultLocation;
       var queryBuilder = new QueryBuilder
       {
-        { "lat", location.Latitude.ToString(CultureInfo.InvariantCulture) },
-        { "lng", location.Longitude.ToString(CultureInfo.InvariantCulture) },
-        { "query", query }
+        { @"lat", location.Latitude.ToString(CultureInfo.InvariantCulture) },
+        { @"lng", location.Longitude.ToString(CultureInfo.InvariantCulture) },
+        { @"query", query }
       };
       if (near)
       {
@@ -87,12 +94,12 @@ namespace RaidBattlesBot
       var boundaries = new CoordinateBoundaries(location.Latitude, location.Longitude, radius, DistanceUnit.Kilometers);
       var queryBuilder = new QueryBuilder
       {
-        { "nelat", boundaries.MaxLatitude.ToString(CultureInfo.InvariantCulture) },
-        { "nelng", boundaries.MaxLongitude.ToString(CultureInfo.InvariantCulture) },
-        { "swlat", boundaries.MinLatitude.ToString(CultureInfo.InvariantCulture) },
-        { "swlng", boundaries.MinLongitude.ToString(CultureInfo.InvariantCulture) },
-        { "offset", 0.ToString() },
-        { "telegram", "" }
+        { @"nelat", boundaries.MaxLatitude.ToString(CultureInfo.InvariantCulture) },
+        { @"nelng", boundaries.MaxLongitude.ToString(CultureInfo.InvariantCulture) },
+        { @"swlat", boundaries.MinLatitude.ToString(CultureInfo.InvariantCulture) },
+        { @"swlng", boundaries.MinLongitude.ToString(CultureInfo.InvariantCulture) },
+        { @"offset", 0.ToString() },
+        { @"telegram", "" }
       };
 
       return await Execute("getPortals.php", queryBuilder, cancellationToken, "portalData");
@@ -100,16 +107,14 @@ namespace RaidBattlesBot
 
     private async Task<Portal[]> Execute(string path, QueryBuilder parameters, CancellationToken cancellationToken = default, string property = default)
     {
-      using (var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress.Host, path, parameters.ToString())))
-      {
-        var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken);
-        op.Telemetry.ResultCode = response.StatusCode.ToString();
-        op.Telemetry.Success = response.IsSuccessStatusCode;
-        var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
-        var resultObject = JToken.Parse(result);
-        var portals = (property == null ? resultObject : resultObject[property]).ToObject<Portal[]>();
-        return portals ?? new Portal[0];
-      }
+      using var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress.Host, path, parameters.ToString()));
+      var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken);
+      op.Telemetry.ResultCode = response.StatusCode.ToString();
+      op.Telemetry.Success = response.IsSuccessStatusCode;
+      var result = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync(cancellationToken);
+      var resultObject = JToken.Parse(result);
+      var portals = (property == null ? resultObject : resultObject[property])?.ToObject<Portal[]>();
+      return portals ?? Array.Empty<Portal>();
     }
   }
 }
