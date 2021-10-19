@@ -14,7 +14,7 @@ namespace RaidBattlesBot.Model
       var configuration = webHostBuilder.Build().Services.GetService<IConfiguration>();
       var connectionSting = configuration.GetConnectionString(Startup.ConnectionStringName);
 
-      var optionsBuilder = new DbContextOptionsBuilder<RaidBattlesContext>();
+      var optionsBuilder = new DbContextOptionsBuilder<RaidBattlesContext>().EnableSensitiveDataLogging();
       optionsBuilder.UseSqlServer(connectionSting, opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds));
 
       return new RaidBattlesContext(optionsBuilder.Options);
