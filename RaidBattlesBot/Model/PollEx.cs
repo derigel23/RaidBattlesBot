@@ -13,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
 using RaidBattlesBot.Handlers;
-using Telegram.Bot;
 using Telegram.Bot.Types;
  using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -405,16 +404,18 @@ namespace RaidBattlesBot.Model
 
     public static Poll InitImplicitVotes(this Poll poll, User owner, long? botId = null)
     {
-      foreach (var vote in ((poll.AllowedVotes ?? VoteEnum.None) & VoteEnum.ImplicitVotes).GetFlags())
+      var allowedImplicitVotes = (poll.AllowedVotes ?? VoteEnum.None) & VoteEnum.ImplicitVotes;
+      // implicit votes are not allowed for poll
+      if (allowedImplicitVotes == 0) return poll;
+      // there is already vote for specified user
+      if (poll.Votes?.Any(vote => vote.UserId == owner.Id) ?? false) return poll;
+      (poll.Votes ??= new List<Vote>()).Add(new Vote
       {
-        (poll.Votes ??= new List<Vote>()).Add(new Vote
-        {
-          BotId = botId,
-          User = owner,
-          Team = vote,
-          PollId = poll.Id
-        });
-      }
+        BotId = botId,
+        User = owner,
+        Team = allowedImplicitVotes, // all implicit votes at once?! 🤷
+        PollId = poll.Id
+      });
 
       return poll;
     }
