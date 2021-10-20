@@ -124,7 +124,8 @@ namespace RaidBattlesBot.Handlers
 
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
 
-      if ((now - vote?.Modified) <= myVoteTimeout)
+      // voting timeout (not applied for implicit votes)
+      if (now - vote?.Modified <= myVoteTimeout && !(vote.Team?.HasAnyFlags(VoteEnum.ImplicitVotes) ?? false))
         return ($"You're voting too fast. Try again in {myVoteTimeout.TotalSeconds:0} sec", false, null);
       
       if (clearTeam.HasAnyFlags())
