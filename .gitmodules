@@ -4,4 +4,4 @@
 
 [submodule "TelegramSkeleton"]
 	path = TelegramSkeleton
-	url = https://github.com/derigel23/TelegramSkeleton.git
+	url = ../TelegramSkeleton.git
