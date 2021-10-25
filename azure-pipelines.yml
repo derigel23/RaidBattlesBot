@@ -1,0 +1,44 @@
+trigger:
+- "*"
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    useGlobalJson: true
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish WebApp
+  inputs:
+    command: 'publish'
+    arguments: '--configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)'
+
+- task: DotNetCoreCLI@2
+  displayName: Restore EF tool
+  inputs:
+    command: 'custom'
+    custom: 'tool'
+    arguments: 'restore'
+
+- task: DotNetCoreCLI@2
+  displayName: Create SQL Scripts
+  inputs:
+    command: custom
+    custom: 'ef '
+    arguments: migrations script --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/DB.sql --idempotent
+
+- publish: $(Build.ArtifactStagingDirectory)
+  displayName: Publish Artifacts
+  artifact: 'WebAppAndSql'
