@@ -37,7 +37,7 @@ steps:
   inputs:
     command: custom
     custom: 'ef '
-    arguments: migrations script --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/DB.sql --idempotent
+    arguments: migrations script --project RaidBattlesBot --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/DB.sql --idempotent
 
 - publish: $(Build.ArtifactStagingDirectory)
   displayName: Publish Artifacts
