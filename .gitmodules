@@ -1,6 +1,6 @@
 [submodule "RaidBattlesBot/PogoAssets"]
 	path = RaidBattlesBot/PogoAssets
-	url = https://github.com:ZeChrales/PogoAssets.git
+	url = https://github.com/ZeChrales/PogoAssets.git
 
 [submodule "TelegramSkeleton"]
 	path = TelegramSkeleton
