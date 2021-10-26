@@ -402,8 +402,9 @@ namespace RaidBattlesBot.Model
       return poll;
     }
 
-    public static Poll InitImplicitVotes(this Poll poll, User owner, long? botId = null)
+    public static Poll InitImplicitVotes([CanBeNull] this Poll poll, User owner, long? botId = null)
     {
+      if (poll == null) return null;
       var allowedImplicitVotes = (poll.AllowedVotes ?? VoteEnum.None) & VoteEnum.ImplicitVotes;
       // implicit votes are not allowed for poll
       if (allowedImplicitVotes == 0) return poll;
