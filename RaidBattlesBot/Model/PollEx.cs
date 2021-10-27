@@ -359,44 +359,51 @@ namespace RaidBattlesBot.Model
     {
       if (ourRaidTimeDetector.Matches(poll.Title) is {} matches && matches.LastOrDefault() is {} match)
       {
-        var timePattern = LocalTimePattern.CreateWithCurrentCulture(@$"H\{match.Groups["delimeter"]}mm");
-        if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(LocalTime.MinValue, out var time))
+        try
         {
-          if (match.Groups["timezone"] is { Success: true } timezoneMatch)
+          var timePattern = LocalTimePattern.CreateWithCurrentCulture(@$"H\{match.Groups["delimeter"]}mm");
+          if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(LocalTime.MinValue, out var time))
           {
-            if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
+            if (match.Groups["timezone"] is { Success: true } timezoneMatch)
             {
-              if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
+              if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
               {
-                timeZone = DateTimeZone.ForOffset(offset);
+                if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
+                {
+                  timeZone = DateTimeZone.ForOffset(offset);
+                }
+              }
+
+              if (timeZone != null)
+              {
+                var getPrevDateTime = getDateTime;
+                getDateTime = async ct => (await getPrevDateTime(ct)).WithZone(timeZone);
               }
             }
 
-            if (timeZone != null)
+            if (match.Groups["designator"] is { Success: true } designatorMatch)
             {
-              var getPrevDateTime = getDateTime;
-              getDateTime = async ct => (await getPrevDateTime(ct)).WithZone(timeZone); 
-            }
-          }
-          
-          if (match.Groups["designator"] is { Success: true } designatorMatch)
-          {
-            if (time.ClockHourOfHalfDay == 12)
-            {
-              time = time.PlusHours(-12);
+              if (time.ClockHourOfHalfDay == 12)
+              {
+                time = time.PlusHours(-12);
+              }
+
+              if (designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+              {
+                time = time.PlusHours(12);
+              }
             }
 
-            if (designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
-            {
-              time = time.PlusHours(12);
-            }
+            var ((date, _), dateTimeZone, _) = await getDateTime(cancellationToken);
+            var localDateTime = time.On(date);
+            var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
+            poll.Time = detectedTime.ToDateTimeOffset();
+            poll.TimeZoneId = detectedTime.Zone.Id;
           }
-
-          var ((date, _), dateTimeZone, _) = await getDateTime(cancellationToken);
-          var localDateTime = time.On(date);
-          var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
-          poll.Time = detectedTime.ToDateTimeOffset();
-          poll.TimeZoneId = detectedTime.Zone.Id;
+        }
+        catch (Exception)
+        {
+          // ignored
         }
       }
       return poll;
