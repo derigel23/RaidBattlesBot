@@ -353,7 +353,7 @@ namespace RaidBattlesBot.Model
     
     private static readonly Regex ourRaidTimeDetector =
       new(
-        @"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]+)?(\b|\s|$)");
+        @"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]{2,}(?![-:.]))?(\b|\s|$)");
     
     public static async Task<Poll> DetectRaidTime(this Poll poll, TimeZoneService timeZoneService, Func<Task<Location>> getLocation, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
@@ -401,7 +401,7 @@ namespace RaidBattlesBot.Model
             poll.TimeZoneId = detectedTime.Zone.Id;
           }
         }
-        catch (Exception)
+        catch (ArgumentOutOfRangeException)
         {
           // ignored
         }
