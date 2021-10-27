@@ -16,7 +16,7 @@ namespace RaidBattlesBot
     private readonly Dictionary<string, List<TzdbZoneLocation>> myTimeZoneAbbreviations = new(StringComparer.OrdinalIgnoreCase);
 
     // some manual abbreviations
-    private static ILookup<string, string> ourAbbreviations = new List<KeyValuePair<string, string>>
+    private static readonly ILookup<string, string> ourAbbreviations = new List<KeyValuePair<string, string>>
     {
       KeyValuePair.Create("Europe/Moscow", "МСК"),
       KeyValuePair.Create("Asia/Novosibirsk", "НСК"),
