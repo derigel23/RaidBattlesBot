@@ -11,7 +11,8 @@ namespace RaidBattlesBot
 {
   public class TimeZoneService
   {
-    private readonly IDateTimeZoneProvider myDateTimeZoneProvider;
+    public IDateTimeZoneProvider DateTimeZoneProvider { get; }
+    
     private readonly Dictionary<string, RegionInfo> myTimeZoneRegions = new();
     private readonly Dictionary<string, List<TzdbZoneLocation>> myTimeZoneAbbreviations = new(StringComparer.OrdinalIgnoreCase);
 
@@ -25,7 +26,7 @@ namespace RaidBattlesBot
       
     public TimeZoneService(IClock clock, IDateTimeZoneProvider dateTimeZoneProvider)
     {
-      myDateTimeZoneProvider = dateTimeZoneProvider;
+      DateTimeZoneProvider = dateTimeZoneProvider;
       
       var instant = clock.GetCurrentInstant();
       // reverse tz map
@@ -73,7 +74,7 @@ namespace RaidBattlesBot
       dateTimeZone = null;
       
       // first check by full time zone id
-      if (myDateTimeZoneProvider.GetZoneOrNull(abbr) is {} dtz)
+      if (DateTimeZoneProvider.GetZoneOrNull(abbr) is {} dtz)
       {
         dateTimeZone = dtz;
         return true;
@@ -85,7 +86,7 @@ namespace RaidBattlesBot
 
       if (zoneLocations.Count == 1)
       {
-        dateTimeZone = myDateTimeZoneProvider[zoneLocations[0].ZoneId];
+        dateTimeZone = DateTimeZoneProvider[zoneLocations[0].ZoneId];
         return true;
       }
 
@@ -95,7 +96,7 @@ namespace RaidBattlesBot
         .OrderBy(tuple => tuple.Item2)
         .FirstOrDefault() is var (zoneId, _))
       {
-        dateTimeZone = myDateTimeZoneProvider[zoneId];
+        dateTimeZone = DateTimeZoneProvider[zoneId];
         return true;
       }
 

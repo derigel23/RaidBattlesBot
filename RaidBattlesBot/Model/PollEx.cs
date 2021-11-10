@@ -353,7 +353,7 @@ namespace RaidBattlesBot.Model
     
     private static readonly Regex ourRaidTimeDetector =
       new(
-        @"(^|\s|\b)(?<time>\d{1,2}(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]{2,}(?![-:.]))?(\b|\s|$)");
+        @"(^|\s|\b)(?<time>(?<hour>[\dxX]{1,2})(?<delimeter>[-:.])\d{2})\s*(?<designator>[aApP]\.?[mM]\.?)?\s*(?<timezone>[\p{L}\p{N}/_\-\+]{2,}(?![-:.]))?(\b|\s|$)");
     
     public static async Task<Poll> DetectRaidTime(this Poll poll, TimeZoneService timeZoneService, Func<Task<Location>> getLocation, Func<CancellationToken, Task<ZonedDateTime>> getDateTime, CancellationToken cancellationToken = default)
     {
@@ -361,42 +361,52 @@ namespace RaidBattlesBot.Model
       {
         try
         {
-          var timePattern = LocalTimePattern.CreateWithCurrentCulture(@$"H\{match.Groups["delimeter"]}mm");
-          if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(LocalTime.MinValue, out var time))
+          if (match.Groups["timezone"] is { Success: true } timezoneMatch)
           {
-            if (match.Groups["timezone"] is { Success: true } timezoneMatch)
+            if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
             {
-              if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
+              if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
               {
-                if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
-                {
-                  timeZone = DateTimeZone.ForOffset(offset);
-                }
+                timeZone = DateTimeZone.ForOffset(offset);
               }
+            }
 
-              if (timeZone != null)
-              {
-                var getPrevDateTime = getDateTime;
-                getDateTime = async ct => (await getPrevDateTime(ct)).WithZone(timeZone);
-              }
+            if (timeZone != null)
+            {
+              var getPrevDateTime = getDateTime;
+              getDateTime = async ct => (await getPrevDateTime(ct)).WithZone(timeZone);
+            }
+          }
+
+          var currentDateTime = await getDateTime(cancellationToken);
+          
+          // hour is not specified explicitly - user current one if it's in the future or the next one if in the past
+          var hourValue = match.Groups["hour"].Value;
+          var xxFormat = !int.TryParse(hourValue, out _);
+          var timePattern = ZonedDateTimePattern
+            .CreateWithCurrentCulture($"{(xxFormat ? $"'{hourValue}'" : "H")}\\{match.Groups["delimeter"]}mm", timeZoneService.DateTimeZoneProvider)
+            .WithTemplateValue(currentDateTime);
+          if (timePattern.Parse(match.Groups["time"].Value).TryGetValue(default, out var detectedTime))
+          {
+
+            if (xxFormat && detectedTime.ToInstant() < currentDateTime.ToInstant())
+            {
+              detectedTime = detectedTime.PlusHours(1);
             }
 
             if (match.Groups["designator"] is { Success: true } designatorMatch)
             {
-              if (time.ClockHourOfHalfDay == 12)
+              if (detectedTime.ClockHourOfHalfDay == 12)
               {
-                time = time.PlusHours(-12);
+                detectedTime = detectedTime.PlusHours(-12);
               }
 
               if (designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
               {
-                time = time.PlusHours(12);
+                detectedTime = detectedTime.PlusHours(12);
               }
             }
 
-            var ((date, _), dateTimeZone, _) = await getDateTime(cancellationToken);
-            var localDateTime = time.On(date);
-            var detectedTime = localDateTime.InZoneLeniently(dateTimeZone);
             poll.Time = detectedTime.ToDateTimeOffset();
             poll.TimeZoneId = detectedTime.Zone.Id;
           }
