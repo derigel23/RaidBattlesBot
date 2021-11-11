@@ -11,20 +11,20 @@
     <None Include="PogoAssets\**\*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="EFCore.BulkExtensions" Version="5.4.0" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="6.0.1" />
     <PackageReference Include="GeoTimeZone" Version="4.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0-rc.2.21480.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="Autofac" Version="6.3.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.2.0" />
     <PackageReference Include="DelegateDecompiler.EntityFrameworkCore5" Version="0.29.1" />
     <PackageReference Include="Enums.NET" Version="4.0.0" />
     <PackageReference Include="Geolocation" Version="1.2.1" />
     <PackageReference Include="GoogleMapsApi" Version="0.80.0" />
-    <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0-rc.2.21480.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0-rc.2.21480.5">
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.19.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -32,7 +32,7 @@
     <PackageReference Include="NodaTime.Testing" Version="3.0.9" />
     <PackageReference Include="OpenLocationCode" Version="2.1.1" />
     <PackageReference Include="SimpleBase" Version="3.1.0" />
-    <PackageReference Include="Telegram.Bot" Version="17.0.0-alpha.3" />
+    <PackageReference Include="Telegram.Bot" Version="17.0.0-alpha.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TelegramSkeleton\TelegramSkeleton.csproj" />
