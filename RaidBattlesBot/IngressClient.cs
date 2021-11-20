@@ -42,8 +42,9 @@ namespace RaidBattlesBot
     {
       if (string.IsNullOrEmpty(guid)) return null;
       
-      var portalSet = myContext.Set<Portal>();
-      var portal = await portalSet.FindAsync(new object[] { guid }, cancellationToken);
+      var portalSet = myContext.Set<Portal>(); 
+      // check local & remote
+      var portal = await portalSet.FindAsync(new object[]  { guid }, cancellationToken);
       var now = myClock.GetCurrentInstant().ToDateTimeOffset();
       if ((now - portal?.Modified)?.TotalDays < 1) // refresh every day 
         return portal;
@@ -52,8 +53,7 @@ namespace RaidBattlesBot
       var remotePortal = portals.FirstOrDefault(p => p.Guid == guid);
       if (remotePortal != null && portal != null)
       {
-        remotePortal.Modified = now;
-        myContext.Entry(portal).CurrentValues.SetValues(remotePortal);
+        myContext.Entry(portal).SetNotNullProperties(remotePortal);
       }
       return remotePortal;
     }
@@ -107,7 +107,7 @@ namespace RaidBattlesBot
 
     private async Task<Portal[]> Execute(string path, QueryBuilder parameters, CancellationToken cancellationToken = default, string property = default)
     {
-      using var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress.Host, path, parameters.ToString()));
+      using var op = myTelemetryClient.StartOperation(new DependencyTelemetry(nameof(IngressClient), myHttpClient.BaseAddress?.Host, path, parameters.ToString()));
       var response = await myHttpClient.GetAsync($"{path}{parameters}", cancellationToken);
       op.Telemetry.ResultCode = response.StatusCode.ToString();
       op.Telemetry.Success = response.IsSuccessStatusCode;

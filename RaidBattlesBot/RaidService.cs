@@ -114,19 +114,23 @@ namespace RaidBattlesBot
       };
       if (pollMessage.UserId is { } userId)
         pollMessage.Poll.InitImplicitVotes(GetCachedUser(userId), pollMessage.BotId);
-      myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
       
+      // MUST be set before portal
+      myContext.Set<Poll>().Attach(pollMessage.Poll).State = EntityState.Added;
+
       if (pollData.Portal is { } portal)
       {
         var portalSet = myContext.Set<Portal>();
-        var existingPortal = await portalSet.FindAsync(new object[] { portal.Guid }, cancellationToken);
+        // always check remote
+        var existingPortal = await portalSet.AsNoTracking().FirstOrDefaultAsync(p =>  p.Guid == portal.Guid, cancellationToken);
         if (existingPortal == null)
         {
           portalSet.Attach(portal).State = EntityState.Added;
         }
         else
         {
-          myContext.Entry(existingPortal).CurrentValues.SetValues(portal);
+          myContext.Entry(existingPortal).SetNotNullProperties(portal);
+          myContext.Entry(portal).SetNotNullProperties(existingPortal);
         }
       }
       
@@ -228,7 +232,7 @@ namespace RaidBattlesBot
         }
       }
 
-      var messageEntity = myContext.Set<PollMessage>().Attach(message);
+      myContext.Set<PollMessage>().Attach(message);
       await myContext.SaveChangesAsync(cancellationToken);
 
       // update current raid poll messages if changed
