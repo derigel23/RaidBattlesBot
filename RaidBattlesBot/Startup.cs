@@ -47,22 +47,7 @@ namespace RaidBattlesBot
       services.Configure<GeoCoderConfiguration>(myConfiguration.GetSection("GeoCoder"));
       services.Configure<IngressConfiguration>(myConfiguration.GetSection("Ingress"));
 
-      services.AddSingleton(provider =>
-      {
-        var hostingEnvironment = provider.GetRequiredService<IWebHostEnvironment>();
-        var fileProvider = hostingEnvironment.WebRootFileProvider;
-        var namesBuilder = new ConfigurationBuilder().SetFileProvider(fileProvider);
-        foreach (var fileInfo in fileProvider.GetDirectoryContents("names"))
-        {
-          namesBuilder.AddIniFile(fileInfo.PhysicalPath, false, false);
-        }
-        var raidsBuilder = new ConfigurationBuilder().SetFileProvider(fileProvider);
-        raidsBuilder.AddIniFile("pokemon_raids.properties", false, false);
-
-        return new PokemonInfo(namesBuilder.Build(), raidsBuilder.Build(), provider.GetRequiredService<ILoggerFactory>());
-      });
-
-      var culture = myConfiguration["Culture"];
+     var culture = myConfiguration["Culture"];
       if (!string.IsNullOrEmpty(culture))
       {
         services.Configure<RequestLocalizationOptions>(options =>

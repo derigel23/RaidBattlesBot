@@ -49,4 +49,18 @@
       <DependentUpon>YandexMapsClient.cs</DependentUpon>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_de.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_en.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_es.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_fr.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_it.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_ja.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_ko.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_ru.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_zh_CN.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_zh_HK.properties" />
+    <_ContentIncludedByDefault Remove="wwwroot\names\pokemon_names_zh_TW.properties" />
+  </ItemGroup>
 </Project>

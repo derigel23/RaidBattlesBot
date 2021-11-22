@@ -12,7 +12,6 @@ namespace RaidBattlesBot.Configuration
     public TimeSpan NotificationLeadTime { get; set; }
     public long? LogChatId{ get; set; }
     public HashSet<long> BlackList { get; set; }
-    public string[] SkipDomains { get; set; }
     public HashSet<long> SuperAdministrators { get; set; }
   }
 }

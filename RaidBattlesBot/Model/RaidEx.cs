@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Handlers;
 using Telegram.Bot.Types.Enums;
 
@@ -91,27 +90,6 @@ namespace RaidBattlesBot.Model
       raid.RaidBossEndTime?
         .Subtract(TimeSpan.FromMinutes(15)) // default offset to the end
         .Round(TimeSpan.FromMinutes(5)); // rounding
-
-    public static Raid ParseRaidInfo(this Raid raid, PokemonInfo pokemonInfo, string name, string moves = null)
-    {
-      if (name.StartsWith("EGG", StringComparison.OrdinalIgnoreCase)) // EGG
-      {
-        raid.Name = name.Substring(0, name.Length - 1);
-        if (int.TryParse(name.Substring(name.Length - 1, 1), out var raidBossLevel))
-        {
-          raid.RaidBossLevel = raidBossLevel;
-        }
-      }
-      else // BOSS
-      {
-        raid.Name = name;
-        //raid.IV = 100; // raid bosses are always 100%
-        raid.RaidBossLevel = pokemonInfo.GetRaidBossLevel(name);
-        raid.Pokemon = pokemonInfo.GetPokemonNumber(name);
-      }
-
-      return raid;
-    }
 
     public static Raid SetTitle(this Raid raid, StringBuilder title, bool extended = true)
     {
