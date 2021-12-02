@@ -56,7 +56,7 @@ namespace RaidBattlesBot.Model
       {
         settingsEntity.ToTable("Settings");
         settingsEntity.HasKey(settings => settings.Id);
-        settingsEntity.HasIndex(settings => settings.Chat).IncludeProperties(nameof(Settings.Format));
+        SqlServerIndexBuilderExtensions.IncludeProperties(settingsEntity.HasIndex(settings => settings.Chat), nameof(Settings.Format));
         settingsEntity.Property(settings => settings.Format).HasDefaultValue(VoteEnum.Standard);
       });
       
