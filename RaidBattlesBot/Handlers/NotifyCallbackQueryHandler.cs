@@ -57,10 +57,7 @@ namespace RaidBattlesBot.Handlers
         .Where(vote => vote.Team?.HasFlag(VoteEnum.Invitation) ?? false)
         .OrderBy(vote => vote.Modified)
         .ToList();
-      var i = 0;
-      var invitePartitionedVotes = from vote in inviteVotes
-        group vote by i++ / NotificationBatchSize into parts
-        select parts;
+      var invitePartitionedVotes = inviteVotes.Chunk(NotificationBatchSize);
       
       var inviteMessages = invitePartitionedVotes.Select(votes =>
         votes.Aggregate(new StringBuilder(),
