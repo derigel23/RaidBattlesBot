@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Handlers
 {
@@ -33,7 +34,7 @@ namespace RaidBattlesBot.Handlers
     public const int LowerDecimalPrecision = 4;
     public const MidpointRounding LowerDecimalPrecisionRounding = default;
 
-    public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, StringBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
+    public async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> ProcessGym(Raid raid, TextBuilder description, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
       var location = (lat: raid.Lat, lon: raid.Lon);
       string distance = default;
@@ -73,7 +74,7 @@ namespace RaidBattlesBot.Handlers
         var geoResponse = await GoogleMaps.PlacesNearBy.QueryAsync(geoRequest, myTelemetryClient, cancellationToken);
 
         Result foundAddress = null;
-        Action<StringBuilder> postProcessor = null;
+        Action<TextBuilder> postProcessor = null;
         foreach (var address in geoResponse.Results)
         {
           if (address.Types.Contains("subway_station"))

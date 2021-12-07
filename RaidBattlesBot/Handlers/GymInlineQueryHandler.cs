@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,7 +114,7 @@ namespace RaidBattlesBot.Handlers
           results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(),
             poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
-              Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
+              Description = poll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
               HideUrl = true,
               ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
               ReplyMarkup = poll.GetReplyMarkup()
@@ -128,7 +127,7 @@ namespace RaidBattlesBot.Handlers
             results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle() + " (EX Raid Gym)",
               poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
             {
-              Description = poll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
+              Description = poll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
               HideUrl = true,
               ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
               ReplyMarkup = poll.GetReplyMarkup()
@@ -153,8 +152,8 @@ namespace RaidBattlesBot.Handlers
             return article;
           }
 
-          var portalContent = new StringBuilder()
-            .Bold((builder, mode) => builder.Sanitize(portal.Name, mode)).NewLine()
+          var portalContent = new TextBuilder()
+            .Bold(builder => builder.Sanitize(portal.Name)).NewLine()
             .Sanitize(portal.Address)
             .Link("\u200B", portal.Image)
             .ToTextMessageContent();
@@ -164,9 +163,9 @@ namespace RaidBattlesBot.Handlers
 
           if (i == 0)
           {
-            var exRaidPortalContent = new StringBuilder()
+            var exRaidPortalContent = new TextBuilder()
               .Sanitize("☆ ")
-              .Bold((builder, mode) => builder.Sanitize(portal.Name, mode))
+              .Bold(builder => builder.Sanitize(portal.Name))
               .Sanitize(" (EX Raid Gym)").NewLine()
               .Sanitize(portal.Address)
               .Link("\u200B", portal.Image)
@@ -192,7 +191,7 @@ namespace RaidBattlesBot.Handlers
       {
         var search = string.Join(" ", searchQuery);
         results.Add(new InlineQueryResultArticle("NothingFound", "Nothing found", 
-          new StringBuilder($"Nothing found by request ").Code((builder, mode) => builder.Sanitize(search, mode)).ToTextMessageContent())
+          new TextBuilder($"Nothing found by request ").Code(builder => builder.Sanitize(search)).ToTextMessageContent())
         {
           Description = $"Request {search}",
           ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").AbsoluteUri

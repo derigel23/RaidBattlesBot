@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Handlers;
-using Telegram.Bot.Types.Enums;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Model
 {
@@ -16,36 +16,36 @@ namespace RaidBattlesBot.Model
   {
     public const string Delimeter = " ∙ ";
     
-    public static StringBuilder GetDescription(this Raid raid, StringBuilder description, ParseMode mode = Helpers.DefaultParseMode)
+    public static TextBuilder GetDescription(this Raid raid, TextBuilder description)
     {
       var initialLength = description.Length;
 
-      description.Bold((builder, m) =>
+      description.Bold(builder =>
       {
         if (raid.RaidBossLevel is { } raidBossLevel)
         {
-          builder.Sanitize($@"[R{raidBossLevel}] ", m);
+          builder.Sanitize($@"[R{raidBossLevel}] ");
         }
 
-        return builder.Sanitize(raid.Name, m);
-      }, mode);
+        builder.Sanitize(raid.Name);
+      });
 
       if ((raid.Gym ?? raid.PossibleGym) != null)
       {
         description
-          .Sanitize(Delimeter, mode)
-          .Bold((builder, m) => builder.Sanitize(raid.Gym ?? raid.PossibleGym, m), mode);
+          .Sanitize(Delimeter)
+          .Bold(builder => builder.Sanitize(raid.Gym ?? raid.PossibleGym));
       }
       else if (raid.NearByAddress != null)
       {
         description
-          .Sanitize(Delimeter, mode)
-          .Bold((builder, m) => builder.Sanitize(raid.NearByAddress, m), mode);
+          .Sanitize(Delimeter)
+          .Bold(builder => builder.Sanitize(raid.NearByAddress));
       }
 
       if (description.Length == initialLength)
         description
-          .Bold((builder, m) => builder.Sanitize(raid.Title, m), mode);
+          .Bold(builder => builder.Sanitize(raid.Title));
       
       return description;
     }
@@ -136,7 +136,7 @@ namespace RaidBattlesBot.Model
       }
     }
     
-    public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, StringBuilder description, GymHelper gymHelper, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
+    public static async Task<((decimal? lat, decimal? lon) location, string gym, string distance)> SetTitleAndDescription(this Raid raid, StringBuilder title, TextBuilder description, GymHelper gymHelper, int? precision = null, MidpointRounding? rounding = null, CancellationToken cancellationToken = default)
     {
       var gymInfo = await gymHelper.ProcessGym(raid.SetTitle(title), description, precision, rounding, cancellationToken);
       if (description.Length > 0)

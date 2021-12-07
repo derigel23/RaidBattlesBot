@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -111,7 +110,7 @@ namespace RaidBattlesBot.Handlers
             .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(),
               fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
               {
-                Description = fakePoll.AllowedVotes?.Format(new StringBuilder("Create a poll ")).ToString(),
+                Description = fakePoll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
                 HideUrl = true,
                 ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
                 ReplyMarkup = fakePoll.GetReplyMarkup()

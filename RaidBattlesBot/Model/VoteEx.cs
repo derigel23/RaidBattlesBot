@@ -1,30 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class VoteEx
   {
-    public static string GetUserLinkWithPluses(this Vote vote, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, ParseMode parseMode = Helpers.DefaultParseMode)
+    public static TextBuilder GetUserLinkWithPluses(this Vote vote, TextBuilder builder, Func<User, TextBuilder, TextBuilder> userFormatter = null)
     {
-      var result = vote.User.GetLink(userFormatter ?? UserEx.DefaultUserExtractor, parseMode);
+      var result = vote.User.GetLink(builder, userFormatter ?? UserEx.DefaultUserExtractor);
 
       if (vote.Team.GetPlusVotesCount() is var plusCount and > 0)
       {
         result
-          .Sanitize("⁺", parseMode)
+          .Sanitize("⁺")
           .Sanitize(
-            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)), parseMode);
+            ourSuperScriptNumbers.Aggregate(plusCount.ToString(), (s, nums) => s.Replace(nums.Key, nums.Value)));
       }
 
-      return result.ToString();
+      return result;
     }
 
-    private static readonly IReadOnlyDictionary<char, char> ourSuperScriptNumbers = new Dictionary<char, char>()
+    private static readonly IReadOnlyDictionary<char, char> ourSuperScriptNumbers = new Dictionary<char, char>
     {
       { '0', '⁰' },
       { '1', '¹' },

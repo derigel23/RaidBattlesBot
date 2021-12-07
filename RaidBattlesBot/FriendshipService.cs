@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,14 +41,14 @@ namespace RaidBattlesBot
       await myDB.SaveChangesAsync(cancellationToken);
     }
 
-    private static StringBuilder FormatUser(StringBuilder builder, User user, Player player = null)
+    private static TextBuilder FormatUser(TextBuilder builder, User user, Player player = null)
     {
-      builder.Append(user.GetLink());
+      builder = user.GetLink(builder);
       if (player?.Nickname is { } nickname)
       {
         builder
           .Append(" (")
-          .Code((b, m) => b.Sanitize(nickname))
+          .Code(b => b.Sanitize(nickname))
           .Append(")");
       }
 
@@ -60,10 +59,10 @@ namespace RaidBattlesBot
     {
       hostPlayer ??= await myDB.Set<Player>().Get(host, cancellationToken);
       if (hostPlayer?.FriendCode == null) return; // alarm, can't be
-      var content = FormatUser(new StringBuilder(), host, hostPlayer)
+      var content = FormatUser(new TextBuilder(), host, hostPlayer)
         .Append(" Friend Code is ")
-        .Code((b, mode) => b.AppendFormat("{0:0000 0000 0000}", hostPlayer.FriendCode))
-        .AppendLine()
+        .Code(b => b.AppendFormat("{0:0000 0000 0000}", hostPlayer.FriendCode))
+        .NewLine()
         .Append("Please, add him/her to your friends.")
         .ToTextMessageContent();
       try
@@ -79,8 +78,8 @@ namespace RaidBattlesBot
     public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, Player userPlayer = null,  CancellationToken cancellationToken = default)
     {
       userPlayer ??= await myDB.Set<Player>().Get(user, cancellationToken);
-      var userContent = FormatUser(new StringBuilder(), user, userPlayer)
-        .AppendFormat(" is asking for Friendship.")
+      var userContent = FormatUser(new TextBuilder(), user, userPlayer)
+        .Append(" is asking for Friendship.")
         .ToTextMessageContent();
       var userMarkup = new InlineKeyboardMarkup(new []
       {
@@ -134,30 +133,31 @@ namespace RaidBattlesBot
       }
 
       IReplyMarkup replyMarkup = null;
-      var builder = new StringBuilder();
+      var builder = new TextBuilder();
       if (text.Length > 0 && friendCode == null)
       {
         builder
-          .AppendLine("Friend code is not recognized.")
-          .AppendLine();
+          .Append("Friend code is not recognized.")
+          .NewLine()
+          .NewLine();
       }
       
       if (player?.FriendCode is {} storedCode)
       {
         builder
           .Append("Your Friend Code is ")
-          .Bold((b, mode) => b.Code((bb, m) => bb.AppendFormat("{0:0000 0000 0000}", storedCode), mode))
-          .AppendLine()
-          .AppendLine();
+          .Bold(b => b.Code(bb => bb.AppendFormat("{0:0000 0000 0000}", storedCode)))
+          .NewLine()
+          .NewLine();
 
         replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Clear Friend Code", 
           $"{PlayerCallbackQueryHandler.ID}:{PlayerCallbackQueryHandler.Commands.ClearFriendCode}"));
       }
 
       builder
-        .AppendLine("To set up your friend code reply with it to this message.")
-        .AppendLine($"Or use /{FriendCodeCommandHandler.COMMAND} command.")
-        .Code((b, mode) => b.Append("/fc your-friend-code"));
+        .Append("To set up your friend code reply with it to this message.").NewLine()
+        .Append($"Or use /{FriendCodeCommandHandler.COMMAND} command.").NewLine()
+        .Code("/fc your-friend-code");
       
       var content = builder.ToTextMessageContent();
 

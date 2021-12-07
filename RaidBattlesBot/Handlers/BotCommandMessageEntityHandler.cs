@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -56,12 +55,12 @@ namespace RaidBattlesBot.Handlers
         // deep linking to gym
         case "/start" when commandText.StartsWith(GeneralInlineQueryHandler.SwitchToGymParameter, StringComparison.Ordinal):
           var query = commandText.Substring(GeneralInlineQueryHandler.SwitchToGymParameter.Length);
-          var pollTitle = new StringBuilder("Poll creation");
+          var pollTitle = new TextBuilder("Poll creation");
           if (int.TryParse(query, out int gymPollId))
           {
             pollTitle
               .NewLine()
-              .Bold( (builder, m) => builder.Sanitize(myRaidService.GetTemporaryPoll(gymPollId)?.Title, m));
+              .Bold(myRaidService.GetTemporaryPoll(gymPollId)?.Title);
           }
 
           var content = pollTitle.ToTextMessageContent();
@@ -117,7 +116,7 @@ namespace RaidBattlesBot.Handlers
                                 user : new User { Id = u, FirstName = u.ToString() })
             .Aggregate(
               poll.GetDescription(myUrlHelper).NewLine().NewLine(),
-              (builder, user) => builder.Append(user.GetLink()).NewLine())
+              (builder, user) => user.GetLink(builder).NewLine())
             .ToTextMessageContent(disableWebPreview: true);
 
           await myTelegramBotClient.SendTextMessageAsync(myMessage.Chat, info, disableNotification: true,

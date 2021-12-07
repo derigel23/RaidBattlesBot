@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +45,7 @@ namespace RaidBattlesBot
       "🕕", "🕡", "🕖", "🕢", "🕗", "🕣", "🕘", "🕤", "🕙", "🕥", "🕚", "🕦"
     };
 
-    public async Task<bool> ProcessPoll(ITelegramBotClient bot, long targetChatId, int? replyMessageId, Func<CancellationToken, Task<Poll>> getPoll, Func<StringBuilder> getInitialText, CancellationToken cancellationToken = default)
+    public async Task<bool> ProcessPoll(ITelegramBotClient bot, long targetChatId, int? replyMessageId, Func<CancellationToken, Task<Poll>> getPoll, Func<TextBuilder> getInitialText, CancellationToken cancellationToken = default)
     {
       var timeZoneSettings = await myDB.Set<TimeZoneSettings>().Where(settings => settings.ChatId == targetChatId).ToListAsync(cancellationToken);
       if (timeZoneSettings.Count == 0) 
@@ -72,9 +71,9 @@ namespace RaidBattlesBot
         {
           zonedDateTime = zonedDateTime.WithZone(timeZone);
           var clockFace = ourClockFaces[(int)(zonedDateTime.ToDateTimeOffset().TimeOfDay.TotalMinutes / 30) % ourClockFaces.Length];
-          builder.Append(clockFace).Append(' ');
+          builder.Append(clockFace).Append(" ");
           pattern.AppendFormat(zonedDateTime, builder);
-          builder.AppendLine();
+          builder.NewLine();
         }
       }
 
@@ -101,8 +100,8 @@ namespace RaidBattlesBot
       {
         title = await myBot.GetChatAsync(chat, cancellationToken) is {} ch ? ch.Title ?? ch.Username : null;
       }
-      var builder = new StringBuilder("Time zone notifications for ")
-        .Bold((b, m) => b.Sanitize(title, m))
+      var builder = new TextBuilder("Time zone notifications for ")
+        .Bold(b => b.Sanitize(title))
         .NewLine().NewLine();
 
       var instant = myClock.GetCurrentInstant();
@@ -110,7 +109,7 @@ namespace RaidBattlesBot
       {
         if (myDateTimeZoneProvider.GetZoneOrNull(setting.TimeZone) is {} timeZone)
         {
-          builder.AppendLine($"{timeZone.Id} ({timeZone.GetUtcOffset(instant)})");
+          builder.Append($"{timeZone.Id} ({timeZone.GetUtcOffset(instant)})").NewLine();
         }
       }
       

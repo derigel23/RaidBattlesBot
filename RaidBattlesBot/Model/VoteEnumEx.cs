@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using EnumsNET;
+using Team23.TelegramSkeleton;
 
 namespace RaidBattlesBot.Model
 {
@@ -62,10 +62,10 @@ namespace RaidBattlesBot.Model
         // TODO: check for overflow
         public static VoteEnum IncreaseVotesCount(this VoteEnum vote, int diff) => vote
             .RemoveFlags(VoteEnum.Plus)
-            .CombineFlags((VoteEnum) ((((int)(vote.CommonFlags(VoteEnum.Plus)) >> FirstPlusBit) + diff) << FirstPlusBit));
+            .CombineFlags((VoteEnum) ((((int)vote.CommonFlags(VoteEnum.Plus) >> FirstPlusBit) + diff) << FirstPlusBit));
 
         public static string Description(this VoteEnum vote) =>
-            (vote.RemoveFlags(VoteEnum.Modifiers) is { } voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
+            (vote.RemoveFlags(VoteEnum.Modifiers) is var voteWithoutModifiers && voteWithoutModifiers.HasAnyFlags() ?
                 voteWithoutModifiers : vote.HasAnyFlags(VoteEnum.Modifiers) ? VoteEnum.Yes : vote).AsString(EnumFormat.DisplayName);
 
         public static IEnumerable<VoteEnum> GetFlags(VoteEnum vote)
@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Model
             }
         }
     
-        public static StringBuilder Format(this VoteEnum vote, StringBuilder builder) =>
-            builder.AppendJoin("", GetFlags(vote).Select(_ => _.AsString(EnumFormat.DisplayName)));
+        public static TextBuilder Format(this VoteEnum vote, TextBuilder builder) =>
+          GetFlags(vote).Aggregate(builder, (b, v) => b.Append(v.AsString(EnumFormat.DisplayName)));
     }
 }

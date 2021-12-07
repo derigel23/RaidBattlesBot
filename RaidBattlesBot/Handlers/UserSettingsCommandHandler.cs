@@ -58,15 +58,15 @@ namespace RaidBattlesBot.Handlers
       
     private async Task<InputTextMessageContent> GetMessage(UserSettings settings, CancellationToken cancellationToken = default)
     {
-      var contentBuilder = new StringBuilder();
+      var contentBuilder = new TextBuilder();
       if (settings is { Lat: {} lat, Lon: {} lon })
       {
-        if ((await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken)) is { Length: > 0 } geoDescription)
+        if (await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken) is { Length: > 0 } geoDescription)
         {
           contentBuilder
             .Append("Your location is ")
-            .Bold((b, mode) => b.Append(geoDescription))
-            .AppendLine();
+            .Bold(b => b.Append(geoDescription))
+            .NewLine();
         }
       }
       
@@ -74,11 +74,11 @@ namespace RaidBattlesBot.Handlers
       {
         var zoneInterval = timeZone.GetZoneInterval(myClock.GetCurrentInstant());
         contentBuilder.Append("Your time zone is ")
-          .Bold((builder, mode) => builder.Sanitize($"{timeZone.Id} {zoneInterval.Name} UTC{zoneInterval.WallOffset}", mode));
+          .Bold(builder => builder.Sanitize($"{timeZone.Id} {zoneInterval.Name} UTC{zoneInterval.WallOffset}"));
       }
       else
       {
-        contentBuilder.AppendLine("Time zone is not set.");
+        contentBuilder.Append("Time zone is not set.").NewLine();
       }
 
       return contentBuilder.ToTextMessageContent();
@@ -86,7 +86,7 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<bool?> ProcessLocation(Message message, CancellationToken cancellationToken = default)
     {
-      if (message.Location is {} location && (message.ReplyToMessage?.MessageId ?? message.MessageId - 1) is { } commandMessageId && this[commandMessageId] is {} cacheId && myCache.TryGetValue(cacheId, out bool _))
+      if (message.Location is {} location && (message.ReplyToMessage?.MessageId ?? message.MessageId - 1) is var commandMessageId && this[commandMessageId] is {} cacheId && myCache.TryGetValue(cacheId, out bool _))
       {
         myCache.Remove(cacheId);  
       }

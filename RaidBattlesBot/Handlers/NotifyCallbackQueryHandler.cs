@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -60,9 +59,13 @@ namespace RaidBattlesBot.Handlers
       var invitePartitionedVotes = inviteVotes.Chunk(NotificationBatchSize);
       
       var inviteMessages = invitePartitionedVotes.Select(votes =>
-        votes.Aggregate(new StringBuilder(),
-          (builder, vote) => (string.IsNullOrEmpty(vote.Username) ? builder.Append(vote.User.GetLink()) : builder.Append('@').Append(vote.Username)).Append(", "),
-          builder => builder.Remove(builder.Length - 2, 2).ToTextMessageContent())
+        votes.Aggregate(new TextBuilder(),
+          (builder, vote) => (string.IsNullOrEmpty(vote.Username) ? vote.User.GetLink(builder) : builder.Append("@").Append(vote.Username)).Append(", "),
+          builder =>
+          {
+            builder.Length -= 2;
+            return builder.ToTextMessageContent();
+          })
       ).ToArray();
       
       if (inviteMessages.Length == 0)

@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RaidBattlesBot.Model;
@@ -27,7 +26,7 @@ namespace RaidBattlesBot.Handlers
       
       var player = await myDB.Set<Player>().Get(data.Message.From, cancellationToken);
 
-      var content = new StringBuilder("When someone is asking for Friendship")
+      var content = new TextBuilder("When someone is asking for Friendship")
         .ToTextMessageContent();
 
       var replyMarkup = GetInlineKeyboardMarkup(player);

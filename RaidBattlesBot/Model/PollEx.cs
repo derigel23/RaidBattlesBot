@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Text;
 using RaidBattlesBot.Handlers;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
- using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -72,9 +71,9 @@ namespace RaidBattlesBot.Model
       return thumbnail ?? poll.Raid().GetThumbUrl(urlHelper);
     }
 
-    private static StringBuilder GetTitleBase(this Poll poll, StringBuilder builder, ParseMode mode)
+    private static TextBuilder GetTitleBase(this Poll poll, TextBuilder builder)
     {
-      var result = poll.Raid()?.GetDescription(builder, mode) ?? builder;
+      var result = poll.Raid()?.GetDescription(builder) ?? builder;
       // if (poll.Time != null)
       // {
       //   if (result.Length > 0)
@@ -85,90 +84,84 @@ namespace RaidBattlesBot.Model
       return result;
     }
 
-    public static string GetTitle(this Poll poll, ParseMode mode = 0) // by default no formatting at all
+    public static string GetTitle(this Poll poll)
     {
-      return GetTitle(poll, new StringBuilder(), mode).ToString();
+      return GetTitle(poll, new TextBuilder()).ToString();
     }
 
-    public static StringBuilder GetTitle(this Poll poll, StringBuilder builder, ParseMode mode = Helpers.DefaultParseMode)
+    public static TextBuilder GetTitle(this Poll poll, TextBuilder builder)
     {
       var initialLength = builder.Length;
-      var title = poll.GetTitleBase(builder, mode);
+      var title = poll.GetTitleBase(builder);
       if (title.Length == initialLength)
       {
-        title.Bold((b, m) => b.Sanitize(poll.Title ?? $"Poll{poll.Id}", m), mode);
+        title.Bold(b => b.Sanitize(poll.Title ?? $"Poll{poll.Id}"));
         if (poll.Portal is { } portal)
         {
-          title.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0", mode);
-          title.Link(portal.Name, $"https://pogo.tools/{portal.Guid}", mode);
+          title.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
+          title.Link(portal.Name, $"https://pogo.tools/{portal.Guid}");
         }
       }
 
       return title;
     }
 
-    public static StringBuilder GetDescription(this Poll poll, IUrlHelper urlHelper, ParseMode mode = Helpers.DefaultParseMode)
+    public static TextBuilder GetDescription(this Poll poll, IUrlHelper urlHelper)
     {
-      var description = poll.GetTitleBase(new StringBuilder(), mode);
+      var description = poll.GetTitleBase(new TextBuilder());
       if (!string.IsNullOrEmpty(poll.Title))
       {
         if (description.Length > 0)
         {
-          description.NewLine().Sanitize(poll.Title, mode);
+          description.NewLine().Sanitize(poll.Title);
         }
         else
         {
-          description.Bold((builder, m) => builder.Sanitize(poll.Title, m), mode);
+          description.Bold(builder => builder.Sanitize(poll.Title));
           if (poll.Portal is { } portal)
           {
-            description.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0", mode);
-            description.Link(portal.Name, $"https://pogo.tools/{portal.Guid}", mode);
+            description.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
+            description.Link(portal.Name, $"https://pogo.tools/{portal.Guid}");
             if (poll.ExRaidGym)
             {
-              description.Sanitize(" (EX Raid Gym)", mode);
+              description.Sanitize(" (EX Raid Gym)");
             }
           }
         }
       }
-      switch (mode)
+
+      if (poll.Raid() is { Lat: { }, Lon: { } } raid && urlHelper != null)
       {
-        case ParseMode.Html:
-        case ParseMode.Markdown:
-          var raid = poll.Raid();
-          if (raid?.Lat != null && raid?.Lon != null && urlHelper != null)
-          {
-            description
-              .Sanitize(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter, mode)
-              .Link("Map", raid.GetLink(urlHelper), mode);
-          }
-          break;
+        description
+          .Sanitize(/*string.IsNullOrEmpty(poll.Title) ? Environment.NewLine : */RaidEx.Delimeter)
+          .Link("Map", raid.GetLink(urlHelper));
       }
 
       return description;
     }
 
-    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, ParseMode parseMode = Helpers.DefaultParseMode, bool disableWebPreview = false,
-      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null, Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null)
+    public static InputTextMessageContent GetMessageText(this Poll poll, IUrlHelper urlHelper, bool disableWebPreview = false,
+      Func<User, TextBuilder,TextBuilder> userFormatter = null, Func<IGrouping<VoteEnum?, Vote>, bool, TextBuilder, TextBuilder> userGroupFormatter = null)
     {
-      var text = poll.GetDescription(urlHelper, parseMode).NewLine();
+      var text = poll.GetDescription(urlHelper).NewLine();
       text.Append(" "); // for better presentation in telegram pins & notifications
       
       if (poll.Cancelled)
       {
         text
           .NewLine()
-          .Bold((builder, m) => builder.Sanitize("Cancellation!", m).NewLine(), parseMode);
+          .Bold(builder => builder.Sanitize("Cancellation!").NewLine());
       }
 
       var compactMode = poll.Votes?.Count > 10;
       var pollVotes = poll.Votes ?? Enumerable.Empty<Vote>();
       GroupVotes(text, pollVotes, ourVoteGrouping);
 
-      text.Link("\x200B", poll.Raid()?.GetLink(urlHelper), parseMode);
+      text.Link("\x200B", poll.Raid()?.GetLink(urlHelper));
 
-      return text.ToTextMessageContent(parseMode, disableWebPreview);
+      return text.ToTextMessageContent(disableWebPreview);
       
-      int GroupVotes(StringBuilder result, IEnumerable<Vote> enumerable, IEnumerable<VoteGrouping> grouping, string extraPhrase = null)
+      int GroupVotes(TextBuilder result, IEnumerable<Vote> enumerable, IEnumerable<VoteGrouping> grouping, string extraPhrase = null)
       {
         int groupsCount = 0;
         foreach (var voteGroup in enumerable
@@ -178,17 +171,17 @@ namespace RaidBattlesBot.Model
           groupsCount++;
           var votesNumber = voteGroup.Aggregate(0, (i, vote) => i + vote.Team.GetPlusVotesCount() + 1);
           var countStr = votesNumber == 1 ? voteGroup.Key.Singular : voteGroup.Key.Plural;
-          StringBuilder FormatCaption(StringBuilder sb)
+          TextBuilder FormatCaption(TextBuilder sb)
           {
             return sb
               .NewLine()
-              .Sanitize(string.Format(countStr, extraPhrase is {} extraPhraseNotNull ? string.Format(extraPhraseNotNull, votesNumber) : votesNumber), parseMode)
+              .Sanitize(string.Format(countStr, extraPhrase is {} extraPhraseNotNull ? string.Format(extraPhraseNotNull, votesNumber) : votesNumber))
               .NewLine();
           }
 
           if (voteGroup.Key.NestedGrouping is {} nestedGrouping)
           {
-            var nestedResult = new StringBuilder();
+            var nestedResult = new TextBuilder();
             if (GroupVotes(nestedResult, voteGroup, nestedGrouping) > 1)
             {
               FormatCaption(result).Append(nestedResult);
@@ -206,23 +199,25 @@ namespace RaidBattlesBot.Model
           {
             if (userGroupFormatter != null)
             {
-              userGroupFormatter(vote, compactMode, result, parseMode);
+              userGroupFormatter(vote, compactMode, result);
               continue;
             }
             
             var votes = vote.OrderBy(v => v.Modified);
             if (compactMode)
             {
-              result
-                .Sanitize(vote.Key?.Description()).Append('\x00A0')
-                .AppendJoin(", ", votes.Select(v => v.GetUserLinkWithPluses(userFormatter, parseMode)))
+              result.Sanitize(vote.Key?.Description()).Append("\x00A0");
+              var initialLength = result.Length;
+              votes
+                .Aggregate(result, (b, v) => v.GetUserLinkWithPluses(b.Append(b.Length == initialLength ? null : ", "), userFormatter))
                 .NewLine();
             }
             else
             {
-              result
-                .AppendJoin(Helpers.NewLineString,
-                  votes.Select(v => $"{v.Team?.Description().Sanitize(parseMode)} {v.GetUserLinkWithPluses(userFormatter, parseMode)}"))
+              var initialLength = result.Length;
+              votes
+                .Aggregate(result, (b, v) => v
+                  .GetUserLinkWithPluses(b.Append(b.Length == initialLength ? null : TextBuilderEx.NewLineString).Sanitize(v.Team?.Description()).Append(" "), userFormatter))
                 .NewLine();
             }
           }
@@ -462,8 +457,8 @@ namespace RaidBattlesBot.Model
       if (resultNicknames.Count > 0)
       {
         return
-          new StringBuilder()
-            .Code((builder, mode) => builder.Sanitize(string.Join(",", resultNicknames), mode))
+          new TextBuilder()
+            .Code(builder => builder.Sanitize(string.Join(",", resultNicknames)))
             .ToTextMessageContent();
       }
 

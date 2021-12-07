@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +25,7 @@ namespace RaidBattlesBot.Handlers
     {
       if (!this.ShouldProcess(entity, context)) return null;
       
-      var builder = new StringBuilder();
+      var builder = new TextBuilder();
       var nickname = entity.AfterValue.Trim().ToString().ToLowerInvariant();
       if (!string.IsNullOrEmpty(nickname))
       {
@@ -37,7 +36,7 @@ namespace RaidBattlesBot.Handlers
                 OUTER APPLY (SELECT TOP 1 * FROM Votes V WHERE V.UserId = P.UserId ORDER BY Modified DESC) VV
                 WHERE UPPER({0}) IN (SELECT UPPER(RTRIM(LTRIM(value))) FROM STRING_SPLIT(P.Nickname,','))", nickname, myBot.BotId)
             .ToListAsync(cancellationToken))
-          .Aggregate(builder, (sb, vote) => sb.Append(vote.User.GetLink()).NewLine());
+          .Aggregate(builder, (sb, vote) => vote.User.GetLink(builder).NewLine());
 
       }
 

@@ -1,24 +1,25 @@
 ﻿using System;
-using System.Text;
+using System.Runtime.CompilerServices;
+using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Model
 {
   public static class UserEx
   {
-    public static readonly Func<User, StringBuilder, ParseMode, StringBuilder> DefaultUserExtractor =
-      (user, builder, mode) => builder.Sanitize(" ".JoinNonEmpty(user.FirstName, user.LastName) is {} name  && !string.IsNullOrWhiteSpace(name) ? name : user.Username, mode);
+    public static readonly Func<User, TextBuilder, TextBuilder> DefaultUserExtractor =
+      (user, builder) => builder.Append(" ".JoinNonEmpty(user.FirstName, user.LastName) is {} name  && !string.IsNullOrWhiteSpace(name) ? name : user.Username);
     
-    public static StringBuilder GetLink(this User user, ParseMode parseMode = Helpers.DefaultParseMode)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TextBuilder GetLink(this User user, TextBuilder builder = default)
     {
-      return GetLink(user, DefaultUserExtractor, parseMode);
+      return GetLink(user, builder ?? new TextBuilder(), DefaultUserExtractor);
     }
     
-    public static StringBuilder GetLink(this User user, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter, ParseMode parseMode = Helpers.DefaultParseMode)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TextBuilder GetLink(this User user, TextBuilder builder, Func<User, TextBuilder, TextBuilder> userFormatter)
     {
-      var builder = new StringBuilder();
-      return builder.Link((b, m) => userFormatter(user, b, m) , $"tg://user?id={user.Id}", parseMode);
+      return builder.Link(b => userFormatter(user, b), user);
     }
 
   }

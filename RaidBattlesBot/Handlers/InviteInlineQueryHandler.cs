@@ -46,7 +46,7 @@ namespace RaidBattlesBot.Handlers
       var result = await GetResult(poll, cancellationToken);
 
       result ??= new InlineQueryResultArticle("NobodyToInvite", "Nobody to invite",
-        new StringBuilder().Sanitize($"Nobody to invite").ToTextMessageContent())
+        new TextBuilder().Sanitize($"Nobody to invite").ToTextMessageContent())
         {
           ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").ToString()
         };

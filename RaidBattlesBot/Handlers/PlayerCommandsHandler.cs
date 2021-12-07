@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RaidBattlesBot.Model;
@@ -60,27 +59,25 @@ namespace RaidBattlesBot.Handlers
       }
 
       IReplyMarkup replyMarkup = null;
-      var builder = new StringBuilder();
+      var builder = new TextBuilder();
       if (!string.IsNullOrEmpty(player?.Nickname))
       {
         builder
           .Append("Your IGN is ")
-          .Bold((b, mode) => b.Sanitize(player.Nickname, mode))
-          .AppendLine()
-          .AppendLine();
+          .Bold(b => b.Sanitize(player.Nickname))
+          .NewLine()
+          .NewLine();
 
         replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Clear IGN", 
           $"{PlayerCallbackQueryHandler.ID}:{PlayerCallbackQueryHandler.Commands.ClearIGN}"));
       }
 
       builder
-        .AppendLine("To set up your in-game-name reply with it to this message.")
-        .AppendLine($"Or use /{COMMAND} command.")
-        .Code((b, mode) => b.Append("/ign your-in-game-name"));
+        .Append("To set up your in-game-name reply with it to this message.").NewLine()
+        .Append($"Or use /{COMMAND} command.").NewLine()
+        .Code("/ign your-in-game-name");
       
-      var content = builder.ToTextMessageContent();
-
-      await myBot.SendTextMessageAsync(user.Id, content, cancellationToken: cancellationToken,
+      await myBot.SendTextMessageAsync(user.Id, builder.ToTextMessageContent(), cancellationToken: cancellationToken,
         replyMarkup: replyMarkup ?? new ForceReplyMarkup { InputFieldPlaceholder = "in-game-name" });
         
       return false; // processed, but not pollMessage

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -39,8 +38,7 @@ namespace RaidBattlesBot.Handlers
         .IncludeRelatedData()
         .ToListAsync(cancellationToken);
 
-      var builder = new StringBuilder();
-      var mode = Helpers.DefaultParseMode;
+      var builder = new TextBuilder();
       if (polls.Count == 0)
       {
         builder.Append("No upcoming raids.");
@@ -49,9 +47,9 @@ namespace RaidBattlesBot.Handlers
       {
         foreach (var poll in polls)
         {
-          builder.Bold((b, m) =>
-             b.Code((bb, mm) =>  bb.Sanitize(poll.Time?.ToString("t"), mm), m), mode).Append(" ");
-          poll.GetTitle(builder).AppendLine();
+          builder.Bold(b =>
+             b.Code(bb =>  bb.Sanitize(poll.Time?.ToString("t")))).Append(" ");
+          poll.GetTitle(builder).NewLine();
         }
       }
 

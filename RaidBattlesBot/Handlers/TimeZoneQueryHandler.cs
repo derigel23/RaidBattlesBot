@@ -89,15 +89,16 @@ namespace RaidBattlesBot.Handlers
         if (myDateTimeZoneProvider.GetZoneOrNull(id) is { } timeZone)
         {
           var title = $"{timeZone.Id} ({timeZone.GetUtcOffset(instant)})";
-          var builder = new StringBuilder()
+          var builder = new TextBuilder()
             .Append(title)
-            .AppendLine("\x00A0"); // trailing space is necessary to allow edit it further to the same message
+            .Append("\x00A0") // trailing space is necessary to allow edit it further to the same message
+            .NewLine();
 
           string countryString = null;
           if (myTimeZoneService.TryGetRegion(timeZone.Id, out var country))
           {
             countryString = $"{country.EnglishName} {country.NativeName}";
-            builder.AppendLine(countryString);
+            builder.Append(countryString).NewLine();
           }
 
           results.Add(new InlineQueryResultArticle($"{PREFIX}:{encodedId}:{timeZone.Id}", title, builder.ToTextMessageContent())
@@ -112,7 +113,7 @@ namespace RaidBattlesBot.Handlers
       if (results.Count == 0 && offset == 0)
       {
         results.Add(new InlineQueryResultArticle("NothingFound", "Nothing found", 
-          new StringBuilder($"Nothing found by request ").Code((builder, mode) => builder.Sanitize(query, mode)).ToTextMessageContent())
+          new TextBuilder($"Nothing found by request ").Code(builder => builder.Sanitize(query)).ToTextMessageContent())
         {
           Description = $"Request {query}",
           ThumbUrl = myUrlHelper.AssetsContent(@"static_assets/png/btn_close_normal.png").AbsoluteUri

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
@@ -166,7 +165,7 @@ namespace RaidBattlesBot.Handlers
           try
           {
             await myTimeZoneNotifyService.ProcessPoll(myBot, user.Id, null, ct => Task.FromResult(poll),
-              () => new StringBuilder().Bold((b, m) => b.Sanitize(poll.Title, m)).NewLine(), cancellationToken);
+              () => new TextBuilder().Bold(b => b.Sanitize(poll.Title)).NewLine(), cancellationToken);
           }
           catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
           {
@@ -243,8 +242,8 @@ namespace RaidBattlesBot.Handlers
 
                 if (host.Team?.HasFlag(VoteEnum.AutoApproveFriendNotificationSent) is not true)
                 {
-                  var pollContent = new StringBuilder()
-                    .Bold((b, m) => b.Sanitize(poll.Title, m))
+                  var pollContent = new TextBuilder()
+                    .Bold(b => b.Sanitize(poll.Title))
                     .ToTextMessageContent();
                   var pollMarkup = new InlineKeyboardMarkup(
                     new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", 

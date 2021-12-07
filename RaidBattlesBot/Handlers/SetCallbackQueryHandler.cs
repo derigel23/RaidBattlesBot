@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnumsNET;
@@ -110,7 +109,7 @@ namespace RaidBattlesBot.Handlers
             }
               .Select(format => new []
               {
-                InlineKeyboardButton.WithCallbackData($"{(settings.Format.HasAllFlags(format) ? '☑' : '☐')} {format.Format(new StringBuilder())}", $"{ID}:{settings.Id}:{format:D}")
+                InlineKeyboardButton.WithCallbackData($"{(settings.Format.HasAllFlags(format) ? '☑' : '☐')} {format.Format(new TextBuilder())}", $"{ID}:{settings.Id}:{format:D}")
               });
 
           if (allSettings.FirstOrDefault() is { } existingDefault && existingDefault != settings)
@@ -126,7 +125,7 @@ namespace RaidBattlesBot.Handlers
             .Append(new [] { InlineKeyboardButton.WithCallbackData("Back", $"{ID}:list") });
 
           return await Return((
-            settings.Format.Format(new StringBuilder("Selected poll format:").AppendLine()).ToTextMessageContent(),
+            settings.Format.Format(new TextBuilder("Selected poll format:").NewLine()).ToTextMessageContent(),
             new InlineKeyboardMarkup(buttons)), message);
       }
 
@@ -147,11 +146,11 @@ namespace RaidBattlesBot.Handlers
 
       var replyMarkup = new InlineKeyboardMarkup(
         settings
-          .Select(setting => new[] { InlineKeyboardButton.WithCallbackData(setting.Format.Format(new StringBuilder()).ToString(), $"{ID}:{setting.Id}") })
+          .Select(setting => new[] { InlineKeyboardButton.WithCallbackData(setting.Format.Format(new TextBuilder()).ToString(), $"{ID}:{setting.Id}") })
           .Concat(new [] { new []{InlineKeyboardButton.WithCallbackData("Create a new", $"{ID}:")}})
           .ToArray());
 
-      return (new StringBuilder("Choose a poll format to edit or create a new:").ToTextMessageContent(), replyMarkup);
+      return (new TextBuilder("Choose a poll format to edit or create a new:").ToTextMessageContent(), replyMarkup);
     }
   }
 }

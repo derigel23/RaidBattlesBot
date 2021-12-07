@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
 using RaidBattlesBot.Model;
+using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -58,7 +58,7 @@ namespace RaidBattlesBot.Handlers
                       .IncludeRelatedData()
                       .Include(poll => poll.Notifications)
                       .FirstOrDefaultAsync(cancellationToken);
-                  }, () => new StringBuilder(), cancellationToken);
+                  }, () => new TextBuilder(), cancellationToken);
 
                   await myDB.SaveChangesAsync(cancellationToken);
                   return res;

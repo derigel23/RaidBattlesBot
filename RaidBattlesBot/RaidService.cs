@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DelegateDecompiler.EntityFrameworkCore;
@@ -15,7 +14,6 @@ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Team23.TelegramSkeleton;
 using Poll = RaidBattlesBot.Model.Poll;
 
@@ -253,7 +251,7 @@ namespace RaidBattlesBot
         }
       }
 
-      var content = message.Poll.GetMessageText(urlHelper, disableWebPreview: message.Poll.DisableWebPreview());
+      var content = message.Poll.GetMessageText(urlHelper, message.Poll.DisableWebPreview());
       if (message.Chat is { } chat)
       {
         var bot = myBot(message.BotId);
@@ -265,8 +263,7 @@ namespace RaidBattlesBot
       }
       else if (message.InlineMessageId is { })
       {
-        //await myBot.EditInlineMessageTextAsync(inlineMessageId, messageText, RaidEx.ParseMode, disableWebPagePreview: message.Poll.GetRaidId() == null,
-        //  replyMarkup: await message.GetReplyMarkup(myChatInfo, cancellationToken), cancellationToken: cancellationToken);
+        // TODO: ???
       }
 
       await myContext.SaveChangesAsync(cancellationToken);
@@ -290,19 +287,20 @@ namespace RaidBattlesBot
 
     public async Task UpdatePollMessage(PollMessage pollMessage, IUrlHelper urlHelper, CancellationToken cancellationToken = default)
     {
-      Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null;
-      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null;
+      Func<User, TextBuilder, TextBuilder> userFormatter = null;
+      Func<IGrouping<VoteEnum?, Vote>, bool, TextBuilder, TextBuilder> userGroupFormatter = null;
 
-      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> UserGroupFormatter(string delimiter, Func<StringBuilder, StringBuilder> postAction = null) =>
-        (vote, _, builder, _) =>
-          builder.Sanitize(vote.Key?.Description())
-            .Append('\x00A0')
-            .Code((b, m) =>
+      Func<IGrouping<VoteEnum?, Vote>, bool, TextBuilder, TextBuilder> UserGroupFormatter(string delimiter, Func<TextBuilder, TextBuilder> postAction = null) =>
+        (vote, _, builder) =>
+          builder
+            .Sanitize(vote.Key?.Description())
+            .Append("\x00A0")
+            .Code(b =>
             {
               var initialLength = b.Length;
               b = vote.OrderBy(v => v.Modified).Aggregate(b, (bb, v) =>
-                  (userFormatter ?? UserEx.DefaultUserExtractor)(v.User, bb.Append(bb.Length == initialLength ? null : delimiter), m));
-              return postAction != null ? postAction(b) : b;
+                  (userFormatter ?? UserEx.DefaultUserExtractor)(v.User, bb.Append(bb.Length == initialLength ? null : delimiter)));
+              postAction?.Invoke(b);
             })
             .NewLine();
 
@@ -314,15 +312,15 @@ namespace RaidBattlesBot
           goto default;
           
         case { } mode when mode.HasFlag(PollMode.Usernames):
-          userFormatter = (user, b, m) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b, m) : b.Append('@').Append(user.Username);
+          userFormatter = (user, b) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b) : b.Append("@").Append(user.Username);
           userGroupFormatter = UserGroupFormatter(" ", b => b.Append(" "));
           goto default;
         
         case { } mode when mode.HasFlag(PollMode.Invitation) || (pollMessage.Poll.AllowedVotes ?? VoteEnum.Standard).HasFlag(VoteEnum.Invitation):
           var nicknames = await GetNicknames(pollMessage.Poll, cancellationToken);
-          userFormatter = (user, b, m) => nicknames.ContainsKey(user.Id) ?
-            UserEx.DefaultUserExtractor(user, b, m) :
-            b.Italic((bb, mm) => UserEx.DefaultUserExtractor(user, bb, mm));
+          userFormatter = (user, b) => nicknames.ContainsKey(user.Id) ?
+            UserEx.DefaultUserExtractor(user, b) :
+            b.Italic(bb => UserEx.DefaultUserExtractor(user, bb));
           goto default;
           
         default:
@@ -345,17 +343,17 @@ namespace RaidBattlesBot
         });
     }
 
-    private async Task<Func<User, StringBuilder, ParseMode, StringBuilder>> GetNicknamesUserFormatter(Poll poll, CancellationToken cancellationToken = default)
+    private async Task<Func<User, TextBuilder, TextBuilder>> GetNicknamesUserFormatter(Poll poll, CancellationToken cancellationToken = default)
     {
       var nicknames = await GetNicknames(poll, cancellationToken);
 
-      return (user, builder, mode) => 
-        nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname, mode) : 
-          builder.Italic((b, m) => _ = user.Username is {} username ? b.Sanitize(username, m) : UserEx.DefaultUserExtractor(user, b, m), mode);
+      return (user, builder) => 
+        nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname) : 
+          builder.Italic(b => _ = user.Username is {} username ? b.Sanitize(username) : UserEx.DefaultUserExtractor(user, b));
     }
     
-    private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, StringBuilder, ParseMode, StringBuilder> userFormatter = null,
-      Func<IGrouping<VoteEnum?, Vote>, bool, StringBuilder, ParseMode, StringBuilder> userGroupFormatter = null, CancellationToken cancellationToken = default)
+    private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, TextBuilder, TextBuilder> userFormatter = null,
+      Func<IGrouping<VoteEnum?, Vote>, bool, TextBuilder, TextBuilder> userGroupFormatter = null, CancellationToken cancellationToken = default)
     {
       try
       {
