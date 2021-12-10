@@ -14,6 +14,9 @@ using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Poll = RaidBattlesBot.Model.Poll;
 
 namespace RaidBattlesBot
 {
@@ -84,7 +87,7 @@ namespace RaidBattlesBot
             {
               BotId = botId,
               UserId = userId,
-              ChatId = userId,
+              Chat = new Chat { Id = userId, Type = ChatType.Private },
               Poll = poll,
               PollId = poll.Id,
               PollMode = pollMode

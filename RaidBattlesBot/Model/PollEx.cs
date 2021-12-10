@@ -236,7 +236,7 @@ namespace RaidBattlesBot.Model
 
       var buttons = new List<IReadOnlyCollection<InlineKeyboardButton>>
       {
-        new List<InlineKeyboardButton>(collection: VoteEnumEx.GetFlags(poll.AllowedVotes & ~VoteEnum.ImplicitVotes ?? VoteEnum.Standard)
+        new List<InlineKeyboardButton>(VoteEnumEx.GetFlags(poll.AllowedVotes & ~VoteEnum.ImplicitVotes ?? VoteEnum.Standard)
           .Select(vote =>
           {
             string display = null;
@@ -266,15 +266,6 @@ namespace RaidBattlesBot.Model
             };
           }))
       };
-
-      if (pollMode?.HasFlag(PollMode.Invitation) ?? false)
-      {
-        buttons.Add(new[]
-        {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}"),
-          InlineKeyboardButton.WithCallbackData("GO", $"{GoCallbackQueryHandler.ID}:{pollId}")
-        });
-      }
 
       return new InlineKeyboardMarkup(buttons);
     }

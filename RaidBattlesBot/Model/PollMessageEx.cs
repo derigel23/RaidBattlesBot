@@ -37,15 +37,7 @@ namespace RaidBattlesBot.Model
         if (messageChat.Type == ChatType.Channel && (inlineKeyboardButton.CallbackData?.StartsWith(ShareInlineQueryHandler.ID) ?? false))
         {
           modified = true;
-          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(VoteEnum.Share.AsString(EnumFormat.DisplayName), $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
-        }
-        
-        // For Invite button on direct messages - direct reply in the same chat
-        if ((inlineKeyboardButton.SwitchInlineQuery?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false) ||
-            (inlineKeyboardButton.SwitchInlineQueryCurrentChat?.StartsWith(InviteInlineQueryHandler.PREFIX) ?? false))
-        {
-          modified = true;
-          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(inlineKeyboardButton.Text, $"{InviteCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
+          inlineKeyboardButtons[i][j] = InlineKeyboardButton.WithCallbackData(VoteEnum.Share.AsString(EnumFormat.DisplayName)!, $"{CloneCallbackQueryHandler.ID}:{message.GetExtendedPollId()}");
         }
       }
 
@@ -55,6 +47,22 @@ namespace RaidBattlesBot.Model
       }
       
       if (messageChat.Type != ChatType.Private) return pollReplyMarkup;
+
+      if (message.PollMode?.HasFlag(PollMode.Invitation) ?? false)
+      {
+        var hosters = message.Poll.Votes.Where(v => v.Team?.HasAnyFlags(VoteEnum.Hosting) ?? false).Select(_ => _.UserId).ToHashSet();
+        if (message.Poll.Owner == message.ChatId || hosters.Contains(messageChat.Id))
+        {
+          pollReplyMarkup = new InlineKeyboardMarkup(inlineKeyboardButtons.Concat(new []
+          {
+            new []
+            {
+              InlineKeyboardButton.WithCallbackData("Invite", $"{InviteCallbackQueryHandler.ID}:{message.GetExtendedPollId()}"),
+              InlineKeyboardButton.WithCallbackData("GO", $"{GoCallbackQueryHandler.ID}:{message.PollId}")
+            }
+          }));
+        }
+      }
 
       // TODO: Currently, no additional admin buttons
       return pollReplyMarkup;
@@ -115,7 +123,7 @@ namespace RaidBattlesBot.Model
     {
       return new Dictionary<string, string>(properties ?? EmptyProperties)
       {
-        { "messageId", pollMessage?.Id is { } pollMessageId && pollMessageId > 0 ? pollMessageId.ToString() : null },
+        { "messageId", pollMessage?.Id is { } pollMessageId and > 0 ? pollMessageId.ToString() : null },
         { "pollId", pollMessage?.GetPollId()?.ToString() },
         { "raidId", pollMessage?.Poll.GetRaidId()?.ToString() }
       };
