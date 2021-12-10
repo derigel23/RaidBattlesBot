@@ -271,7 +271,8 @@ namespace RaidBattlesBot.Model
       {
         buttons.Add(new[]
         {
-          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}")
+          InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Invite", $"{InviteInlineQueryHandler.PREFIX}{pollId}"),
+          InlineKeyboardButton.WithCallbackData("GO", $"{GoCallbackQueryHandler.ID}:{pollId}")
         });
       }
 
