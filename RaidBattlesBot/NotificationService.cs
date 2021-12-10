@@ -70,7 +70,7 @@ namespace RaidBattlesBot
 
       foreach (var poll in polls)
       {
-        var pollMode = poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false ? PollMode.Invitation : default;
+        var pollMode = poll.AllowedVotes?.HasFlag(VoteEnum.Invitation) ?? false ? PollMode.DefaultWithInvitation : default;
         var alreadyNotified = poll.Notifications.Where(notification => notification.Type == NotificationType.PollTime).Select(notification => notification.ChatId).ToHashSet();
         foreach (var pollVote in poll.Votes)
         {
