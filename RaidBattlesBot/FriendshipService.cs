@@ -48,7 +48,7 @@ namespace RaidBattlesBot
       {
         builder
           .Append(" (")
-          .Code(b => b.Sanitize(nickname))
+          .Code(b => b.SanitizeNickname(nickname))
           .Append(")");
       }
 

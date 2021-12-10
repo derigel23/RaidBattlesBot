@@ -48,7 +48,7 @@ namespace RaidBattlesBot.Handlers
         foreach (var poll in polls)
         {
           builder.Bold(b =>
-             b.Code(bb =>  bb.Sanitize(poll.Time?.ToString("t")))).Append(" ");
+             b.Code(bb => bb.AppendFormat("{0:t} ", poll.Time)));
           poll.GetTitle(builder).NewLine();
         }
       }

@@ -7,8 +7,15 @@ namespace RaidBattlesBot.Model
 {
   public static class UserEx
   {
+
+    public static Func<User, TextBuilder, TextBuilder> GetDefaultUserExtractor(Func<TextBuilder, string, TextBuilder> appender) =>
+      (user, builder) => appender(builder, " ".JoinNonEmpty(user.FirstName, user.LastName) is {} name  && !string.IsNullOrWhiteSpace(name) ? name : user.Username);
+
     public static readonly Func<User, TextBuilder, TextBuilder> DefaultUserExtractor =
-      (user, builder) => builder.Append(" ".JoinNonEmpty(user.FirstName, user.LastName) is {} name  && !string.IsNullOrWhiteSpace(name) ? name : user.Username);
+      GetDefaultUserExtractor((builder, text) => builder.Sanitize(text));
+
+    public static readonly Func<User, TextBuilder, TextBuilder> NicknameSanitizingDefaultUserExtractor =
+      GetDefaultUserExtractor((builder, text) => builder.SanitizeNickname(text));
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TextBuilder GetLink(this User user, TextBuilder builder = default)

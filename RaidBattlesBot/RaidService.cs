@@ -337,8 +337,11 @@ namespace RaidBattlesBot
           entry.SlidingExpiration = TimeSpan.FromSeconds(3);
 
           var userIDs = poll.Votes.Select(_ => _.UserId).ToList();
-          return (await myContext.Set<Player>()
-              .Where(player => userIDs.Contains(player.UserId)).ToListAsync(cancellationToken))
+          return (await myContext
+              .Set<Player>()
+              .Where(player => userIDs.Contains(player.UserId))
+              .ToListAsync(cancellationToken))
+            .Where(player => !string.IsNullOrEmpty(player.Nickname)) // filter out empty nicknames
             .ToDictionary(player => player.UserId, player => player.Nickname);
         });
     }
@@ -348,8 +351,8 @@ namespace RaidBattlesBot
       var nicknames = await GetNicknames(poll, cancellationToken);
 
       return (user, builder) => 
-        nicknames.TryGetValue(user.Id, out var nickname) ? builder.Sanitize(nickname) : 
-          builder.Italic(b => _ = user.Username is {} username ? b.Sanitize(username) : UserEx.DefaultUserExtractor(user, b));
+        nicknames.TryGetValue(user.Id, out var nickname) ? builder.SanitizeNickname(nickname) : 
+          builder.Italic(b => _ = user.Username is {} username ? b.SanitizeNickname(username) : UserEx.NicknameSanitizingDefaultUserExtractor(user, b));
     }
     
     private async Task UpdatePollMessage(PollMessage message, IUrlHelper urlHelper, Func<User, TextBuilder, TextBuilder> userFormatter = null,

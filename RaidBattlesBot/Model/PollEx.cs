@@ -458,7 +458,8 @@ namespace RaidBattlesBot.Model
       {
         return
           new TextBuilder()
-            .Code(builder => builder.Sanitize(string.Join(",", resultNicknames)))
+            .Code(builder => resultNicknames.Aggregate(builder,
+              (b, nickname) =>  b.Append(b.Length == 0 ? null : ",").SanitizeNickname(nickname)))
             .ToTextMessageContent();
       }
 
