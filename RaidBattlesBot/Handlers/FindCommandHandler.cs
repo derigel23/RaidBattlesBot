@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,18 +27,30 @@ namespace RaidBattlesBot.Handlers
       if (!this.ShouldProcess(entity, context)) return null;
       
       var builder = new TextBuilder();
-      var nickname = entity.AfterValue.Trim().ToString().ToLowerInvariant();
-      if (!string.IsNullOrEmpty(nickname))
+      var nickname = entity.AfterValue.Trim().ToString();
+      
+      if (!string.IsNullOrEmpty(nickname) && nickname.Length > 3)
       {
-        builder = (await myContext
-            .Set<Vote>()
-            .FromSqlRaw(@"
-                SELECT P.UserId, {1} AS BotId, COALESCE(VV.Username, {0}) AS Username, VV.FirstName, VV.LastName, VV.Team, VV.Modified, -1 AS PollId FROM Players P
-                OUTER APPLY (SELECT TOP 1 * FROM Votes V WHERE V.UserId = P.UserId ORDER BY Modified DESC) VV
-                WHERE UPPER({0}) IN (SELECT UPPER(RTRIM(LTRIM(value))) FROM STRING_SPLIT(P.Nickname,','))", nickname, myBot.BotId)
-            .ToListAsync(cancellationToken))
-          .Aggregate(builder, (sb, vote) => vote.User.GetLink(builder).NewLine());
+        var found = await myContext.Set<Player>().Where(player => player.Nickname == nickname).Select(_ => _.UserId).ToListAsync(cancellationToken);
+        if (found.Count == 0)
+        {
+          found = (await myContext.Set<Player>().Where(player => player.Nickname.Contains(nickname)).ToListAsync(cancellationToken))
+              .Where(player => player.Nickname.Split(new []{','}).Select(nick => nick.Trim()).Contains(nickname, StringComparer.OrdinalIgnoreCase))
+              .Select(_ => _.UserId)
+              .ToList();
+        }
 
+        if (found.Count > 0)
+        {
+          builder = (await (from v in myContext.Set<Vote>()
+              where found.Contains(v.UserId)
+              group v by v.UserId into uu
+              select uu.OrderByDescending(_ => _.Modified).First())
+              .ToListAsync(cancellationToken))
+            .Aggregate(builder, (b, vote) =>
+              vote.User.GetLink(b, (u, bb) => UserEx.DefaultUserExtractor(u, bb)
+                .Append(string.IsNullOrEmpty(u.Username) ? null : $" (@{u.Username})")).NewLine());
+        }
       }
 
       if (builder.Length == 0)
