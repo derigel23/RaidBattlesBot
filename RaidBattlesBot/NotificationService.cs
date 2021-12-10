@@ -76,7 +76,7 @@ namespace RaidBattlesBot
         {
           var botId = pollVote.BotId;
           var userId = pollVote.UserId;
-          if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Going) ?? false)) continue;
+          if (!(pollVote.Team?.HasAnyFlags(VoteEnum.Notify) ?? false)) continue;
           if (alreadyNotified.Contains(userId)) continue;
           try
           {

@@ -141,6 +141,8 @@ namespace RaidBattlesBot.Model
     Modifiers = Plus | Share | PollMode | AutoApproveFriend | AutoApproveFriendNotificationSent | FriendCodeAsked,
     
     ImplicitVotes = Host,
-    ExplicitVotes = Hosting & ~ImplicitVotes
+    ExplicitVotes = Hosting & ~ImplicitVotes,
+    
+    Notify = Going | Host
   }
 }

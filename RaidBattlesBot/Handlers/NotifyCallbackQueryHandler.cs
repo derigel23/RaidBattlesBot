@@ -81,7 +81,7 @@ namespace RaidBattlesBot.Handlers
         }
         catch (Exception ex)
         {
-          myTelemetryClient.TrackExceptionEx(ex, properties: pollMessage.GetTrackingProperties(new Dictionary<string, string>
+          myTelemetryClient.TrackExceptionEx(ex, pollMessage.GetTrackingProperties(new Dictionary<string, string>
           {
             { nameof(ITelegramBotClient.BotId), myBot.BotId.ToString()}
           }));
