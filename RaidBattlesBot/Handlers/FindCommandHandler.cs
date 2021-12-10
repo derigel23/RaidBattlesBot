@@ -31,6 +31,8 @@ namespace RaidBattlesBot.Handlers
       
       if (!string.IsNullOrEmpty(nickname) && nickname.Length > 3)
       {
+        await myBot.SendChatActionAsync(entity.Message.Chat, ChatAction.Typing, cancellationToken);
+        
         var found = await myContext.Set<Player>().Where(player => player.Nickname == nickname).Select(_ => _.UserId).ToListAsync(cancellationToken);
         if (found.Count == 0)
         {
