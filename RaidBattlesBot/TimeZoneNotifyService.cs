@@ -11,7 +11,6 @@ using NodaTime.Text;
 using NodaTime.TimeZones;
 using RaidBattlesBot.Handlers;
 using RaidBattlesBot.Model;
-using SimpleBase;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -118,7 +117,7 @@ namespace RaidBattlesBot
         builder.Append("No time zone notifications");
       }
 
-      var encodedId = EncodeId(chat.Id, messageId);
+      var encodedId = new EncodedId<long, int>(chat.Id, messageId);
       var replyMarkupButtons = new List<InlineKeyboardButton[]>
       {
         new []
@@ -144,29 +143,11 @@ namespace RaidBattlesBot
       return (builder.ToTextMessageContent(), new InlineKeyboardMarkup(replyMarkupButtons));
     }
 
-    public string EncodeId(long chatId, int messageId)
+    public bool DecodeId(string encodedId, out long chatId, out int messageId)
     {
-      var idBytes = new byte[sizeof(long) + sizeof(int)].AsSpan();
-      BitConverter.TryWriteBytes(idBytes, chatId);
-      BitConverter.TryWriteBytes(idBytes[sizeof(long)..], messageId);
-      return Base58.Flickr.Encode(idBytes);
-    }
-    
-    public bool DecodeId(string chatIdEncoded, out long chatId, out int messageId)
-    {
-      chatId = messageId = 0;
-      if (string.IsNullOrEmpty(chatIdEncoded))
-        return false;
-      
-      var chatIdBytes = new byte[sizeof(long) + sizeof(int)];
-      if (Base58.Flickr.TryDecode(chatIdEncoded, chatIdBytes, out _))
-      {
-        chatId = BitConverter.ToInt64(chatIdBytes, 0);
-        messageId = BitConverter.ToInt32(chatIdBytes, sizeof(long));
-        return true;
-      }
-
-      return false;
+      EncodedId<long, int> decodedId = encodedId;
+      (chatId, messageId) = decodedId;
+      return decodedId != EncodedId<long, int>.Empty;
     }
   }
 }
