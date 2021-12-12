@@ -23,7 +23,7 @@ namespace RaidBattlesBot
       builder.Register(c =>
       {
         var configuration = c.Resolve<IConfiguration>();
-        DateTimeZone? dateTimeZone = null;
+        DateTimeZone dateTimeZone = null;
         var timezone = configuration["Timezone"];
         if (!string.IsNullOrEmpty(timezone))
         {

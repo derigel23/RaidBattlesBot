@@ -100,7 +100,7 @@ namespace RaidBattlesBot
       builder.RegisterModule<RegistrationModule>();
     }
 
-    private IWebHostEnvironment? Environment { get; set; }
+    private IWebHostEnvironment Environment { get; set; }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
