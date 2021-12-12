@@ -10,9 +10,9 @@ namespace RaidBattlesBot.Controllers
 {
   public class StatusController : StatusController<PollMessage, bool?, BotCommandAttribute>
   {
-    public StatusController(IEnumerable<ITelegramBotClient> bots, IEnumerable<IStatusProvider> statusProviders,
+    public StatusController(IWebHookSaltProvider? webHookSaltProvider, IEnumerable<ITelegramBotClient> bots, IEnumerable<IStatusProvider> statusProviders,
       IEnumerable<Lazy<Func<Message, IBotCommandHandler<PollMessage, bool?>>, BotCommandAttribute>> commandHandlers)
-      : base(bots, statusProviders, commandHandlers)
+      : base(webHookSaltProvider, bots, statusProviders, commandHandlers)
     {
     }
   }

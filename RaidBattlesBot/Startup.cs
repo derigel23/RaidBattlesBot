@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -53,7 +53,7 @@ namespace RaidBattlesBot
         services.Configure<RequestLocalizationOptions>(options =>
         {
           options.DefaultRequestCulture = new RequestCulture(culture);
-          options.RequestCultureProviders = null;
+          options.RequestCultureProviders = ArraySegment<IRequestCultureProvider>.Empty;
         });
       }
 
@@ -62,14 +62,14 @@ namespace RaidBattlesBot
         .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
         .AddScoped(x => x
           .GetRequiredService<IUrlHelperFactory>()
-          .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
+          .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext ?? new ActionContext()));
 
       services.AddMemoryCache();
       services.AddHttpClient();
       services.AddHttpClient<IngressClient>();
       services.AddHttpClient<YandexMapsClient>();
       services.AddHttpClient<PoGoToolsClient>();
-      services.RegisterTelegramClients<PoGoTelegramBotClient>(provider => provider.GetService<IOptions<BotConfiguration>>().Value?.BotTokens);
+      services.RegisterTelegramClients<PoGoTelegramBotClient>(provider => provider.GetService<IOptions<BotConfiguration>>()?.Value?.BotTokens);
       
       services
         .AddMvc(options =>
@@ -100,7 +100,7 @@ namespace RaidBattlesBot
       builder.RegisterModule<RegistrationModule>();
     }
 
-    private IWebHostEnvironment Environment { get; set; }
+    private IWebHostEnvironment? Environment { get; set; }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

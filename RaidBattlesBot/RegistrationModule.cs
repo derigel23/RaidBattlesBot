@@ -19,10 +19,11 @@ namespace RaidBattlesBot
       //builder.RegisterInstance(new FakeClock(SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(5)))).As<IClock>();
       builder.RegisterInstance(DateTimeZoneProviders.Tzdb).As<IDateTimeZoneProvider>();
       builder.RegisterType<TimeZoneService>().SingleInstance();
+      builder.RegisterType<WebHookSaltProvider>().SingleInstance().AsImplementedInterfaces();
       builder.Register(c =>
       {
         var configuration = c.Resolve<IConfiguration>();
-        DateTimeZone dateTimeZone = null;
+        DateTimeZone? dateTimeZone = null;
         var timezone = configuration["Timezone"];
         if (!string.IsNullOrEmpty(timezone))
         {

@@ -7,6 +7,7 @@ namespace RaidBattlesBot.Configuration
   {
     public string[] BotTokens { get; set; }
     public long? DefaultBotId { get; set; }
+    public int? BotSalt { get; set; }
     public TimeSpan Timeout { get; set; }
     public TimeSpan VoteTimeout { get; set; }
     public TimeSpan NotificationLeadTime { get; set; }
