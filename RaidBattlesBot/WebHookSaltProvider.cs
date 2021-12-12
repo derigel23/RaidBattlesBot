@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using Team23.TelegramSkeleton;
@@ -6,12 +7,12 @@ namespace RaidBattlesBot;
 
 public class WebHookSaltProvider : IWebHookSaltProvider
 {
-  private readonly IOptions<BotConfiguration> myOptions;
+  private readonly long mySalt;
 
   public WebHookSaltProvider(IOptions<BotConfiguration> options)
   {
-    myOptions = options;
+    mySalt = new Random(options.Value?.BotSalt ?? 0).NextInt64();
   }
   
-  public int? GetSalt(long? botId) => myOptions.Value?.BotSalt;
+  public long GetSalt() => mySalt;
 }
