@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Autofac;
@@ -46,6 +47,7 @@ namespace RaidBattlesBot
       services.Configure<BotConfiguration>(myConfiguration.GetSection("BotConfiguration"));
       services.Configure<GeoCoderConfiguration>(myConfiguration.GetSection("GeoCoder"));
       services.Configure<IngressConfiguration>(myConfiguration.GetSection("Ingress"));
+      services.Configure<Dictionary<string, NotificationChannelInfo>>(myConfiguration.GetSection("NotificationChannels"));
 
      var culture = myConfiguration["Culture"];
       if (!string.IsNullOrEmpty(culture))

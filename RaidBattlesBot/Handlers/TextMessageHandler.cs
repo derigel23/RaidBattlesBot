@@ -1,9 +1,11 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -20,7 +22,7 @@ namespace RaidBattlesBot.Handlers
 
     public TextMessageHandler(ITelegramBotClient bot, IEnumerable<Lazy<Func<Message, IReplyBotCommandHandler>, BotCommandAttribute>> replyCommandHandlers,
         IEnumerable<Lazy<Func<Message, IMessageEntityHandler<PollMessage, bool?>>, MessageEntityTypeAttribute>> messageEntityHandlers,
-        RaidBattlesContext db)
+        RaidBattlesContext db, IClock clock)
       : base(bot, messageEntityHandlers)
     {
       myReplyCommandHandlers = replyCommandHandlers;
@@ -48,9 +50,7 @@ namespace RaidBattlesBot.Handlers
         }
       }
 
-
       // check for reply commands
-      
       if (message.ReplyToMessage is { } parentMessage && message.Entities is null or { Length: 0 } ) // handle only plain text replies
       {
         if (await Handle(message, parentMessage, pollMessage, myReplyCommandHandlers, cancellationToken) is {} replyProcessed)

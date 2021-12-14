@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using RaidBattlesBot.Configuration;
@@ -23,10 +22,17 @@ using Poll = RaidBattlesBot.Model.Poll;
 namespace RaidBattlesBot
 {
   [UsedImplicitly]
-  public class NotificationService : BackgroundService
+  public class NotificationServiceBase : NotificationServiceBase<NotificationServiceWorker>
   {
-    private readonly TimeSpan myCheckPeriod = TimeSpan.FromSeconds(30);
-    private readonly TimeSpan myErrorOffset = TimeSpan.FromSeconds(3);
+    public NotificationServiceBase(TelemetryClient telemetryClient, IServiceProvider serviceProvider)
+      : base(telemetryClient, serviceProvider, NotificationServiceWorker.CheckPeriod) { }
+  }
+
+  [UsedImplicitly]
+  public class NotificationServiceWorker : IBackgroundServiceWorker
+  {
+    public static readonly TimeSpan CheckPeriod = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan ErrorOffset = TimeSpan.FromSeconds(3);
 
     private readonly RaidBattlesContext myDB;
     private readonly RaidService myRaidService;
@@ -34,7 +40,7 @@ namespace RaidBattlesBot
     private readonly IClock myClock;
     private readonly TimeSpan myNotificationLeadTime;
 
-    public NotificationService(RaidBattlesContext db, RaidService raidService, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
+    public NotificationServiceWorker(RaidBattlesContext db, RaidService raidService, TelemetryClient telemetryClient, IOptions<BotConfiguration> options, IClock clock)
     {
       myDB = db;
       myRaidService = raidService;
@@ -43,30 +49,10 @@ namespace RaidBattlesBot
       myNotificationLeadTime = options.Value.NotificationLeadTime;
     }
     
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-      var timer = new Timer(o =>
-      {
-        if (!Monitor.TryEnter(this))
-          return;
-
-        try
-        {
-          DoWork((CancellationToken)o!);
-        }
-        finally
-        {
-          Monitor.Exit(this);
-        }
-      }, stoppingToken, TimeSpan.Zero, myCheckPeriod);
-      stoppingToken.Register(() => timer.Dispose());
-      return Task.CompletedTask;
-    }
-
-    private async void DoWork(CancellationToken cancellationToken)
+    public async Task Execute(CancellationToken cancellationToken)
     {
       var nowWithLeadTime = myClock.GetCurrentInstant().ToDateTimeOffset() + myNotificationLeadTime;
-      var previous = nowWithLeadTime - myCheckPeriod - myErrorOffset;
+      var previous = nowWithLeadTime - CheckPeriod - ErrorOffset;
       var polls = await myDB.Set<Poll>()
         .Where(poll => poll.Time > previous && poll.Time <= nowWithLeadTime)
         .IncludeRelatedData()

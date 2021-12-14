@@ -47,7 +47,8 @@ namespace RaidBattlesBot
       
       builder
         .RegisterAssemblyTypes(Assembly.GetExecutingAssembly(), Assembly.GetCallingAssembly())
-        .Where(type => type.InheritsOrImplements(typeof(IHostedService)))
+        .Where(type => type.InheritsOrImplements(typeof(IHostedService)) || type.InheritsOrImplements(typeof(IBackgroundServiceWorker)))
+        .AsSelf()
         .AsImplementedInterfaces()
         .InstancePerLifetimeScope();
 
