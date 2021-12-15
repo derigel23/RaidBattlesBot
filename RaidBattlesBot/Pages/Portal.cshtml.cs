@@ -1,12 +1,7 @@
-﻿using System.Drawing;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using DelegateDecompiler.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using RaidBattlesBot.Model;
 

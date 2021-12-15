@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using EFCore.BulkExtensions;
+using LinqToDB;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -144,7 +145,7 @@ namespace RaidBattlesBot.Handlers
             }
             
             var settings = myDB.Set<TimeZoneSettings>();
-            if (await settings.Where(s => s.ChatId == chatId && s.TimeZone == timeZoneId).FirstOrDefaultAsync(cancellationToken) == null)
+            if (await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(settings.Where(s => s.ChatId == chatId && s.TimeZone == timeZoneId), cancellationToken) == null)
             {
               settings.Add(new TimeZoneSettings { ChatId = chatId, TimeZone = timeZoneId });
               await myDB.SaveChangesAsync(cancellationToken);
@@ -196,7 +197,14 @@ namespace RaidBattlesBot.Handlers
           {
             return ("You have no rights", true, null);
           }
-          await myDB.Set<TimeZoneSettings>().Where(s => s.ChatId == chatId).BatchDeleteAsync(cancellationToken);
+
+          var chatIdParam = chatId;
+
+          await myDB
+            .Set<TimeZoneSettings>()
+            .ToLinqToDB()
+            .DeleteAsync(s => s.ChatId == chatIdParam, cancellationToken);
+          
           var (content, replyMarkup) = await myTimeZoneNotifyService.GetSettingsMessage(new Chat { Id = chatId, Type = ChatType.Sender }, messageId, cancellationToken);
           await myBot.EditMessageTextAsync(data, content, replyMarkup, cancellationToken);
           
