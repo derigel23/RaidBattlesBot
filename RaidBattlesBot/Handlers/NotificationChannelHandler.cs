@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using NodaTime;
-using NodaTime.Extensions;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -16,7 +16,8 @@ using Telegram.Bot.Types.Enums;
 
 namespace RaidBattlesBot.Handlers;
 
-[MessageType(MessageType = MessageTypeAttribute.AllMessageTypes)]
+[MessageType(MessageType = MessageTypeAttribute.AllMessageTypes,
+  UpdateTypes = new []{ UpdateType.Message, UpdateType.EditedMessage, UpdateType.ChannelPost, UpdateType.EditedChannelPost })]
 public class NotificationChannelHandler : IMessageHandler
 {
   private readonly RaidBattlesContext myDB;
@@ -48,8 +49,9 @@ public class NotificationChannelHandler : IMessageHandler
       if (process)
       {
         // determine active users
+        var now = myClock.GetCurrentInstant().ToDateTimeOffset();
         var activationStart = configuration.ActiveCheck is {} activeCheck ?
-          myClock.GetCurrentInstant().Minus(activeCheck.ToDuration()).ToDateTimeOffset() : DateTimeOffset.MinValue;
+          now.Subtract(activeCheck) : DateTimeOffset.MinValue;
           
         var voters = await myDB.Set<Vote>()
           .Where(v => v.Modified > activationStart)
@@ -63,9 +65,10 @@ public class NotificationChannelHandler : IMessageHandler
           FromChatId = message.Chat.Id,
           FromMessageId = message.MessageId,
           FromUserId = message.From?.Id,
-        });
+          Modified = now
+        }).ToList();
           
-        await myDB.Set<ReplyNotification>().AddRangeAsync(notifications, cancellationToken);
+        await myDB.BulkInsertOrUpdateAsync(notifications, cancellationToken: cancellationToken);
         await myDB.SaveChangesAsync(cancellationToken);
           
         return true;
