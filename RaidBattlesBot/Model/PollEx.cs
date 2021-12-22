@@ -96,10 +96,20 @@ namespace RaidBattlesBot.Model
       if (title.Length == initialLength)
       {
         title.Bold(b => b.Sanitize(poll.Title ?? $"Poll{poll.Id}"));
+        
+        if (poll.Limits is { Count: > 0 } limits)
+        {
+          title = limits.Aggregate(title, (b, limit) => b.Append($" {limit.Vote.Description()} {limit.Limit}"));
+        }
+
         if (poll.Portal is { } portal)
         {
           title.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
           title.Link(portal.Name, $"https://pogo.tools/{portal.Guid}");
+          if (poll.ExRaidGym)
+          {
+            title.Sanitize(" (EX Raid Gym)");
+          }
         }
       }
 
@@ -108,27 +118,7 @@ namespace RaidBattlesBot.Model
 
     public static TextBuilder GetDescription(this Poll poll, IUrlHelper urlHelper)
     {
-      var description = poll.GetTitleBase(new TextBuilder());
-      if (!string.IsNullOrEmpty(poll.Title))
-      {
-        if (description.Length > 0)
-        {
-          description.NewLine().Sanitize(poll.Title);
-        }
-        else
-        {
-          description.Bold(builder => builder.Sanitize(poll.Title));
-          if (poll.Portal is { } portal)
-          {
-            description.Sanitize(poll.ExRaidGym ? " ☆\u00A0" : " ◊\u00A0");
-            description.Link(portal.Name, $"https://pogo.tools/{portal.Guid}");
-            if (poll.ExRaidGym)
-            {
-              description.Sanitize(" (EX Raid Gym)");
-            }
-          }
-        }
-      }
+      var description = poll.GetTitle(new TextBuilder());
 
       if (poll.Raid() is { Lat: { }, Lon: { } } raid && urlHelper != null)
       {
