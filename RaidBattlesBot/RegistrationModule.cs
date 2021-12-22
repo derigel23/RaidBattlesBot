@@ -44,14 +44,20 @@ namespace RaidBattlesBot
 
       builder.RegisterType<GeoCoder>().SingleInstance();
       builder.RegisterType<GeoCoderEx>().SingleInstance();
-      
+
       builder
         .RegisterAssemblyTypes(Assembly.GetExecutingAssembly(), Assembly.GetCallingAssembly())
-        .Where(type => type.InheritsOrImplements(typeof(IHostedService)) || type.InheritsOrImplements(typeof(IBackgroundServiceWorker)))
+        .Where(type => type.InheritsOrImplements(typeof(IHostedService)))
+        .AsSelf()
+        .AsImplementedInterfaces()
+        .SingleInstance();
+
+      builder
+        .RegisterAssemblyTypes(Assembly.GetExecutingAssembly(), Assembly.GetCallingAssembly())
+        .Where(type => type.InheritsOrImplements(typeof(IBackgroundServiceWorker)))
         .AsSelf()
         .AsImplementedInterfaces()
         .InstancePerLifetimeScope();
-
     }
   }
 }

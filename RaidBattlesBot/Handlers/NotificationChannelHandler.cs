@@ -1,14 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB;
-using LinqToDB.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using NodaTime;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot.Types;
@@ -20,14 +16,12 @@ namespace RaidBattlesBot.Handlers;
   UpdateTypes = new []{ UpdateType.Message, UpdateType.EditedMessage, UpdateType.ChannelPost, UpdateType.EditedChannelPost })]
 public class NotificationChannelHandler : IMessageHandler
 {
-  private readonly RaidBattlesContext myDB;
-  private readonly IClock myClock;
+  private readonly NotificationChannelBackgroundService myNotificationChannelBackgroundService;
   private readonly IReadOnlyDictionary<string, NotificationChannelInfo> myNotificationChannelsConfiguration;
 
-  public NotificationChannelHandler(RaidBattlesContext db, IClock clock, IOptions<Dictionary<string, NotificationChannelInfo>> options)
+  public NotificationChannelHandler(RaidBattlesContext db, NotificationChannelBackgroundService notificationChannelBackgroundService, IOptions<Dictionary<string, NotificationChannelInfo>> options)
   {
-    myDB = db;
-    myClock = clock;
+    myNotificationChannelBackgroundService = notificationChannelBackgroundService;
     myNotificationChannelsConfiguration = options.Value;
   }
   
@@ -48,37 +42,7 @@ public class NotificationChannelHandler : IMessageHandler
 
       if (process)
       {
-        // determine active users
-        var now = myClock.GetCurrentInstant().ToDateTimeOffset();
-        var activationStart = configuration.ActiveCheck is {} activeCheck ?
-          now.Subtract(activeCheck) : DateTimeOffset.MinValue;
-
-        var rankedVotes = from vote in myDB.Set<Vote>().ToLinqToDB()
-          where vote.Modified >= activationStart
-          select new { vote, rank = Sql.Ext.Rank().Over().PartitionBy(vote.UserId).OrderByDesc(vote.Modified).ToValue() };
-
-        var voters = await rankedVotes
-          .Where(arg => arg.rank == 1)
-          .Select(arg => arg.vote)
-          .ToListAsyncLinqToDB(cancellationToken); 
-
-        var notifications = voters.Select(v => new ReplyNotification
-        {
-          BotId = v.BotId,
-          ChatId = v.UserId,
-          FromChatId = message.Chat.Id,
-          FromMessageId = message.MessageId,
-          FromUserId = message.From?.Id,
-          Modified = now
-        }).ToList();
-
-        await myDB.Set<ReplyNotification>().ToLinqToDBTable()
-          .Merge()
-          .Using(notifications)
-          .OnTargetKey()
-          .InsertWhenNotMatched()
-          .MergeAsync(cancellationToken);
-          
+        await myNotificationChannelBackgroundService.Enqueue(configuration, message, cancellationToken);
         return true;
       }
 
