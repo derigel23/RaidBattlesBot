@@ -277,6 +277,7 @@ namespace RaidBattlesBot.Model
         .Include(_ => _.Votes)
         .Include(_ => _.Messages)
         .Include(_ => _.Portal)
+        .Include(_ => _.Limits)
         .Include(_ => _.Raid)
         .ThenInclude(raid => raid.PostEggRaid);
     }
@@ -348,11 +349,11 @@ namespace RaidBattlesBot.Model
       {
         try
         {
-          if (match.Groups["timezone"] is { Success: true } timezoneMatch)
+          if (match.Groups["timezone"] is { Success: true, Value: {} timezoneMatchValue })
           {
-            if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatch.Value, await getLocation(), out var timeZone))
+            if (!timeZoneService.TryGetTimeZoneByAbbreviation(timezoneMatchValue, await getLocation(), out var timeZone))
             {
-              if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatch.Value).TryGetValue(Offset.Zero, out var offset))
+              if (OffsetPattern.CreateWithCurrentCulture("g").Parse(timezoneMatchValue).TryGetValue(Offset.Zero, out var offset))
               {
                 timeZone = DateTimeZone.ForOffset(offset);
               }
@@ -388,7 +389,7 @@ namespace RaidBattlesBot.Model
                 detectedTime = detectedTime.PlusHours(-12);
               }
 
-              if (designatorMatch.Value.Contains("p", StringComparison.OrdinalIgnoreCase))
+              if (designatorMatch.ValueSpan.Contains("p", StringComparison.OrdinalIgnoreCase))
               {
                 detectedTime = detectedTime.PlusHours(12);
               }

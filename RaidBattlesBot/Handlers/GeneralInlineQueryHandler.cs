@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,18 @@ namespace RaidBattlesBot.Handlers
       myTimeZoneService = timeZoneService;
     }
 
+    public bool ProcessLimitQueryString(ref List<VoteLimit> limits, string queryPart)
+    {
+      if (Regex.Match(queryPart, @"/i(?<limit>\d+)") is { Success: true } match)
+      {
+        limits ??= new List<VoteLimit>(1);
+        limits.Add(new VoteLimit { Vote = VoteEnum.Invitation, Limit = int.Parse(match.Groups["limit"].ValueSpan)});
+        return true;
+      }
+
+      return false;
+    }
+    
     public async Task<bool?> Handle(InlineQuery data, object context = default, CancellationToken cancellationToken = default)
     {
       IReadOnlyCollection<InlineQueryResult> inlineQueryResults;
@@ -54,6 +67,7 @@ namespace RaidBattlesBot.Handlers
       Portal portal = null;
       bool exRaidGym = false;
       string switchPmParameter = null;
+      List<VoteLimit> limits = default;
       foreach (var queryPart in data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries))
       {
         switch (queryPart)
@@ -68,6 +82,10 @@ namespace RaidBattlesBot.Handlers
             var portalGuid = PortalEx.DecodeGuid(guid);
             portal = await myIngressClient.Get(portalGuid, await GetLocation(), cancellationToken);
             break;
+          
+          case { } when ProcessLimitQueryString(ref limits, queryPart):
+            break;
+          
           default:
             query += (query == null ? default(char?) : ' ') + queryPart;
             break;
@@ -91,7 +109,7 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        var poll = await new Poll(data) { Title = query, Portal = portal }
+        var poll = await new Poll(data) { Title = query, Portal = portal, Limits = limits }
           .DetectRaidTime(myTimeZoneService, GetLocation, async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         var pollId = await myRaidService.GetPollId(poll, data.From, cancellationToken);
         switchPmParameter = portal == null ? $"{SwitchToGymParameter}{pollId}" : null;
@@ -107,14 +125,7 @@ namespace RaidBattlesBot.Handlers
               AllowedVotes = format,
               ExRaidGym = exRaidGym
             }.InitImplicitVotes(data.From, myBot.BotId))
-            .Select((fakePoll, i) => new InlineQueryResultArticle(fakePoll.GetInlineId(suffixNumber: i), fakePoll.GetTitle(),
-              fakePoll.GetMessageText(myUrlHelper, disableWebPreview: fakePoll.DisableWebPreview()))
-              {
-                Description = fakePoll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
-                HideUrl = true,
-                ThumbUrl = fakePoll.GetThumbUrl(myUrlHelper).ToString(),
-                ReplyMarkup = fakePoll.GetReplyMarkup()
-            })
+            .Select((fakePoll, i) => GetInlineResult(fakePoll, i))
             .ToArray();
       }
 
@@ -125,5 +136,14 @@ namespace RaidBattlesBot.Handlers
       await myDb.SaveChangesAsync(cancellationToken);
       return true;
     }
+
+    public InlineQueryResultArticle GetInlineResult(Poll poll, int? suffixNumber = null) =>
+      new (poll.GetInlineId(suffixNumber: suffixNumber), poll.GetTitle() + (poll.Id < 0 ? " (EX Raid Gym)" : null), poll.GetMessageText(myUrlHelper, poll.DisableWebPreview()))
+      {
+        Description = poll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
+        HideUrl = true,
+        ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
+        ReplyMarkup = poll.GetReplyMarkup()
+      };
   }
 }

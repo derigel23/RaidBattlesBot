@@ -108,7 +108,8 @@ namespace RaidBattlesBot
         ExRaidGym = exRaidGym,
         Time = pollData.Time,
         TimeZoneId = pollData.TimeZoneId,
-        Votes = pollData.Votes
+        Votes = pollData.Votes,
+        Limits = pollData.Limits
       };
       if (pollMessage.UserId is { } userId)
         pollMessage.Poll.InitImplicitVotes(GetCachedUser(userId), pollMessage.BotId);

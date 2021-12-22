@@ -146,6 +146,15 @@ namespace RaidBattlesBot.Handlers
         poll.Votes.RemoveAll(v => v.UserId != user.Id && (v.Team?.HasAnyFlags(VoteEnum.ImplicitVotes) ?? false));
       }
       
+      // check limits
+      foreach (var limit in poll.Limits ?? new List<VoteLimit>(0))
+      {
+        var total = poll.Votes
+          .Aggregate(0, (i, v) => v.Team?.HasAnyFlags(limit.Vote) ?? false ? v.Team.GetPlusVotesCount() + 1 + i : i);
+        if (total > limit.Limit)
+          return ($"You've exceeded the vote limit for {limit.Vote.Description()}", true, null);
+      }
+
       var changed = await myDb.SaveChangesAsync(cancellationToken) > 0;
       if (changed)
       {

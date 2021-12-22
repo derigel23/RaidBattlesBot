@@ -38,6 +38,7 @@ namespace RaidBattlesBot.Model
 
       Messages = poll.Messages;
       Votes = poll.Votes;
+      Limits = poll.Limits;
     }
     
     public int Id { get; set; }
@@ -67,5 +68,6 @@ namespace RaidBattlesBot.Model
     public List<PollMessage> Messages { get; set; }
     public List<Vote> Votes { get; set; }
     public List<Notification> Notifications { get; set; }
+    public List<VoteLimit> Limits { get; set; }
   }
 }

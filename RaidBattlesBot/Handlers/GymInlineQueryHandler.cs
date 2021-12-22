@@ -29,11 +29,13 @@ namespace RaidBattlesBot.Handlers
     private readonly IClock myClock;
     private readonly TimeZoneService myTimeZoneService;
     private readonly IUrlHelper myUrlHelper;
+    private readonly GeneralInlineQueryHandler myGeneralInlineQueryHandler;
     private readonly IngressClient myIngressClient;
     
-    public GymInlineQueryHandler(IUrlHelper urlHelper, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService, GeoCoderEx geoCoder, IClock clock, TimeZoneService timeZoneService)
+    public GymInlineQueryHandler(IUrlHelper urlHelper, GeneralInlineQueryHandler generalInlineQueryHandler, IngressClient ingressClient, ITelegramBotClientEx bot, RaidBattlesContext db, RaidService raidService, GeoCoderEx geoCoder, IClock clock, TimeZoneService timeZoneService)
     {
       myUrlHelper = urlHelper;
+      myGeneralInlineQueryHandler = generalInlineQueryHandler;
       myIngressClient = ingressClient;
       myBot = bot;
       myDb = db;
@@ -51,6 +53,7 @@ namespace RaidBattlesBot.Handlers
       var queryParts = data.Query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
       
       var poll = default(Poll);
+      List<VoteLimit> limits = default;
       var pollQuery = new List<string>(queryParts.Length);
       var searchQuery = new List<string>(queryParts.Length);
       var query = pollQuery;
@@ -65,16 +68,18 @@ namespace RaidBattlesBot.Handlers
             break;
 
           case { } part when Regex.Match(part, PATTERN) is { Success: true } match:
-            if (int.TryParse(match.Groups["pollId"].Value, out var pollId))
+            if (int.TryParse(match.Groups["pollId"].ValueSpan, out var pollId))
             {
               poll = myRaidService
                 .GetTemporaryPoll(pollId)
                 .InitImplicitVotes(data.From, myBot.BotId);
             }
             query = searchQuery;
-
             break;
 
+          case { } part when myGeneralInlineQueryHandler.ProcessLimitQueryString(ref limits, part):
+            break;
+          
           default:
             query.Add(queryPart);
             break;
@@ -100,38 +105,26 @@ namespace RaidBattlesBot.Handlers
         {
           Title = string.Join("  ", pollQuery),
           AllowedVotes = voteFormat,
-          ExRaidGym = false
+          ExRaidGym = false,
+          Limits = limits
         }.DetectRaidTime(myTimeZoneService, () => Task.FromResult(location), async ct => myClock.GetCurrentInstant().InZone(await myGeoCoder.GetTimeZone(data, ct)), cancellationToken);
         
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
           poll = new Poll(poll)
           {
-            Portal = portals[i]
+            Portal = portals[i],
+            Limits = poll.Limits ?? limits
           }.InitImplicitVotes(data.From, myBot.BotId);
           await myRaidService.GetPollId(poll, data.From, cancellationToken);
 
-          results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle(),
-            poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
-            {
-              Description = poll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
-              HideUrl = true,
-              ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-              ReplyMarkup = poll.GetReplyMarkup()
-            });
+          results.Add(myGeneralInlineQueryHandler.GetInlineResult(poll));
           
           if (i == 0)
           {
             poll.Id = -poll.Id;
             poll.ExRaidGym = true;
-            results.Add(new InlineQueryResultArticle(poll.GetInlineId(), poll.GetTitle() + " (EX Raid Gym)",
-              poll.GetMessageText(myUrlHelper, disableWebPreview: poll.DisableWebPreview()))
-            {
-              Description = poll.AllowedVotes?.Format(new TextBuilder("Create a poll ")).ToString(),
-              HideUrl = true,
-              ThumbUrl = poll.GetThumbUrl(myUrlHelper).ToString(),
-              ReplyMarkup = poll.GetReplyMarkup()
-            });
+            results.Add(myGeneralInlineQueryHandler.GetInlineResult(poll));
           }
         }
       }

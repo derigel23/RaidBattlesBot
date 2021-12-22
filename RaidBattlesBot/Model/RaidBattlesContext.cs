@@ -118,6 +118,16 @@ namespace RaidBattlesBot.Model
         builder.HasIndex(settings => settings.ChatId);
       });
 
+      modelBuilder.Entity<VoteLimit>(builder =>
+      {
+        builder.ToTable("VoteLimits");
+        builder.HasKey(vl => new { vl.PollId, vl.Vote });
+        builder
+          .HasOne<Poll>()
+          .WithMany(poll => poll.Limits)
+          .HasForeignKey(limit => limit.PollId);
+      });
+
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
