@@ -37,6 +37,10 @@ public class NotificationChannelBackgroundService : BackgroundService
   {
     await foreach (var (configuration, message) in myChannel.Reader.ReadAllAsync(cancellationToken))
     {
+      var fromChatId = message.Chat.Id;
+      var fromMessageId = message.MessageId;
+      var fromUserId = message.From?.Id;
+
       try
       {
         // determine active users
@@ -44,38 +48,39 @@ public class NotificationChannelBackgroundService : BackgroundService
         var activationStart = configuration.ActiveCheck is {} activeCheck ?
           now.Subtract(activeCheck) : DateTimeOffset.MinValue;
 
-        var rankedVotes = from vote in myDB.Set<Vote>()
+        var voters =
+          from vote in myDB.Set<Vote>()
           where vote.Modified >= activationStart
-          select new { vote.BotId, vote.UserId, rank = Sql.Ext.Rank().Over().PartitionBy(vote.UserId).OrderByDesc(vote.Modified).ToValue() };
-
-        var voters = await rankedVotes
-          .Where(arg => arg.rank == 1)
-          .Select(arg => new { arg.BotId, arg.UserId })
-          .ToListAsyncLinqToDB(cancellationToken); 
-
-        var notifications = voters.Select(v => new ReplyNotification
-        {
-          BotId = v.BotId,
-          ChatId = v.UserId,
-          FromChatId = message.Chat.Id,
-          FromMessageId = message.MessageId,
-          FromUserId = message.From?.Id,
-          Modified = now
-        }).ToList();
-
+          let rank = Sql.Ext.Rank().Over().PartitionBy(vote.UserId).OrderByDesc(vote.Modified).ToValue()
+          where rank == 1
+          select new { vote.BotId, vote.UserId,  };
+          
         await myDB.Set<ReplyNotification>().ToLinqToDBTable()
           .Merge()
-          .Using(notifications)
-          .OnTargetKey()
-          .InsertWhenNotMatched()
+          .Using(voters)
+          .On((notification, data) =>
+            notification.ChatId == data.UserId &&
+            notification.FromChatId == fromChatId &&
+            notification.FromMessageId == fromMessageId)
+          .InsertWhenNotMatched(data =>
+            new ReplyNotification
+            {
+              BotId = data.BotId,
+              ChatId = data.UserId,
+              FromChatId = fromChatId,
+              FromMessageId = fromMessageId,
+              FromUserId = fromUserId,
+              Modified = now
+            })
           .MergeAsync(cancellationToken);
       }
       catch (Exception ex)
       {
         myTelemetryClient.TrackExceptionEx(ex, new Dictionary<string, string>
         {
-          ["ChatId"] = message.Chat.Id.ToString(),
-          ["MessageId"] = message.MessageId.ToString(),
+          [nameof(fromChatId)] = fromChatId.ToString(),
+          [nameof(fromMessageId)] = fromMessageId.ToString(),
+          [nameof(fromUserId)] = fromUserId.ToString(),
         });
       }
     }
