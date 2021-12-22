@@ -111,20 +111,20 @@ namespace RaidBattlesBot.Handlers
         
         for (var i = 0; i < portals.Length && i < MAX_PORTALS_PER_RESPONSE; i++)
         {
-          poll = new Poll(poll)
+          var portalPoll = new Poll(poll)
           {
             Portal = portals[i],
             Limits = poll.Limits ?? limits
           }.InitImplicitVotes(data.From, myBot.BotId);
-          await myRaidService.GetPollId(poll, data.From, cancellationToken);
+          await myRaidService.GetPollId(portalPoll, data.From, cancellationToken);
 
-          results.Add(myGeneralInlineQueryHandler.GetInlineResult(poll));
+          results.Add(myGeneralInlineQueryHandler.GetInlineResult(portalPoll));
           
           if (i == 0)
           {
-            poll.Id = -poll.Id;
-            poll.ExRaidGym = true;
-            results.Add(myGeneralInlineQueryHandler.GetInlineResult(poll));
+            portalPoll.Id = -portalPoll.Id;
+            portalPoll.ExRaidGym = true;
+            results.Add(myGeneralInlineQueryHandler.GetInlineResult(portalPoll));
           }
         }
       }
