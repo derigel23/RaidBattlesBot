@@ -6,7 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.EntityFrameworkCore;
+using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
@@ -20,33 +22,63 @@ namespace RaidBattlesBot.Handlers
   [BotCommand("find", "Find user by IGN", BotCommandScopeType.AllPrivateChats, Order = 10)]
   public class FindCommandHandler : ReplyBotCommandHandler
   {
+    private readonly TelemetryClient myTelemetryClient;
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
+    private readonly IMemoryCache myMemoryCache;
 
-    public FindCommandHandler(Message message, RaidBattlesContext context, ITelegramBotClient bot) : base(message)
+    public FindCommandHandler(TelemetryClient telemetryClient, Message message, RaidBattlesContext context, ITelegramBotClient bot, IMemoryCache memoryCache)
+      : base(message)
     {
+      myTelemetryClient = telemetryClient;
       myContext = context;
       myBot = bot;
+      myMemoryCache = memoryCache;
     }
 
     // custom timeout, long operations
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(90);
+    private static readonly TimeSpan ourProcessingTimeout = TimeSpan.FromSeconds(90);
     
     protected override async Task<bool?> Handle(Message message, StringSegment text, PollMessage? context = default, CancellationToken parentCancellationToken = default)
     {
+      var key = message.Chat.Id + message.MessageId;
+      if (!myMemoryCache.TryGetValue(key, out _))
+      {
+        using var entry = myMemoryCache.CreateEntry(key);
+        entry.Value = new object();
+      }
+      else
+      {
+        return false; // already processing, this is repeating call from telegram
+      }
+      
       var builder = new TextBuilder();
       IReplyMarkup? replyMarkup = null;
       var nickname = text.ToString().Trim();
       ChatId chatId = message.Chat!;
 
-      using var cts = new CancellationTokenSource(Timeout);
+      using var cts = new CancellationTokenSource(ourProcessingTimeout);
       var cancellationToken = cts.Token;
+      var statusTask = Task.CompletedTask;
+
       switch (nickname)
       {
         case { Length: > 3 }:
-          await myBot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken);
 
-          myContext.Database.SetCommandTimeout(Timeout);
+          statusTask = Task.Factory.StartNew(async () =>
+            {
+              do
+              {
+                await myBot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken);
+                await Task.Delay(5000, cancellationToken);
+              } while (!cancellationToken.IsCancellationRequested);
+            }, cancellationToken, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning, TaskScheduler.Current)
+            .ContinueWith(task =>
+            {
+              myTelemetryClient.TrackException(task.Exception);
+            }, TaskContinuationOptions.OnlyOnFaulted);
+
+          myContext.Database.SetCommandTimeout(ourProcessingTimeout);
 
           string username = nickname;
           if (nickname.StartsWith('@') is { } byUsername && byUsername)
@@ -119,10 +151,15 @@ namespace RaidBattlesBot.Handlers
           replyMarkup = new ForceReplyMarkup { InputFieldPlaceholder = "in-game-name or username" };
           break;
       }
-      
+
       var content = builder.ToTextMessageContent();
       await myBot.SendTextMessageAsync(chatId, content, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-        
+
+      cts.Cancel();
+      await statusTask;
+
+      myMemoryCache.Remove(key);
+      
       return false; // processed, but not pollMessage
     }
   }
