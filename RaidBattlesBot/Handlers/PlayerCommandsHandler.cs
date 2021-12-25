@@ -1,5 +1,7 @@
+#nullable enable
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
@@ -10,34 +12,22 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace RaidBattlesBot.Handlers
 {
   [BotCommand(COMMAND, "Set in-game-name (IGN)", BotCommandScopeType.AllPrivateChats, Aliases = new[] { "nick" , "nickname" }, Order = -20)]
-  public class PlayerCommandsHandler : IReplyBotCommandHandler
+  public class PlayerCommandsHandler : ReplyBotCommandHandler
   {
     public const string COMMAND = "ign";
 
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
-    private readonly Message myMessage;
 
-    public PlayerCommandsHandler(RaidBattlesContext context, ITelegramBotClient bot, Message message)
+    public PlayerCommandsHandler(RaidBattlesContext context, ITelegramBotClient bot, Message message) : base(message)
     {
       myContext = context;
       myBot = bot;
-      myMessage = message;
     }
 
-    public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
+    protected override async Task<bool?> Handle(Message message, StringSegment text, PollMessage? context = default, CancellationToken cancellationToken = default)
     {
-      if (this.ShouldProcess(entity, context))
-      {
-        var nickname = entity.AfterValue.Trim();
-        if (entity.Message != myMessage) // reply mode
-        {
-          nickname = myMessage.Text;
-        }
-        return await Process(myMessage.From, nickname.ToString(), cancellationToken);
-      }
-
-      return null;
+      return await Process(message.From!, text.ToString(), cancellationToken);
     }
 
     public async Task<bool?> Process(User user, string nickname, CancellationToken cancellationToken = default)
@@ -58,13 +48,12 @@ namespace RaidBattlesBot.Handlers
         await myContext.SaveChangesAsync(cancellationToken);
       }
 
-      IReplyMarkup replyMarkup = null;
+      IReplyMarkup? replyMarkup = null;
       var builder = new TextBuilder();
       if (!string.IsNullOrEmpty(player?.Nickname))
       {
         builder
-          .Append("Your IGN is ")
-          .Bold(b => b.Sanitize(player.Nickname))
+          .Append($"Your IGN is {player.Nickname:bold}")
           .NewLine()
           .NewLine();
 
@@ -73,7 +62,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       builder
-        .Append("To set up your in-game-name reply with it to this message.").NewLine()
+        .Append($"To set up your in-game-name reply with it to this message.").NewLine()
         .Append($"Or use /{COMMAND} command.").NewLine()
         .Code("/ign your-in-game-name");
       

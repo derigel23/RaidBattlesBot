@@ -82,6 +82,6 @@ namespace RaidBattlesBot.Model
         }
     
         public static TextBuilder Format(this VoteEnum vote, TextBuilder builder) =>
-          GetFlags(vote).Aggregate(builder, (b, v) => b.Append(v.AsString(EnumFormat.DisplayName)));
+          GetFlags(vote).Aggregate(builder, (b, v) => b.Sanitize(v.AsString(EnumFormat.DisplayName)));
     }
 }

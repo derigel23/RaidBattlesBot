@@ -1,66 +1,100 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using LinqToDB;
+using LinqToDB.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using RaidBattlesBot.Model;
 using Team23.TelegramSkeleton;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RaidBattlesBot.Handlers
 {
   [BotCommand("find", "Find user by IGN", BotCommandScopeType.AllPrivateChats, Order = 10)]
-  public class FindCommandHandler : IBotCommandHandler
+  public class FindCommandHandler : ReplyBotCommandHandler
   {
     private readonly RaidBattlesContext myContext;
     private readonly ITelegramBotClient myBot;
 
-    public FindCommandHandler(RaidBattlesContext context, ITelegramBotClient bot)
+    public FindCommandHandler(Message message, RaidBattlesContext context, ITelegramBotClient bot) : base(message)
     {
       myContext = context;
       myBot = bot;
     }
 
-    public async Task<bool?> Handle(MessageEntityEx entity, PollMessage context = default, CancellationToken cancellationToken = default)
+    protected override async Task<bool?> Handle(Message message, StringSegment text, PollMessage? context = default, CancellationToken cancellationToken = default)
     {
-      if (!this.ShouldProcess(entity, context)) return null;
-      
       var builder = new TextBuilder();
-      var nickname = entity.AfterValue.Trim().ToString();
-      
-      if (!string.IsNullOrEmpty(nickname) && nickname.Length > 3)
+      IReplyMarkup? replyMarkup = null;
+      var nickname = text.ToString().Trim();
+      ChatId chatId = message.Chat!;
+
+      switch (nickname)
       {
-        await myBot.SendChatActionAsync(entity.Message.Chat, ChatAction.Typing, cancellationToken);
+        case { Length: > 3 }:
+          await myBot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken);
+          
+          var found = await myContext
+            .Set<Player>()
+            .Where(player => player.Nickname == nickname)
+            .ToDictionaryAsyncLinqToDB(player => player.UserId, player => player.Nickname, cancellationToken);
+          
+          if (found.Count == 0)
+          {
+            found = (await myContext.Set<Player>().Where(player => player.Nickname.Contains(nickname)).ToListAsyncLinqToDB(cancellationToken))
+                .Where(player => player.Nickname.Split(new []{','}).Select(nick => nick.Trim()).Contains(nickname, StringComparer.OrdinalIgnoreCase))
+                .ToDictionary(_ => _.UserId, _ => _.Nickname);
+          }
+
+          if (found.Count == 0)
+          {
+            found = await (from vote in myContext.Set<Vote>()
+              where vote.Username == text.ToString()
+              let rank = Sql.Ext.Rank().Over().PartitionBy(vote.UserId).OrderByDesc(vote.Modified).ToValue()
+              where rank == 1
+              join player in myContext.Set<Player>() on vote.UserId equals player.UserId
+              select player)
+            .ToDictionaryAsyncLinqToDB(player => player.UserId, player => player.Nickname, cancellationToken);
+          }
+          
+          if (found.Count > 0)
+          {
+            builder = (await (from vote in myContext.Set<Vote>()
+                where found.ContainsKey(vote.UserId)
+                let rank = Sql.Ext.Rank().Over().PartitionBy(vote.UserId).OrderByDesc(vote.Modified).ToValue()
+                where rank == 1
+                select vote)
+              .ToListAsyncLinqToDB(cancellationToken))
+              .Aggregate(builder, (b, vote) =>
+                vote.User.GetLink(b, (u, bb) => UserEx.DefaultUserExtractor(u, bb)
+                  .Sanitize(string.IsNullOrEmpty(u.Username) ? null : $" (@{u.Username})"))
+                  .Append($" {found[vote.UserId]:code}")
+                  .NewLine());
+          }
+
+          if (builder.Length == 0)
+          {
+            builder.Sanitize("No one was found.");
+          }
+          break;
         
-        var found = await myContext.Set<Player>().Where(player => player.Nickname == nickname).Select(_ => _.UserId).ToListAsync(cancellationToken);
-        if (found.Count == 0)
-        {
-          found = (await myContext.Set<Player>().Where(player => player.Nickname.Contains(nickname)).ToListAsync(cancellationToken))
-              .Where(player => player.Nickname.Split(new []{','}).Select(nick => nick.Trim()).Contains(nickname, StringComparer.OrdinalIgnoreCase))
-              .Select(_ => _.UserId)
-              .ToList();
-        }
-
-        if (found.Count > 0)
-        {
-          builder = (await (from v in myContext.Set<Vote>()
-              where found.Contains(v.UserId)
-              group v by v.UserId into uu
-              select uu.OrderByDescending(_ => _.Modified).First())
-              .ToListAsync(cancellationToken))
-            .Aggregate(builder, (b, vote) =>
-              vote.User.GetLink(b, (u, bb) => UserEx.DefaultUserExtractor(u, bb)
-                .Append(string.IsNullOrEmpty(u.Username) ? null : $" (@{u.Username})")).NewLine());
-        }
+        case {Length: > 0}:
+          builder.Sanitize("Nick is too short.");
+          break;
+        
+        default:
+          builder.Append($"Send user's IGN or Telegram handle to /find.");
+          replyMarkup = new ForceReplyMarkup { InputFieldPlaceholder = "in-game-name or username" };
+          break;
       }
-
-      if (builder.Length == 0)
-      {
-        builder.Append("No one was found.");
-      }
+      
       var content = builder.ToTextMessageContent();
-      await myBot.SendTextMessageAsync(entity.Message.Chat, content, cancellationToken: cancellationToken);
+      await myBot.SendTextMessageAsync(chatId, content, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
         
       return false; // processed, but not pollMessage
     }

@@ -41,7 +41,7 @@ namespace RaidBattlesBot.Handlers
       var builder = new TextBuilder();
       if (polls.Count == 0)
       {
-        builder.Append("No upcoming raids.");
+        builder.Append($"No upcoming raids.");
       }
       else
       {

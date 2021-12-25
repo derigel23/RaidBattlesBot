@@ -70,7 +70,7 @@ namespace RaidBattlesBot
         {
           zonedDateTime = zonedDateTime.WithZone(timeZone);
           var clockFace = ourClockFaces[(int)(zonedDateTime.ToDateTimeOffset().TimeOfDay.TotalMinutes / 30) % ourClockFaces.Length];
-          builder.Append(clockFace).Append(" ");
+          builder.Append($"{clockFace} ");
           pattern.AppendFormat(zonedDateTime, builder);
           builder.NewLine();
         }
@@ -114,7 +114,7 @@ namespace RaidBattlesBot
       
       if (settings.Count == 0)
       {
-        builder.Append("No time zone notifications");
+        builder.Sanitize("No time zone notifications");
       }
 
       var encodedId = new EncodedId<long, int>(chat.Id, messageId);

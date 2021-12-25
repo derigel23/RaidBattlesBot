@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GoogleMapsApi;
@@ -125,8 +124,8 @@ namespace RaidBattlesBot.Handlers
         if (!string.IsNullOrEmpty(name))
         {
           description
-            .Append(description.Length > 0 ? " ∙ " : "")
-            .Append(name);
+            .Sanitize(description.Length > 0 ? " ∙ " : "")
+            .Sanitize(name);
           
           postProcessor?.Invoke(description);
         }

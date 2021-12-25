@@ -134,7 +134,7 @@ namespace RaidBattlesBot.Model
       Func<User, TextBuilder,TextBuilder> userFormatter = null, Func<IGrouping<VoteEnum?, Vote>, bool, TextBuilder, TextBuilder> userGroupFormatter = null)
     {
       var text = poll.GetDescription(urlHelper).NewLine();
-      text.Append(" "); // for better presentation in telegram pins & notifications
+      text.Sanitize(" "); // for better presentation in telegram pins & notifications
       
       if (poll.Cancelled)
       {
@@ -196,10 +196,10 @@ namespace RaidBattlesBot.Model
             var votes = vote.OrderBy(v => v.Modified);
             if (compactMode)
             {
-              result.Sanitize(vote.Key?.Description()).Append("\x00A0");
+              result.Sanitize(vote.Key?.Description()).Sanitize("\x00A0");
               var initialLength = result.Length;
               votes
-                .Aggregate(result, (b, v) => v.GetUserLinkWithPluses(b.Append(b.Length == initialLength ? null : ", "), userFormatter))
+                .Aggregate(result, (b, v) => v.GetUserLinkWithPluses(b.Sanitize(b.Length == initialLength ? null : ", "), userFormatter))
                 .NewLine();
             }
             else
@@ -207,7 +207,7 @@ namespace RaidBattlesBot.Model
               var initialLength = result.Length;
               votes
                 .Aggregate(result, (b, v) => v
-                  .GetUserLinkWithPluses(b.Append(b.Length == initialLength ? null : TextBuilderEx.NewLineString).Sanitize(v.Team?.Description()).Append(" "), userFormatter))
+                  .GetUserLinkWithPluses(b.Sanitize(b.Length == initialLength ? null : TextBuilderEx.NewLineString).Sanitize(v.Team?.Description()).Sanitize(" "), userFormatter))
                 .NewLine();
             }
           }
@@ -442,7 +442,7 @@ namespace RaidBattlesBot.Model
         return
           new TextBuilder()
             .Code(builder => resultNicknames.Aggregate(builder,
-              (b, nickname) =>  b.Append(b.Length == 0 ? null : ",").SanitizeNickname(nickname)))
+              (b, nickname) =>  b.Sanitize(b.Length == 0 ? null : ",").SanitizeNickname(nickname)))
             .ToTextMessageContent();
       }
 

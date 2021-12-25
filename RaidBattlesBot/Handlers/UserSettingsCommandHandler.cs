@@ -64,8 +64,7 @@ namespace RaidBattlesBot.Handlers
         if (await myGeoCoder.GeoCode(new Location((double) lat, (double) lon), new StringBuilder(), 0, cancellationToken) is { Length: > 0 } geoDescription)
         {
           contentBuilder
-            .Append("Your location is ")
-            .Bold(b => b.Append(geoDescription))
+            .Append($"Your location is {geoDescription:bold}")
             .NewLine();
         }
       }
@@ -73,12 +72,12 @@ namespace RaidBattlesBot.Handlers
       if (settings?.TimeZoneId is { } timeZoneId && myDateTimeZoneProvider.GetZoneOrNull(timeZoneId) is { } timeZone)
       {
         var zoneInterval = timeZone.GetZoneInterval(myClock.GetCurrentInstant());
-        contentBuilder.Append("Your time zone is ")
+        contentBuilder.Sanitize("Your time zone is ")
           .Bold(builder => builder.Sanitize($"{timeZone.Id} {zoneInterval.Name} UTC{zoneInterval.WallOffset}"));
       }
       else
       {
-        contentBuilder.Append("Time zone is not set.").NewLine();
+        contentBuilder.Append($"Time zone is not set.").NewLine();
       }
 
       return contentBuilder.ToTextMessageContent();

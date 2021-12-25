@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
       
       var inviteMessages = invitePartitionedVotes.Select(votes =>
         votes.Aggregate(new TextBuilder(),
-          (builder, vote) => (string.IsNullOrEmpty(vote.Username) ? vote.User.GetLink(builder) : builder.Append("@").Append(vote.Username)).Append(", "),
+          (builder, vote) => string.IsNullOrEmpty(vote.Username) ? vote.User.GetLink(builder) : builder.Append($"@{vote.Username}, "),
           builder =>
           {
             builder.Length -= 2;

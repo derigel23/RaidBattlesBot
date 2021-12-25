@@ -295,12 +295,12 @@ namespace RaidBattlesBot
         (vote, _, builder) =>
           builder
             .Sanitize(vote.Key?.Description())
-            .Append("\x00A0")
+            .Sanitize("\x00A0")
             .Code(b =>
             {
               var initialLength = b.Length;
               b = vote.OrderBy(v => v.Modified).Aggregate(b, (bb, v) =>
-                  (userFormatter ?? UserEx.DefaultUserExtractor)(v.User, bb.Append(bb.Length == initialLength ? null : delimiter)));
+                  (userFormatter ?? UserEx.DefaultUserExtractor)(v.User, bb.Sanitize(bb.Length == initialLength ? null : delimiter)));
               postAction?.Invoke(b);
             })
             .NewLine();
@@ -313,8 +313,8 @@ namespace RaidBattlesBot
           goto default;
           
         case { } mode when mode.HasFlag(PollMode.Usernames):
-          userFormatter = (user, b) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b) : b.Append("@").Append(user.Username);
-          userGroupFormatter = UserGroupFormatter(" ", b => b.Append(" "));
+          userFormatter = (user, b) => string.IsNullOrEmpty(user.Username) ? UserEx.DefaultUserExtractor(user, b) : b.Append($"@{user.Username}");
+          userGroupFormatter = UserGroupFormatter(" ", b => b.Sanitize(" "));
           goto default;
         
         case { } mode when mode.HasFlag(PollMode.Invitation) || (pollMessage.Poll.AllowedVotes ?? VoteEnum.Standard).HasFlag(VoteEnum.Invitation):

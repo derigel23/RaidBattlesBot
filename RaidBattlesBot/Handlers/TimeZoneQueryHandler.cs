@@ -90,15 +90,14 @@ namespace RaidBattlesBot.Handlers
         {
           var title = $"{timeZone.Id} ({timeZone.GetUtcOffset(instant)})";
           var builder = new TextBuilder()
-            .Append(title)
-            .Append("\x00A0") // trailing space is necessary to allow edit it further to the same message
+            .Append($"{title}\x00A0") // trailing space is necessary to allow edit it further to the same message
             .NewLine();
 
           string countryString = null;
           if (myTimeZoneService.TryGetRegion(timeZone.Id, out var country))
           {
             countryString = $"{country.EnglishName} {country.NativeName}";
-            builder.Append(countryString).NewLine();
+            builder.Sanitize(countryString).NewLine();
           }
 
           results.Add(new InlineQueryResultArticle($"{PREFIX}:{encodedId}:{timeZone.Id}", title, builder.ToTextMessageContent())

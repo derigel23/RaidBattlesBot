@@ -8,7 +8,6 @@ using Telegram.Bot.Types.Enums;
 namespace RaidBattlesBot.Handlers
 { 
   public interface IBotCommandHandler :  IMessageEntityHandler, IBotCommandHandler<PollMessage, bool?> { }
-  public interface IReplyBotCommandHandler :  IBotCommandHandler { }
   
   [MeansImplicitUse]
   [BaseTypeRequired(typeof(IBotCommandHandler))]

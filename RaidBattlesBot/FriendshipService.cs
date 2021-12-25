@@ -47,9 +47,9 @@ namespace RaidBattlesBot
       if (player?.Nickname is { } nickname)
       {
         builder
-          .Append(" (")
+          .Sanitize(" (")
           .Code(b => b.SanitizeNickname(nickname))
-          .Append(")");
+          .Sanitize(")");
       }
 
       return builder;
@@ -60,10 +60,9 @@ namespace RaidBattlesBot
       hostPlayer ??= await myDB.Set<Player>().Get(host, cancellationToken);
       if (hostPlayer?.FriendCode == null) return; // alarm, can't be
       var content = FormatUser(new TextBuilder(), host, hostPlayer)
-        .Append(" Friend Code is ")
-        .Code(b => b.AppendFormat("{0:0000 0000 0000}", hostPlayer.FriendCode))
+        .Append($" Friend Code is {hostPlayer.FriendCode?.ToString("{0:0000 0000 0000}"):code}")
         .NewLine()
-        .Append("Please, add him/her to your friends.")
+        .Append($"Please, add him/her to your friends.")
         .ToTextMessageContent();
       try
       {
@@ -79,7 +78,7 @@ namespace RaidBattlesBot
     {
       userPlayer ??= await myDB.Set<Player>().Get(user, cancellationToken);
       var userContent = FormatUser(new TextBuilder(), user, userPlayer)
-        .Append(" is asking for Friendship.")
+        .Sanitize(" is asking for Friendship.")
         .ToTextMessageContent();
       var userMarkup = new InlineKeyboardMarkup(new []
       {
@@ -137,7 +136,7 @@ namespace RaidBattlesBot
       if (text.Length > 0 && friendCode == null)
       {
         builder
-          .Append("Friend code is not recognized.")
+          .Sanitize("Friend code is not recognized.")
           .NewLine()
           .NewLine();
       }
@@ -145,7 +144,7 @@ namespace RaidBattlesBot
       if (player?.FriendCode is {} storedCode)
       {
         builder
-          .Append("Your Friend Code is ")
+          .Sanitize("Your Friend Code is ")
           .Bold(b => b.Code(bb => bb.AppendFormat("{0:0000 0000 0000}", storedCode)))
           .NewLine()
           .NewLine();
@@ -155,7 +154,7 @@ namespace RaidBattlesBot
       }
 
       builder
-        .Append("To set up your friend code reply with it to this message.").NewLine()
+        .Append($"To set up your friend code reply with it to this message.").NewLine()
         .Append($"Or use /{FriendCodeCommandHandler.COMMAND} command.").NewLine()
         .Code("/fc your-friend-code");
       
