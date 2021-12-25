@@ -51,7 +51,9 @@ namespace RaidBattlesBot.Handlers
       }
 
       // check for reply commands
-      if (message.ReplyToMessage is { } parentMessage && message.Entities is null or { Length: 0 } ) // handle only plain text replies
+      // handle only replies without other commands
+      if (message.ReplyToMessage is { } parentMessage &&
+          (message.Entities?.All(entity => entity.Type != MessageEntityType.BotCommand) ?? true ))
       {
         if (await Handle(message, parentMessage, pollMessage, myReplyCommandHandlers, cancellationToken) is {} replyProcessed)
         {

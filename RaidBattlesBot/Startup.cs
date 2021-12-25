@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Autofac;
+using LinqToDB.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
@@ -105,7 +108,7 @@ namespace RaidBattlesBot
     private IWebHostEnvironment Environment { get; set; }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
     {
       Environment = env;
       if (env.IsDevelopment())
@@ -118,6 +121,18 @@ namespace RaidBattlesBot
           RequestPath = "/assets",
           OnPrepareResponse = context => context.Context.Response.Headers.Append("Cache-Control", "public,max-age=600")
         });
+        DataConnection.TurnTraceSwitchOn();
+        DataConnection.WriteTraceLine =
+          (message, category, level) => loggerFactory.CreateLogger(category).Log(
+            level switch
+            {
+              TraceLevel.Error => LogLevel.Error,
+              TraceLevel.Warning => LogLevel.Warning,
+              TraceLevel.Info => LogLevel.Information,
+              TraceLevel.Verbose => LogLevel.Trace,
+              TraceLevel.Off => LogLevel.None,
+              _ => throw new ArgumentOutOfRangeException(nameof(level), level, null)
+            }, message);
       }
       else
       {
