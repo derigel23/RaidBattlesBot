@@ -74,6 +74,13 @@ namespace RaidBattlesBot
       }
     }
 
+    public async Task NotifyHost(ITelegramBotClient bot, User host, User user, Player player = null, CancellationToken cancellationToken = default)
+    {
+      player ??= await myDB.Set<Player>().Get(user, cancellationToken);
+      var content = FormatUser(new TextBuilder("Sent your Friend Code to "), user, player).ToTextMessageContent();
+      await bot.SendTextMessageAsync(host.Id, content, cancellationToken: cancellationToken);
+    }
+
     public async Task AskCode(User user, ITelegramBotClient userBot, User host, ITelegramBotClient hostBot, Player userPlayer = null,  CancellationToken cancellationToken = default)
     {
       userPlayer ??= await myDB.Set<Player>().Get(user, cancellationToken);

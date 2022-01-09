@@ -213,12 +213,18 @@ namespace RaidBattlesBot.Handlers
               friendship.PollId = poll.Id;
 
               var hostPlayer = await myDb.Set<Player>().Get(host.User, cancellationToken);
+              if (host.BotId is not { } hostBotId || !myBots.TryGetValue(hostBotId, out var hostBot))
+              {
+                hostBot = myBot;
+              }
+
               // auto approve
               if (hostPlayer?.AutoApproveFriendship ?? host.Team?.HasFlag(VoteEnum.AutoApproveFriend) ?? false)
               {
                 try
                 {
                   await myFriendshipService.SendCode(myBot, user, host.User, cancellationToken: cancellationToken);
+                  await myFriendshipService.NotifyHost(hostBot, host.User, user, player, cancellationToken);
                 }
                 catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
                 {
@@ -227,11 +233,6 @@ namespace RaidBattlesBot.Handlers
                 continue;
               }
               
-              if (host.BotId is not { } botId || !myBots.TryGetValue(botId, out var bot))
-              {
-                bot = myBot;
-              }
-
               try
               {
                 // ask invitee instead
@@ -240,7 +241,7 @@ namespace RaidBattlesBot.Handlers
                 {
                   try
                   {
-                    await myFriendshipService.AskCode(host.User, bot, user, myBot, hostPlayer, cancellationToken);
+                    await myFriendshipService.AskCode(host.User, hostBot, user, myBot, hostPlayer, cancellationToken);
                   }
                   finally
                   {
@@ -255,11 +256,10 @@ namespace RaidBattlesBot.Handlers
                     .Bold(b => b.Sanitize(poll.Title))
                     .ToTextMessageContent();
                   var pollMarkup = new InlineKeyboardMarkup(
-                    new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", 
-                      callbackData: FriendshipCallbackQueryHandler.Commands.AutoApprove(poll)) });
+                    new[] { InlineKeyboardButton.WithCallbackData($"Approve all invitees", FriendshipCallbackQueryHandler.Commands.AutoApprove(poll)) });
                   try
                   {
-                    await bot.SendTextMessageAsync(host.UserId, pollContent, replyMarkup: pollMarkup, cancellationToken: cancellationToken);
+                    await hostBot.SendTextMessageAsync(host.UserId, pollContent, replyMarkup: pollMarkup, cancellationToken: cancellationToken);
                   }
                   finally
                   {
@@ -271,7 +271,7 @@ namespace RaidBattlesBot.Handlers
                 {
                   try
                   {
-                    await myFriendshipService.AskCode(user, myBot, host.User, bot, player, cancellationToken);
+                    await myFriendshipService.AskCode(user, myBot, host.User, hostBot, player, cancellationToken);
                   }
                   finally
                   {
@@ -285,9 +285,9 @@ namespace RaidBattlesBot.Handlers
               }
               catch (Exception ex)
               {
-                myTelemetryClient.TrackExceptionEx(ex, properties: new Dictionary<string, string>
+                myTelemetryClient.TrackExceptionEx(ex, new Dictionary<string, string>
                 {
-                  { nameof(ITelegramBotClient.BotId), bot?.BotId .ToString() },
+                  { nameof(ITelegramBotClient.BotId), hostBot?.BotId .ToString() },
                   { "UserId", host.UserId.ToString() }
                 });
               }
