@@ -60,7 +60,7 @@ namespace RaidBattlesBot
       hostPlayer ??= await myDB.Set<Player>().Get(host, cancellationToken);
       if (hostPlayer?.FriendCode == null) return; // alarm, can't be
       var content = FormatUser(new TextBuilder(), host, hostPlayer)
-        .Append($" Friend Code is {hostPlayer.FriendCode?.ToString("{0:0000 0000 0000}"):code}")
+        .Append($" Friend Code is {hostPlayer.FriendCode?.ToString("0000 0000 0000"):code}")
         .NewLine()
         .Append($"Please, add him/her to your friends.")
         .ToTextMessageContent();
