@@ -45,7 +45,7 @@ namespace RaidBattlesBot.Handlers
       }
       else
       {
-        foreach (var poll in polls)
+        foreach (var poll in polls.OrderBy(poll => poll.Time))
         {
           builder.Bold(b =>
              b.Code(bb => bb.AppendFormat("{0:t} ", poll.Time)));
