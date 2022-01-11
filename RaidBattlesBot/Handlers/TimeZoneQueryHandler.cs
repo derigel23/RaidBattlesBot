@@ -139,7 +139,7 @@ namespace RaidBattlesBot.Handlers
           {
             if (!await CheckRights(chatId, data.From, cancellationToken))
             {
-              await myBot.EditMessageTextAsync(data.InlineMessageId, new InputTextMessageContent("You have no rights"), cancellationToken: cancellationToken);
+              await myBot.EditMessageTextAsync(data.InlineMessageId!, new InputTextMessageContent("You have no rights"), cancellationToken: cancellationToken);
               return false;
             }
             
@@ -152,7 +152,7 @@ namespace RaidBattlesBot.Handlers
             
             var (content, replyMarkup) = await myTimeZoneNotifyService.GetSettingsMessage(new Chat { Id = chatId, Type = ChatType.Sender }, cancellationToken: cancellationToken);
 
-            await myBot.EditMessageTextAsync(data.InlineMessageId, content, replyMarkup, cancellationToken);
+            await myBot.EditMessageTextAsync(data.InlineMessageId!, content, replyMarkup, cancellationToken);
 
             if (messageId != 0)
             {
@@ -185,8 +185,8 @@ namespace RaidBattlesBot.Handlers
 
     public async Task<(string text, bool showAlert, string url)> Handle(CallbackQuery data, object context = default, CancellationToken cancellationToken = default)
     {
-      var callback = data.Data.Split(':');
-      if (callback[0] != PREFIX)
+      var callback = data.Data?.Split(':');
+      if (callback?[0] != PREFIX)
         return (null, false, null);
 
       switch (callback.Skip(1).FirstOrDefault())
