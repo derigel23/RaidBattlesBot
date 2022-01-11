@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Autofac;
+using System.Threading.Tasks;
 using LinqToDB.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -37,9 +37,7 @@ namespace RaidBattlesBot
 
     public const string ConnectionStringName = "RaidBattlesDatabase";
       
-    // This method gets called by the runtime. Use this method to add services to the container.
-    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-    public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services, IWebHostEnvironment env)
     {
       services.AddApplicationInsightsTelemetry();
       
@@ -75,23 +73,19 @@ namespace RaidBattlesBot
       services.AddHttpClient<YandexMapsClient>();
       services.AddHttpClient<PoGoToolsClient>();
       services.RegisterTelegramClients<PoGoTelegramBotClient>(provider => provider.GetService<IOptions<BotConfiguration>>()?.Value?.BotTokens);
-      
+
+      services.AddRazorPages();
       services
-        .AddMvc(options =>
+        .AddControllers(options =>
         {
-          options.EnableEndpointRouting = false;
           options.OutputFormatters.Insert(0, new JsonpMediaTypeFormatter(options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().Single()));
         })
         .AddNewtonsoftJson()
-        .AddApplicationPart(typeof(TelegramController).Assembly)
-        .AddRazorPagesOptions(options =>
-        {
-          options.Conventions.AddPageRouteWithName("/Portal", "~/{guid:minlength(32)?}", "Portal");
-        });
-
+        .AddApplicationPart(typeof(TelegramController).Assembly);
+      
       services.AddDbContextPool<RaidBattlesContext>(options =>
       {
-        if (Environment?.IsDevelopment() ?? false)
+        if (env.IsDevelopment())
         {
           options.EnableSensitiveDataLogging();
         }
@@ -100,17 +94,8 @@ namespace RaidBattlesBot
       });
     }
 
-    public void ConfigureContainer(ContainerBuilder builder)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger logger)
     {
-      builder.RegisterModule<RegistrationModule>();
-    }
-
-    private IWebHostEnvironment Environment { get; set; }
-
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
-    {
-      Environment = env;
       if (env.IsDevelopment())
       {
         app.UseDeveloperExceptionPage();
@@ -123,7 +108,7 @@ namespace RaidBattlesBot
         });
         DataConnection.TurnTraceSwitchOn();
         DataConnection.WriteTraceLine =
-          (message, category, level) => loggerFactory.CreateLogger(category).Log(
+          (message, _, level) => logger.Log(
             level switch
             {
               TraceLevel.Error => LogLevel.Error,
@@ -143,7 +128,13 @@ namespace RaidBattlesBot
       app
         .UseRequestLocalization()
         .UseStaticFiles() // for regular wwwroot
-        .UseMvc();
+        .UseRouting()
+        .UseEndpoints(builder =>
+        {
+          builder.MapRazorPages();
+          builder.MapControllers();
+          builder.Map("wp_content/{**rest}", context => Task.FromResult(context.Response.StatusCode = StatusCodes.Status418ImATeapot));
+        });
     }
 
   }

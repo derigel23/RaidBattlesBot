@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -7,7 +8,9 @@ using DelegateDecompiler.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NodaTime;
+using RaidBattlesBot.Configuration;
 using RaidBattlesBot.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -24,11 +27,11 @@ namespace RaidBattlesBot.Pages
     private readonly IClock myClock;
     private readonly ITelegramBotClient myBot;
 
-    public MapModel(RaidBattlesContext db, IClock clock, ITelegramBotClient bot)
+    public MapModel(RaidBattlesContext db, IClock clock, IOptions<BotConfiguration> botOptions, IDictionary<long, ITelegramBotClient> bots)
     {
       myDb = db;
       myClock = clock;
-      myBot = bot;
+      myBot = botOptions.Value?.DefaultBotId is {} defaultBotId ? bots[defaultBotId] : bots.Values.First(); // at least one bot, default
     }
     
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
