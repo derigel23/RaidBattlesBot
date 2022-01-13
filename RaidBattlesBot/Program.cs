@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using LinqToDB.Data;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
@@ -120,16 +121,23 @@ namespace RaidBattlesBot
         app.UseHttpsRedirection();
       }
 
-      app
-        .UseRequestLocalization()
-        .UseStaticFiles() // for regular wwwroot
-        .UseRouting()
-        .UseEndpoints(endpoints =>
+      app.UseRequestLocalization();
+      app.UseStaticFiles(); // for regular wwwroot
+      app.UseRouting();
+      app.MapRazorPages();
+      app.MapControllers();
+      app.Use((context, next) =>
+      {
+        if ((context.Request.Path.Value?.EndsWith(".php", StringComparison.OrdinalIgnoreCase) ?? false) ||
+            context.Request.GetUri().Segments.Any(segment => segment.StartsWith("wp-", StringComparison.OrdinalIgnoreCase)))
         {
-          endpoints.MapRazorPages();
-          endpoints.MapControllers();
-          endpoints.Map("wp_content/{**rest}", context => Task.FromResult(context.Response.StatusCode = StatusCodes.Status418ImATeapot));
-        });
+          context.Response.StatusCode = StatusCodes.Status418ImATeapot;
+          return Task.CompletedTask;
+        }
+
+        return next(context);
+      });
+      
       app.Run();
     }
 
