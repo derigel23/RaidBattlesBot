@@ -128,7 +128,7 @@ namespace RaidBattlesBot
       app.MapControllers();
       app.Use((context, next) =>
       {
-        if ((context.Request.Path.Value?.EndsWith(".php", StringComparison.OrdinalIgnoreCase) ?? false) ||
+        if (context.Request.Path.Value is {} path && (path.EndsWith(".php", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase)) ||
             context.Request.GetUri().Segments.Any(segment => segment.StartsWith("wp-", StringComparison.OrdinalIgnoreCase)))
         {
           context.Response.StatusCode = StatusCodes.Status418ImATeapot;
