@@ -84,11 +84,10 @@ public class NotificationChannelsServiceWorker : IBackgroundServiceWorker
             { nameof(notification.MessageId), notification.MessageId?.ToString() }
           });
           
-          // every while and then commit processed notifications and pause
+          // every while and then commit processed notifications
           if (++counter % 30 == 0)
           {
             await myDB.SaveChangesAsync(cancellationToken);
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
           }
         }
 
