@@ -77,7 +77,7 @@ namespace RaidBattlesBot
       }
 
       var content = builder.ToTextMessageContent();
-      var notificationMessage = await bot.SendTextMessageAsync(targetChatId, content, true, replyMessageId, cancellationToken: cancellationToken);
+      var notificationMessage = await bot.SendTextMessageAsync(targetChatId, content, true,  replyToMessageId: replyMessageId, cancellationToken: cancellationToken);
       poll.Notifications.Add(new Notification
       {
         PollId = poll.Id,

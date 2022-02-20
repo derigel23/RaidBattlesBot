@@ -60,7 +60,7 @@ namespace RaidBattlesBot.Handlers
       }
 
       var builder = poll.GetTitle(new TextBuilder("GO "));
-      var message = await myBot.SendTextMessageAsync(chatId, builder.ToTextMessageContent(), disableNotification: true, replyToMessageId, cancellationToken: cancellationToken);
+      var message = await myBot.SendTextMessageAsync(chatId, builder.ToTextMessageContent(), disableNotification: true, replyToMessageId: replyToMessageId, cancellationToken: cancellationToken);
       await myReplyHandler.ProcessMessage(message, poll, cancellationToken);
       
       return (null, false, null);
