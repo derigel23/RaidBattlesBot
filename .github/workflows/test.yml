@@ -1,0 +1,21 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Annotate
+        uses: derigel23/ReSharper-InspectCode@6f0265a7dc3414d6b299a69eb0beccf381de597a
+        with:
+          solution: RaidBattlesBot.sln
