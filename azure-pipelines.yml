@@ -1,6 +1,12 @@
 trigger:
-- "*"
-
+  branches:
+    include:
+    - master
+    - releases/*
+  paths:
+    exclude:
+    - .github/**/*
+    
 pool:
   vmImage: ubuntu-latest
 
