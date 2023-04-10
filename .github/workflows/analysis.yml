@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    types: [opened, reopened]
   workflow_dispatch:
   
 jobs:
-  test-action:
+  analysis:
     runs-on: ubuntu-latest
 
     steps:
