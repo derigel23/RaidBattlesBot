@@ -22,3 +22,4 @@ jobs:
         with:
           solution: RaidBattlesBot.sln
           tool-version: 2023.1.2
+          format: Text
