@@ -18,7 +18,7 @@ jobs:
           submodules: recursive
 
       - name: Annotate
-        uses: derigel23/ReSharper-InspectCode@3a7b5ba8123edd69e0e6ca89c46dcc8b6d864003
+        uses: derigel23/ReSharper-InspectCode@3da5bb7e1ac073ada085e05ef540718bf343dd8c
         with:
           solution: RaidBattlesBot.sln
           tool-version: 2023.1.2
